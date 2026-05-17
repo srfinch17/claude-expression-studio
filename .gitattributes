@@ -1,0 +1,3 @@
+# Tell GitHub Linguist that the data/ HTML files are web UI assets,
+# not the primary language of this project.
+esp32_matrix_webserver/data/*.html linguist-documentation=true
