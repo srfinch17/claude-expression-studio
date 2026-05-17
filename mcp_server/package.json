@@ -1,0 +1,17 @@
+{
+  "name": "esp32-matrix-mcp",
+  "version": "1.0.0",
+  "description": "MCP server that connects Claude to the ESP32-S3-Matrix LED board",
+  "type": "module",
+  "scripts": {
+    "start": "tsx index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.11.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "tsx": "^4.19.0",
+    "@types/node": "^22.0.0"
+  }
+}

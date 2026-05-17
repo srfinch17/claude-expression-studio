@@ -1,0 +1,26 @@
+# WiFi credentials — copy secrets.h.example to secrets.h and fill in your details
+esp32_matrix_webserver/secrets.h
+
+# Node.js dependencies — recreated by running: npm install
+mcp_server/node_modules/
+
+# TypeScript compiled output
+mcp_server/dist/
+
+# Local board URL override for MCP server (optional)
+mcp_server/.env
+
+# Arduino IDE temporary files
+*.tmp.*
+
+# Claude Code — local/machine-specific settings (permissions, local overrides)
+.claude/settings.local.json
+
+# .mcp.json contains machine-specific absolute paths; .claude/settings.json is the portable config
+.mcp.json
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
