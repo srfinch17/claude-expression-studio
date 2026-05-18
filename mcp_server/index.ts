@@ -1,26 +1,82 @@
+// ============================================================
+// ESP32-S3 Matrix — MCP Server
+// ============================================================
+// This file is the bridge between Claude and the LED board.
+//
+// How it fits into the big picture:
+//   Claude (AI) calls a "tool" (like matrix_set_animation)
+//   → This server receives that call
+//   → Translates it into an HTTP request
+//   → Sends it to the ESP32 firmware over WiFi
+//   → Returns the result back to Claude
+//
+// Claude Code manages this process automatically — it starts
+// this server as a background process when you open the project,
+// and keeps it running so Claude can use the tools anytime.
+// ============================================================
+
+// ------------------------------------------------------------
+// IMPORTS
+// Named imports ({ }) pull specific exports from a package.
+// The .js extension is required here even though this is a .ts
+// file — Node16 module resolution needs the compiled extension.
+// ------------------------------------------------------------
+
+// Server: the main MCP server class — handles all protocol communication
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+
+// StdioServerTransport: tells the server to communicate over
+// stdin/stdout. Claude Code pipes messages to this process via
+// stdio, so stdout IS the protocol channel — never console.log here.
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+
+// These are the two request types this server handles:
+//   ListToolsRequestSchema  — Claude asking "what tools do you have?"
+//   CallToolRequestSchema   — Claude actually calling one of those tools
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 
+// ------------------------------------------------------------
+// BOARD URL
+// process.env lets us read environment variables set before
+// the process starts. ESP32_URL can be overridden in settings.json
+// if the board has a different address on your network.
+// The ?? operator means "use the right side if the left is null/undefined".
+// ------------------------------------------------------------
 const BOARD_URL = process.env.ESP32_URL ?? "http://esp32matrix.local";
 
+// ------------------------------------------------------------
+// HTTP HELPERS
+// Two small async functions so every tool handler doesn't have
+// to repeat the same fetch boilerplate.
+// ------------------------------------------------------------
+
+// GET — for read-only requests (sensor data, status)
 async function get(path: string) {
   const res = await fetch(`${BOARD_URL}${path}`);
   return { ok: res.ok, status: res.status, body: await res.text() };
 }
 
+// POST — for commands that change board state (animations, brightness, etc.)
+// body defaults to {} so callers don't have to pass anything for simple commands.
 async function post(path: string, body: object = {}) {
   const res = await fetch(`${BOARD_URL}${path}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(body),   // convert JS object → JSON string for the wire
   });
   return { ok: res.ok, status: res.status, body: await res.text() };
 }
 
+// ------------------------------------------------------------
+// CREATE THE MCP SERVER
+// This object represents "this MCP server" to the SDK.
+// The name/version are metadata Claude uses to identify it.
+// capabilities: { tools: {} } tells Claude this server offers tools
+// (as opposed to resources or prompts, which are other MCP features).
+// ------------------------------------------------------------
 const server = new Server(
   {
     name: "esp32-matrix",
@@ -31,6 +87,20 @@ const server = new Server(
   }
 );
 
+// ------------------------------------------------------------
+// HANDLER 1: LIST TOOLS
+// Claude calls this once at startup to discover what tools exist.
+// Each tool entry has:
+//   name        — the identifier Claude uses to call it
+//   description — natural language description Claude reads to
+//                 decide WHEN and HOW to use the tool
+//   inputSchema — JSON Schema defining what parameters Claude
+//                 can pass. "required" lists mandatory params;
+//                 everything else is optional.
+//
+// Think of descriptions as instructions written TO Claude.
+// The better the description, the smarter Claude's choices are.
+// ------------------------------------------------------------
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
@@ -39,7 +109,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         "Get the current state of the ESP32 matrix board — what animation is running, brightness level, timer remaining, weather settings, clock sync status, etc. Call this first if you are unsure what the board is currently doing.",
       inputSchema: {
         type: "object",
-        properties: {},
+        properties: {},   // no parameters needed
         required: [],
       },
     },
@@ -64,7 +134,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             description: "Brightness level from 0 to 255.",
           },
         },
-        required: ["level"],
+        required: ["level"],   // Claude must always provide this
       },
     },
     {
@@ -103,11 +173,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
             description: "Milliseconds per scroll step. Lower is faster. Default is 100.",
           },
         },
-        required: ["text"],
+        required: ["text"],   // only text is mandatory; everything else has sensible defaults
       },
     },
     {
       name: "matrix_set_animation",
+      // Template literal (backtick string) lets us write a multi-line description.
+      // This description is long because it's Claude's rulebook for all 14 animation types.
       description: `Start one of the built-in animations on the LED matrix. Available types:
 
 - fire: burning fire effect. params: palette (classic/blue/green/purple), intensity (1-10), tendrils (0-10), sparks (0-10)
@@ -130,6 +202,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
       inputSchema: {
         type: "object",
         properties: {
+          // "enum" restricts Claude to only these exact string values
           type: {
             type: "string",
             enum: [
@@ -140,6 +213,8 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
             ],
             description: "The animation type to start.",
           },
+          // All remaining params are optional and animation-specific.
+          // Claude reads the descriptions above to know which ones apply to each type.
           palette:     { type: "string",  description: "Fire palette: classic, blue, green, or purple." },
           intensity:   { type: "number",  description: "Fire intensity 1-10. Default 6. Use 3 for low, 6 for medium, 9 for high." },
           tendrils:    { type: "number",  description: "Fire tendrils 0-10. 0 = off, 5 = medium wisps, 10 = very wispy. Default 0." },
@@ -194,32 +269,55 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
   ],
 }));
 
+// ------------------------------------------------------------
+// HANDLER 2: CALL TOOL
+// This runs every time Claude actually invokes one of the tools above.
+// request.params.name  — which tool Claude called
+// request.params.arguments — the parameters Claude passed
+//
+// The return value must always be:
+//   { content: [{ type: "text", text: "..." }] }
+// That text is what Claude reads as the tool's result.
+// ------------------------------------------------------------
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  // Pull out the arguments, defaulting to {} if Claude passed nothing.
+  // "as Record<string, unknown>" is a TypeScript type assertion — we're
+  // telling the compiler "trust me, this is a plain object with string keys".
   const args = (request.params.arguments ?? {}) as Record<string, unknown>;
   const name = request.params.name;
 
   try {
     switch (name) {
+
       case "matrix_status": {
         const r = await get("/api/status");
         return { content: [{ type: "text", text: r.ok ? r.body : `Error ${r.status}: ${r.body}` }] };
       }
+
       case "matrix_clear": {
         const r = await post("/api/display/clear");
         return { content: [{ type: "text", text: r.ok ? "Display cleared." : `Error ${r.status}: ${r.body}` }] };
       }
+
       case "matrix_set_brightness": {
         const r = await post("/api/brightness", { level: args.level });
         return { content: [{ type: "text", text: r.ok ? `Brightness set to ${args.level}.` : `Error ${r.status}: ${r.body}` }] };
       }
+
       case "matrix_show_text": {
+        // Pass args straight through — the firmware handles all the text params directly
         const r = await post("/api/display/text", args);
         return { content: [{ type: "text", text: r.ok ? `Showing text: "${args.text}"` : `Error ${r.status}: ${r.body}` }] };
       }
+
       case "matrix_set_animation": {
+        // Spread args into a new object so we can modify it without touching the original
         const payload: Record<string, unknown> = { ...args };
 
-        // Translate speed 1-5 scale → milliseconds per frame (firmware uses ms directly)
+        // TRANSLATION 1: speed scale
+        // Claude uses a human-friendly 1-5 scale, but the firmware expects
+        // milliseconds per frame (lower ms = faster animation).
+        // We map here so Claude never has to think in milliseconds.
         if (payload.speed !== undefined) {
           const spd = Number(payload.speed);
           if (spd >= 1 && spd <= 5) {
@@ -228,7 +326,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           }
         }
 
-        // Firmware reads "color" for solid fill, not "color1"
+        // TRANSLATION 2: solid color param name
+        // The inputSchema uses "color1" as the generic primary color param,
+        // but the firmware's solid animation specifically reads "color".
+        // We rename it here so neither Claude nor the firmware has to care.
         if (payload.type === "solid" && payload.color1 !== undefined && payload.color === undefined) {
           payload.color = payload.color1;
           delete payload.color1;
@@ -237,27 +338,45 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const r = await post("/api/display/animation", payload);
         return { content: [{ type: "text", text: r.ok ? `Animation started: ${args.type}` : `Error ${r.status}: ${r.body}` }] };
       }
+
       case "matrix_get_temperature": {
         const r = await get("/api/sensors/temperature");
         return { content: [{ type: "text", text: r.ok ? r.body : `Error ${r.status}: ${r.body}` }] };
       }
+
       case "matrix_get_weather_data": {
         const r = await get("/api/sensors/weather");
         return { content: [{ type: "text", text: r.ok ? r.body : `Error ${r.status}: ${r.body}` }] };
       }
+
       case "matrix_get_accelerometer": {
         const r = await get("/api/sensors/accelerometer");
         return { content: [{ type: "text", text: r.ok ? r.body : `Error ${r.status}: ${r.body}` }] };
       }
+
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }] };
     }
+
   } catch (err: unknown) {
+    // fetch() throws (rather than returning a failed response) when the board
+    // is completely unreachable — wrong IP, board unplugged, WiFi down, etc.
+    // Without this catch the whole server process would crash.
+    // We catch it and return a readable message so Claude can report it gracefully.
     const message = err instanceof Error ? err.message : String(err);
     return { content: [{ type: "text", text: `Could not reach board at ${BOARD_URL}: ${message}` }] };
   }
 });
 
+// ------------------------------------------------------------
+// ENTRY POINT
+// Node.js has no built-in entry point like C#'s static void Main().
+// The convention is to define an async function called main() and
+// call it at the bottom of the file.
+//
+// StdioServerTransport wires the server to stdin/stdout.
+// console.error goes to stderr (safe — doesn't corrupt the protocol pipe).
+// ------------------------------------------------------------
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
