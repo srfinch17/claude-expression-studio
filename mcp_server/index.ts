@@ -22,6 +22,8 @@
 // file — Node16 module resolution needs the compiled extension.
 // ------------------------------------------------------------
 
+import { createCanvas } from "@napi-rs/canvas";
+
 // Server: the main MCP server class — handles all protocol communication
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 
@@ -69,6 +71,55 @@ async function post(path: string, body: object = {}) {
   });
   return { ok: res.ok, status: res.status, body: await res.text() };
 }
+
+// ------------------------------------------------------------
+// EMOJI RENDERER
+// Draws an emoji onto a 64×64 Skia canvas (same API as the browser's
+// CanvasRenderingContext2D), then downsamples to 8×8 by averaging each
+// 8×8 pixel block — alpha-composited against black so transparent edges
+// don't wash out the colors.
+// ------------------------------------------------------------
+function emojiToMatrix(emoji: string): string[][] {
+  const SIZE = 64;
+  const BLOCK = SIZE / 8;   // 8 pixels per output cell
+  const canvas = createCanvas(SIZE, SIZE);
+  const ctx = canvas.getContext("2d");
+
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(0, 0, SIZE, SIZE);
+  ctx.font = `${Math.floor(SIZE * 0.82)}px serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(emoji, SIZE / 2, SIZE / 2);
+
+  const { data } = ctx.getImageData(0, 0, SIZE, SIZE);  // RGBA flat array
+  const matrix: string[][] = [];
+
+  for (let by = 0; by < 8; by++) {
+    const row: string[] = [];
+    for (let bx = 0; bx < 8; bx++) {
+      let r = 0, g = 0, b = 0;
+      for (let py = 0; py < BLOCK; py++) {
+        for (let px = 0; px < BLOCK; px++) {
+          const ix = bx * BLOCK + px;
+          const iy = by * BLOCK + py;
+          const i  = (iy * SIZE + ix) * 4;
+          const a  = data[i + 3] / 255;   // premultiply alpha against black
+          r += data[i]     * a;
+          g += data[i + 1] * a;
+          b += data[i + 2] * a;
+        }
+      }
+      const n   = BLOCK * BLOCK;
+      const hex = (v: number) => Math.round(v / n).toString(16).padStart(2, "0");
+      row.push(`#${hex(r)}${hex(g)}${hex(b)}`);
+    }
+    matrix.push(row);
+  }
+  return matrix;
+}
+
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 // ------------------------------------------------------------
 // CREATE THE MCP SERVER
@@ -196,6 +247,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 - timer_text: countdown timer shown as MM:SS digits. params: duration (seconds), color1 (minutes color), color2 (seconds color), color3 (colon color, default white)
 - clock: live 12-hour clock synced via NTP. params: timezone (UTC offset as integer, e.g. -7 for Arizona), color (hex background color)
 - matrix_rain: digital rain / matrix screensaver with falling character drops. Also called "matrix screensaver" or "digital rain". params: theme (classic/blue/red/purple), speed (1-5)
+- spiral: gradient snake flowing along a clockwise inward spiral — all 64 LEDs lit at all times. params: color1 (gradient start), color2 (gradient end)
+- starfield: stars radiate from center or fall inward toward center. params: color1 (birth color), color2 (death color), density (1-16, default 8), inward (bool, default false)
+- fireworks: single looping firework — white mortar launches from bottom, explodes in colorful radial burst. params: color1 (dominant burst color), color2, color3 (fade-out colors)
+- comet: bobbing comet at right edge with wave tail and occasional sparks. params: color1 (heart), color2 (shell), color3 (tail tip)
+- sun: static disc in center with spinning gradient arc around it. params: color1 (disc), color2 (arc head), color3 (arc mid), color4 (arc tail)
 
 Scale guidance for 0-10 and 1-10 params: 2-3 = low, 5 = medium, 8-9 = high, 10 = max.
 Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
@@ -210,6 +266,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
               "liquid", "imu", "chiptemp", "weather",
               "timer_fill", "timer_snow", "timer_text",
               "clock", "matrix_rain",
+              "spiral", "starfield", "fireworks", "comet", "sun",
             ],
             description: "The animation type to start.",
           },
@@ -231,6 +288,9 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
           duration:    { type: "number",  description: "Timer duration in seconds." },
           timezone:    { type: "number",  description: "UTC offset in hours, e.g. -7 for Arizona (no DST)." },
           theme:       { type: "string",  description: "Matrix rain color theme: classic, blue, red, or purple." },
+          color4:      { type: "string",  description: "Quaternary color hex. Used by sun animation for ring tail color." },
+          density:     { type: "number",  description: "Starfield star density 1-16. 4=sparse, 8=medium, 14=dense." },
+          inward:      { type: "boolean", description: "Starfield direction: true = stars fall inward toward center, false = radiate outward from center." },
           speed:       { type: "number",  description: "Animation speed 1-5. 1 = slow, 3 = normal, 5 = fast. Applies to all animations." },
         },
         required: ["type"],
@@ -264,6 +324,37 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
         type: "object",
         properties: {},
         required: [],
+      },
+    },
+    {
+      name: "matrix_show_emoji",
+      description: `Display one or more emoji on the LED matrix in full color, scaled to fit the 8×8 grid.
+
+Pass the actual Unicode emoji characters — Claude should resolve any description to the right emoji before calling this tool. For a sequence, each emoji shows for duration_per_emoji seconds before the next one appears; the final emoji stays on screen.
+
+Examples of how to map intent to emojis:
+- "heart" or "I love you" → ["❤️"]
+- "thumbs up" or "great job" → ["👍"]
+- "birthday" or "happy birthday" → ["🎂", "🎁", "🥳"]
+- "celebrate" → ["🎉", "🌟", "🎊"]
+- "good night" → ["🌙", "😴"]
+- "rocket launch" → ["🚀", "⭐", "🌟"]
+
+Use a duration of 2–4 seconds per emoji. Default is 3.`,
+      inputSchema: {
+        type: "object",
+        properties: {
+          emojis: {
+            type: "array",
+            items: { type: "string" },
+            description: "Array of emoji Unicode characters to display, e.g. [\"🎂\", \"🎁\"]. Pass the actual emoji characters, not names.",
+          },
+          duration_per_emoji: {
+            type: "number",
+            description: "Seconds each emoji stays on screen before the next one appears. Default 3. The last emoji stays on screen indefinitely.",
+          },
+        },
+        required: ["emojis"],
       },
     },
   ],
@@ -352,6 +443,33 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "matrix_get_accelerometer": {
         const r = await get("/api/sensors/accelerometer");
         return { content: [{ type: "text", text: r.ok ? r.body : `Error ${r.status}: ${r.body}` }] };
+      }
+
+      case "matrix_show_emoji": {
+        const emojis = (args.emojis as string[]) ?? [];
+        const durationMs = ((args.duration_per_emoji as number) ?? 3) * 1000;
+
+        if (emojis.length === 0) {
+          return { content: [{ type: "text", text: "No emojis provided." }] };
+        }
+
+        for (let i = 0; i < emojis.length; i++) {
+          const emoji = emojis[i];
+          const matrix = emojiToMatrix(emoji);
+          const r = await post("/api/display/matrix", { matrix });
+          if (!r.ok) {
+            return { content: [{ type: "text", text: `Error displaying ${emoji}: ${r.status} ${r.body}` }] };
+          }
+          // Wait between emojis; skip the delay after the last one so it stays on screen
+          if (i < emojis.length - 1) await sleep(durationMs);
+        }
+
+        const summary =
+          emojis.length === 1
+            ? `Showing ${emojis[0]} on the matrix.`
+            : `Showed sequence: ${emojis.join(" → ")}. ${emojis[emojis.length - 1]} is still on screen.`;
+
+        return { content: [{ type: "text", text: summary }] };
       }
 
       default:
