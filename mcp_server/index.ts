@@ -230,7 +230,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "matrix_set_animation",
       // Template literal (backtick string) lets us write a multi-line description.
-      // This description is long because it's Claude's rulebook for all 14 animation types.
+      // This description is long because it's Claude's rulebook for all 19 animation types.
       description: `Start one of the built-in animations on the LED matrix. Available types:
 
 - fire: burning fire effect. params: palette (classic/blue/green/purple), intensity (1-10), tendrils (0-10), sparks (0-10)
