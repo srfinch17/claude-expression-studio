@@ -250,6 +250,9 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 - spiral: gradient snake flowing along a clockwise inward spiral — all 64 LEDs lit at all times. params: color1 (gradient start), color2 (gradient end)
 - starfield: stars radiate from center or fall inward toward center. params: color1 (birth color), color2 (death color), density (1-16, default 8), inward (bool, default false)
 - fireworks: single looping firework — white mortar launches from bottom, explodes in colorful radial burst. params: color1 (dominant burst color), color2, color3 (fade-out colors)
+- fireworks2: like fireworks but each tendril has a bright colored tip and a dimming white comet tail. Cross-bloom flash at burst. params: color1/2/3 (tip palette, same as fireworks)
+- fireworks3: stub — currently shows fireworks2 behavior. params: none
+- fireworks4: stub — currently shows fireworks behavior. params: none
 - comet: bobbing comet at right edge with wave tail and occasional sparks. params: color1 (heart), color2 (shell), color3 (tail tip)
 - sun: static disc in center with spinning gradient arc around it. params: color1 (disc), color2 (arc head), color3 (arc mid), color4 (arc tail)
 
@@ -266,7 +269,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
               "liquid", "imu", "chiptemp", "weather",
               "timer_fill", "timer_snow", "timer_text",
               "clock", "matrix_rain",
-              "spiral", "starfield", "fireworks", "comet", "sun",
+              "spiral", "starfield", "fireworks", "fireworks2", "fireworks3", "fireworks4", "comet", "sun",
             ],
             description: "The animation type to start.",
           },
