@@ -253,6 +253,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 - fireworks: single looping firework — white mortar launches from bottom, explodes in colorful radial burst. params: color1 (dominant burst color), color2, color3 (fade-out colors)
 - fireworks2: like fireworks but each tendril has a bright colored tip and a dimming white comet tail. Cross-bloom flash at burst. params: color1/2/3 (tip palette, same as fireworks)
 - fireworks3: stub — currently shows fireworks2 behavior. params: none
+- frostbite: shimmering pale mist backdrop with bright diamond sparkles. All pixels always lit. params: color (base hue, default #DCE6FF cool white), sparkle (0-100, default 20)
 - fireworks4: stub — currently shows fireworks behavior. params: none
 - comet: bobbing comet at right edge with wave tail and occasional sparks. params: color1 (heart), color2 (shell), color3 (tail tip)
 - sun: static disc in center with spinning gradient arc around it. params: color1 (disc), color2 (arc head), color3 (arc mid), color4 (arc tail)
@@ -272,6 +273,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
               "clock", "matrix_rain",
               "dancefloor",
               "spiral", "starfield", "fireworks", "fireworks2", "fireworks3", "fireworks4", "comet", "sun",
+              "frostbite",
             ],
             description: "The animation type to start.",
           },
@@ -296,6 +298,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
           color4:      { type: "string",  description: "Quaternary color hex. Used by sun animation for ring tail color." },
           density:     { type: "number",  description: "Starfield star density 1-16. 4=sparse, 8=medium, 14=dense." },
           inward:      { type: "boolean", description: "Starfield direction: true = stars fall inward toward center, false = radiate outward from center." },
+          sparkle:     { type: "number",  description: "Frostbite sparkle intensity 0-100. 0=no sparkles, 20=gentle, 60=frequent diamond flashes. Default 20." },
           speed:       { type: "number",  description: "Animation speed 1-5. 1 = slow, 3 = normal, 5 = fast. Applies to all animations." },
         },
         required: ["type"],
