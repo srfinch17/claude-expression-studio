@@ -230,7 +230,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "matrix_set_animation",
       // Template literal (backtick string) lets us write a multi-line description.
-      // This description is long because it's Claude's rulebook for all 19 animation types.
+      // This description is long because it's Claude's rulebook for all animation types.
       description: `Start one of the built-in animations on the LED matrix. Available types:
 
 - fire: burning fire effect. params: palette (classic/blue/green/purple), intensity (1-10), tendrils (0-10), sparks (0-10)
@@ -252,9 +252,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 - starfield: stars radiate from center or fall inward toward center. params: color1 (birth color), color2 (death color), density (1-16, default 8), inward (bool, default false)
 - fireworks: single looping firework — white mortar launches from bottom, explodes in colorful radial burst. params: color1 (dominant burst color), color2, color3 (fade-out colors)
 - fireworks2: like fireworks but each tendril has a bright colored tip and a dimming white comet tail. Cross-bloom flash at burst. params: color1/2/3 (tip palette, same as fireworks)
-- fireworks3: stub — currently shows fireworks2 behavior. params: none
 - frostbite: shimmering pale mist backdrop with bright diamond sparkles. All pixels always lit. params: color (base hue, default #DCE6FF cool white), sparkle (0-100, default 20)
-- fireworks4: stub — currently shows fireworks behavior. params: none
 - comet: bobbing comet at right edge with wave tail and occasional sparks. params: color1 (heart), color2 (shell), color3 (tail tip)
 - sun: glowing disc with 4 colored dots orbiting around it. Dots are evenly spaced and each keeps its own color as they revolve. params: color1 (disc/sun color), color2 (orbit dot 1, lightest), color3 (orbit dot 2), color4 (orbit dot 3), color5 (orbit dot 4, darkest), discBri (0-100, sun disc brightness, default 78), ringBri (0-100, orbit dot brightness, default 78)
 
@@ -272,7 +270,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
               "timer_fill", "timer_snow", "timer_text",
               "clock", "matrix_rain",
               "dancefloor",
-              "spiral", "starfield", "fireworks", "fireworks2", "fireworks3", "fireworks4", "comet", "sun",
+              "spiral", "starfield", "fireworks", "fireworks2", "comet", "sun",
               "frostbite",
             ],
             description: "The animation type to start.",
