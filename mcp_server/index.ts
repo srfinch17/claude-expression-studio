@@ -256,7 +256,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 - frostbite: shimmering pale mist backdrop with bright diamond sparkles. All pixels always lit. params: color (base hue, default #DCE6FF cool white), sparkle (0-100, default 20)
 - fireworks4: stub — currently shows fireworks behavior. params: none
 - comet: bobbing comet at right edge with wave tail and occasional sparks. params: color1 (heart), color2 (shell), color3 (tail tip)
-- sun: static disc in center with spinning gradient arc around it. params: color1 (disc), color2 (arc head), color3 (arc mid), color4 (arc tail)
+- sun: glowing disc with 4 colored dots orbiting around it. Dots are evenly spaced and each keeps its own color as they revolve. params: color1 (disc/sun color), color2 (orbit dot 1, lightest), color3 (orbit dot 2), color4 (orbit dot 3), color5 (orbit dot 4, darkest), discBri (0-100, sun disc brightness, default 78), ringBri (0-100, orbit dot brightness, default 78)
 
 Scale guidance for 0-10 and 1-10 params: 2-3 = low, 5 = medium, 8-9 = high, 10 = max.
 Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
@@ -295,11 +295,14 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
           duration:    { type: "number",  description: "Timer duration in seconds." },
           timezone:    { type: "number",  description: "UTC offset in hours, e.g. -7 for Arizona (no DST)." },
           theme:       { type: "string",  description: "Matrix rain color theme: classic, blue, red, or purple." },
-          color4:      { type: "string",  description: "Quaternary color hex. Used by sun animation for ring tail color." },
+          color4:      { type: "string",  description: "Quaternary color hex. Used by sun animation for orbit dot 3." },
+          color5:      { type: "string",  description: "Quinary color hex. Used by sun animation for orbit dot 4 (darkest)." },
           density:     { type: "number",  description: "Starfield star density 1-16. 4=sparse, 8=medium, 14=dense." },
           inward:      { type: "boolean", description: "Starfield direction: true = stars fall inward toward center, false = radiate outward from center." },
           sparkle:     { type: "number",  description: "Frostbite sparkle intensity 0-100. 0=no sparkles, 20=gentle, 60=frequent diamond flashes. Default 20." },
           mist:        { type: "number",  description: "Frostbite background intensity 10-90. Controls how bright the shimmering mist layer is (10=very dim, 40=default, 90=bright). Sparkles are always at full brightness above the mist." },
+          discBri:     { type: "number",  description: "Sun disc brightness 0-100. Default 78." },
+          ringBri:     { type: "number",  description: "Sun orbit dot brightness 0-100. Default 78." },
           speed:       { type: "number",  description: "Animation speed 1-5. 1 = slow, 3 = normal, 5 = fast. Applies to all animations." },
         },
         required: ["type"],
