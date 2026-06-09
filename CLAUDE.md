@@ -119,7 +119,17 @@ GET  /api/sensors/{temperature,accelerometer,weather}
 POST /api/display/clear
 POST /api/brightness        { level: 0-255 }
 POST /api/display/text      { text, color, color2, gradient, small, tiny, scroll_speed }
-POST /api/display/animation { type, ...mode-specific }
+POST /api/display/animation { type, ...mode-specific }   # clock/calendar accept tz (POSIX TZ, DST) or timezone (int offset)
 POST /api/display/matrix    { matrix: [[8×8 hex]] }
 POST /api/weather/mode      { mode: temp|humidity|uv|pressure|cycle }
 ```
+
+## Auto-resume (NVS)
+
+The board persists its **last animation** + **brightness** to NVS (`Preferences`,
+namespace `matrix`) and restores them on boot — so it powers back up into
+whatever it was showing. `handleAnimation` is split into `applyAnimationBody(body)`
+(shared by the HTTP handler and the boot-time restore in `setup()`). Clearing the
+display (`/api/display/clear`) makes it boot blank. Text/sketch are transient
+(not auto-resumed). If you're puzzled why the board "starts showing something" on
+power-up — that's this.
