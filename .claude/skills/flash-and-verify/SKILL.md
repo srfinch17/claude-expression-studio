@@ -57,6 +57,12 @@ connected). Then read Serial (115200; needs USB CDC On Boot: Enabled):
 - `[heap] free=` trending toward ~14KB then an auto-restart → low heap. Confirm
   **PSRAM is Enabled** in Tools (this board has 2MB; Disabled starves the heap and
   destabilizes WiFi/web-server under load).
+- `WiFi DISCONNECTED reason=15` (4WAY_HANDSHAKE_TIMEOUT) looping, with strong
+  RSSI + correct password → the AP is refusing the key exchange with THIS device
+  (mesh auto-blocklist / quarantined MAC / sick mesh node). **Decisive test:
+  phone hotspot via secrets.h** — connects → network side (power-cycle the mesh,
+  check its blocked-device list); fails → board side. The firmware's boot scan
+  prints every network's RSSI + auth mode to rule out weak signal / WPA3 first.
 - `.local` fails but the raw IP works → it's mDNS, not WiFi. Use the IP.
 
 Full history of these in `docs/PITFALLS.md` (WiFi-drop + credential-loss entries).

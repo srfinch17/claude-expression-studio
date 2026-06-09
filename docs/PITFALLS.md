@@ -87,6 +87,29 @@ watchdog keep retrying the saved network FOREVER. Portal only for an unconfigure
 board or a held BOOT. **Also: the ESP32 is 2.4GHz-only** — a connect that keeps
 failing is often a 5GHz-only SSID or a wrong password, not code.
 
+## 2026-06-09 — WiFi saga FINAL RESOLUTION: the mesh refused the 4-way handshake
+**Symptom:** Board associates with the home network (strong signal, plain WPA2,
+correct password — even hardcoded via secrets.h) but loops forever on
+`reason=15 4WAY_HANDSHAKE_TIMEOUT`. Nothing on the router was (manually) changed.
+**Diagnosis path that cracked it:** pre-connect scan diagnostics (RSSI/auth per
+network) ruled out weak signal and WPA3-transition; PSRAM-off ruled out PSRAM;
+secrets.h ruled out the portal; then the **phone-hotspot test** — board connected
+instantly → board/core/firmware all healthy → **the home mesh itself was refusing
+the key exchange for this device** (auto client-security blocklist of the board's
+MAC after the crash-loop / rapid-reconnect debugging era, or a mesh node in a bad
+state). Board MAC: `f0:f5:bd:75:29:3c`.
+**Fix / rules:**
+- **The phone-hotspot test is THE decisive board-vs-network splitter.** Put the
+  hotspot creds in `secrets.h`, flash, watch. Connects → network side; fails →
+  board side. Use it early, not after days of theorizing.
+- Recovery on the network side: power-cycle all mesh nodes; check the mesh app's
+  blocked/quarantined device list for the board's MAC.
+- **Keep reconnect logic GENTLE** (watchdog backstop ≥30s; the driver's own
+  autoReconnect handles fast retry). Rapid forced auth cycling is what trips
+  mesh security heuristics in the first place.
+- reason=15 with strong signal + right password ≈ "the AP won't complete the key
+  exchange with YOU" — think blocklist/quarantine/sick node, not credentials.
+
 ## Standing gotchas (board-level, always true)
 
 ### Color order is RGB, not GRB
