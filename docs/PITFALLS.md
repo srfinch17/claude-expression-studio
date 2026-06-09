@@ -64,6 +64,10 @@ loop() watchdog that calls `WiFi.reconnect()` if `WiFi.status() != WL_CONNECTED`
 Log the disconnect reason via `WiFi.onEvent(...STA_DISCONNECTED)` to see WHY.
 Never buffer large HTTP bodies — stream-parse with an ArduinoJson filter. Keep
 blocking network calls out of request handlers and `setup()`.
+**✅ CONFIRMED FIXED on hardware (2026-06-09):** after flashing this self-heal
+firmware + a LittleFS upload, the web interface came back and stayed reachable.
+The self-heal (`setAutoReconnect` + `setSleep(false)` + the loop reconnect
+watchdog) is what recovered it.
 
 ## Standing gotchas (board-level, always true)
 
