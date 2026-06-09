@@ -85,9 +85,11 @@ Actively annoying, and self-contained (firmware physics + color). Three parts:
    palette pickers, clock-style) to show frothiness. Full per-page color
    selector can come later; for now the 4 presets + gradient.
 
-### Phase 3 — Static-image apps (share the most) 🔵
-- **Sketch app** first — simplest consumer of **S3**; validates the paint grid +
-  matrix-push end to end. Paint on a web 8×8 canvas → push to board.
+### Phase 3 — Static-image apps (share the most) 🟠 in progress
+- **Sketch app** 🟠 built — pending hardware test. `data/sketch.html`: 8×8 paint
+  grid (mouse+touch), swatches, eraser, ledsim board preview, POSTs
+  `/api/display/matrix`. Reuses bright.js + ledsim.js. Spec:
+  `docs/superpowers/specs/2026-06-09-sketch-app-design.md`.
 - **Emoji app** next — = sketch + **S3 quantizer** + emoji image import. The
   color problem is a **downscale + palette-reduction** problem: too many source
   colors don't survive shrinking to 8×8, so we deliberately quantize (reduce to
