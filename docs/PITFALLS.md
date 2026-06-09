@@ -49,6 +49,22 @@ so visible everywhere). In a new `anim_*.ino`, only rely on cross-tab *functions
 not on another tab's macros/vars. (e.g. anim_calendar hardcodes the 4px font
 stride instead of using `FONT_CHAR_W`.)
 
+## 2026-06-09 — WiFi drops and never recovers (no reconnect path)
+**Symptom:** Board loses WiFi during use (often around the weather app) and stays
+offline even after a power-cycle, while the animation keeps running.
+**Cause(s):** (1) The firmware connected once at boot via WiFiManager `autoConnect`
+and had NO reconnect logic — any disconnect (router kick, RSSI dip, modem
+power-save) left it permanently offline. (2) Auto-resume made it sticky by
+replaying the last (weather) command on every boot. (3) `fetchWeather()` buffered
+the whole ~50KB wttr.in body with `http.getString()` — heavy on the
+PSRAM-disabled board, a likely trigger.
+**Fix / rule:** Always run a WiFi self-heal: `WiFi.setAutoReconnect(true)`,
+`WiFi.setSleep(false)` (modem power-save is a common silent-drop cause), and a
+loop() watchdog that calls `WiFi.reconnect()` if `WiFi.status() != WL_CONNECTED`.
+Log the disconnect reason via `WiFi.onEvent(...STA_DISCONNECTED)` to see WHY.
+Never buffer large HTTP bodies — stream-parse with an ArduinoJson filter. Keep
+blocking network calls out of request handlers and `setup()`.
+
 ## Standing gotchas (board-level, always true)
 
 ### Color order is RGB, not GRB
