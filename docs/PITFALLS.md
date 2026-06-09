@@ -28,6 +28,13 @@ then **Ctrl+Shift+P → "Upload LittleFS to Pico/ESP8266/ESP32"**. The command
 lives ONLY in the Command Palette, never the Tools menu. **Close the Serial
 Monitor first** or the upload fails on a busy port. Needs IDE ≥ 2.2.1.
 
+## 2026-06-08 — Liquid IMU axis mapping (calibration result)
+The liquid 2D model maps board accel to in-plane gravity. Calibrated on hardware:
+`gxRaw = -ay` (matrix +x / right), `gyRaw = ax` (matrix +y / down). Tip the board
+right (clockwise) → fluid pools right. If a future board mounts the IMU
+differently and left/right or up/down reads reversed, negate the corresponding
+axis in `stepLiquidFrame()` (`anim_liquid.ino`).
+
 ## Standing gotchas (board-level, always true)
 
 ### Color order is RGB, not GRB
