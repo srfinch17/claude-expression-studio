@@ -64,10 +64,19 @@ loop() watchdog that calls `WiFi.reconnect()` if `WiFi.status() != WL_CONNECTED`
 Log the disconnect reason via `WiFi.onEvent(...STA_DISCONNECTED)` to see WHY.
 Never buffer large HTTP bodies — stream-parse with an ArduinoJson filter. Keep
 blocking network calls out of request handlers and `setup()`.
-**✅ CONFIRMED FIXED on hardware (2026-06-09):** after flashing this self-heal
-firmware + a LittleFS upload, the web interface came back and stayed reachable.
-The self-heal (`setAutoReconnect` + `setSleep(false)` + the loop reconnect
-watchdog) is what recovered it.
+**✅ Self-heal CONFIRMED working (2026-06-09):** after flashing, the web interface
+came back. (`setAutoReconnect` + `setSleep(false)` + loop reconnect watchdog.)
+
+**…but then a SECOND, separate WiFi cause showed up — lost credentials.**
+Serial showed `*wm:No wifi saved, skipping` → the stored WiFi creds were gone, so
+WiFiManager opened the setup portal. Two contributors, both now mitigated:
+- **BOOT-button wipe too eager.** `setup()` wipes creds if GPIO0 reads LOW at
+  boot; a glitchy strapping read after a USB flash/reset (or a stray BOOT bump
+  while troubleshooting) could nuke them. Fix: require BOOT held **~1s** before wiping.
+- **NVS churn from auto-resume.** Frequent `prefs.put*` (every animation/brightness
+  change) churns the NVS partition that ALSO holds WiFi creds. Fix: **debounce** —
+  handlers set a dirty flag, loop() flushes to NVS once changes settle (~8s).
+Recovery when it happens: join `ESP32-Matrix-Setup` → 192.168.4.1 → re-enter WiFi.
 
 ## Standing gotchas (board-level, always true)
 
