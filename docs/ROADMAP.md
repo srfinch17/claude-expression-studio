@@ -1,0 +1,114 @@
+# Roadmap — ESP32-S3 Matrix
+
+Living backlog. Each item is a one-liner until we start it, then it graduates
+into a full spec in `docs/superpowers/specs/`. **Specs are written
+just-in-time** (one per feature, when we begin) — not all up front — to save
+tokens and avoid designing things we'll redesign anyway.
+
+Status: 🔵 planned · 🟡 spec'd · 🟠 in progress · ✅ done
+
+---
+
+## The big idea: build shared pieces ONCE
+
+Several requested features are the same machinery wearing different hats. The
+order below is chosen so we build each shared component once, then every later
+feature just consumes it. Three reusable pieces carry most of the work:
+
+### S1 · Brightness widget (per-app brightness control) 🟡 spec'd
+Spec: `docs/superpowers/specs/2026-06-08-per-app-brightness-design.md`.
+A small reusable HTML/JS snippet that hits the existing `POST /api/brightness`.
+You want it on **every** app page. Build it once as an include and drop it into
+each page — and into every *new* page from the start, so we never retrofit.
+**Consumed by:** all pages. **Firmware:** already done (`/api/brightness` exists).
+
+### S2 · Palette + color-picker component
+The clock/animations pages already have a 64-swatch palette + color pickers
+(DF_PAL). Extract it into a shared include. **Consumed by:** liquid gradient
+mode, sketch app, emoji, and any future "pick colors" UI. Don't re-hand-roll
+pickers per page.
+
+### S3 · 8×8 canvas + matrix-push pipeline
+`POST /api/display/matrix` (8×8 hex) already exists on the firmware. A shared JS
+"8×8 grid renderer / paint surface" + the POST wrapper means **sketch and emoji
+are mostly front-end work** — the board already knows how to display a static
+frame. **Consumed by:** sketch (paint→push), emoji (downscale→push), any
+"show this image" feature. The image **downscale + color-quantize** routine
+(the emoji problem) lives here too and is reused anywhere we shrink an image to
+8×8.
+
+> Net effect: once S1–S3 exist, **sketch ≈ S3 paint grid + S1**, and
+> **emoji ≈ sketch + the quantizer + image import**. We build the hard part once.
+
+---
+
+## Recommended order
+
+### Phase 0 — Tooling (now) ✅/🟠
+- ✅ Project `CLAUDE.md`, `docs/PITFALLS.md`, dev-loop memory
+- 🟠 `add-animation` + `flash-and-verify` skills
+- 🔵 Targeted code review of the **liquid module** when we open Phase 2 (find the
+  color bug at its root) — prefer per-module reviews as we touch code over one
+  whole-repo review (cheaper, more relevant).
+
+### Phase 1 — Shared UI components 🔵
+Build **S1 (brightness widget)** first and retrofit existing pages, then **S2**
+and **S3** scaffolding. Everything downstream assumes these exist.
+
+### Phase 2 — Liquid/fluid fixes 🔵
+Actively annoying, and self-contained (firmware physics + color). Three parts:
+1. **Color bug** — the 4 color selectors don't work / colors wrong. Root-cause
+   first (suspect palette→CRGB mapping or an assumption fighting the RGB order;
+   see PITFALLS). Get the 4 fixed selectors working correctly.
+2. **Physics** — currently sloshes only to ~45° then stops. Should behave like a
+   **closed container**: tip past 45° and the fluid spills onto the next edge in
+   the rotation (gravity vector follows full 360° tilt, not clamped to one axis).
+3. **Gradient mode** — top layer vs bottom layer different colors (uses **S2**
+   palette pickers, clock-style) to show frothiness. Full per-page color
+   selector can come later; for now the 4 presets + gradient.
+
+### Phase 3 — Static-image apps (share the most) 🔵
+- **Sketch app** first — simplest consumer of **S3**; validates the paint grid +
+  matrix-push end to end. Paint on a web 8×8 canvas → push to board.
+- **Emoji app** next — = sketch + **S3 quantizer** + emoji image import. The
+  color problem is a **downscale + palette-reduction** problem: too many source
+  colors don't survive shrinking to 8×8, so we deliberately quantize (reduce to
+  a small palette, e.g. nearest-color or k-means to ~8–16 colors) before display.
+  Doing sketch first makes emoji incremental, not a rebuild.
+
+### Phase 4 — Calendar app 🔵
+More self-contained (date/NTP logic + rendering — reuses the clock's NTP). Lower
+shared-code overlap; reuses **S1/S2**. Slots in flexibly mid-stream.
+
+### Phase 5 — Sound/vibration visualizer (experimental, last) 🔵
+See feasibility note below. Riskiest, shares the least — do it once the
+foundations are proven. Reuses the IMU driver (in `anim_liquid.ino`) and **S2**.
+
+---
+
+## Feature notes
+
+### Sound visualizer — feasibility (you asked for input)
+**Honest verdict: a beat/vibration-energy visualizer is plausible; a real
+frequency-band equalizer is not, with this sensor.**
+- Audio is 20 Hz–20 kHz. The accelerometer's usable sample rate here is the
+  animation poll rate (~tens of Hz). Nyquist: polling at ~60 Hz lets you resolve
+  vibration only up to ~30 Hz — nowhere near a music spectrum. **No FFT EQ.**
+- It *can* feel **low-frequency structural vibration**: rest the board on/near a
+  speaker or resonant surface and bass/kick will physically shake it. So a
+  **"lights pulse/spread to the bass"** mode (track accel-magnitude variance over
+  a short window → map to brightness/spread/color) is realistic and fun.
+- If you ever want a true spectrum EQ, that needs a real mic — a ~$1 I2S MEMS mic
+  (e.g. INMP441) wired to spare GPIO. That's a hardware add, not software.
+- **Recommendation:** ship it as a *beat/energy* mode with honest framing; leave
+  the door open for an I2S mic upgrade later.
+
+### Per-app brightness
+Every app page gets the **S1** widget. No firmware change — `/api/brightness`
+already exists. This is the cheapest high-value win; do it in Phase 1.
+
+---
+
+## Parking lot (not yet sequenced)
+- Full per-page color selector for liquid (beyond the 4 presets + gradient)
+- I2S microphone hardware mod for true audio spectrum
