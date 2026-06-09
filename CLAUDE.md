@@ -36,7 +36,7 @@ reason about correctness, but "compiles in my head" ≠ "runs on the board."
 | `LED_TYPE` | `WS2812B` |
 | **`COLOR_ORDER`** | **`RGB`** ⚠️ not the usual GRB — `CRGB(r,g,b)` maps straight through |
 | IMU | QMI8658C 6-axis, I2C **SDA=11 SCL=12**, addr **0x6B** |
-| Flash | 8MB, LittleFS partition for web UI |
+| Flash / PSRAM | **4MB** embedded flash + 2MB PSRAM (verified from esptool). LittleFS lives in the 1MB SPIFFS region of the `huge_app` partition. |
 | Default brightness | 40 / 255 (LEDs are bright + draw real current at full) |
 
 ### Coordinate system
@@ -62,8 +62,10 @@ Library Manager is unrelated — it adds no upload command. See `docs/PITFALLS.m
 - Board: `ESP32S3 Dev Module`
 - USB Mode: `Hardware CDC and JTAG` · USB CDC On Boot: `Enabled`
 - Upload Speed: `921600`
-- Flash Size: `8MB (64Mb)`
-- Partition Scheme: `8MB with spiffs (3MB APP, 5MB SPIFFS)`
+- Flash Size: `4MB (32Mb)` (this board is 4MB — verified via esptool)
+- Partition Scheme: `Huge APP (3MB No OTA / 1MB SPIFFS)` — LittleFS data folder is
+  small (~hundreds of KB) so it fits the 1MB region. Watch this if the data
+  folder ever grows (emoji/sketch image assets).
 
 ---
 
