@@ -90,11 +90,11 @@ Actively annoying, and self-contained (firmware physics + color). Three parts:
   grid (mouse+touch), swatches, eraser, ledsim board preview, POSTs
   `/api/display/matrix`. Reuses bright.js + ledsim.js. Spec:
   `docs/superpowers/specs/2026-06-09-sketch-app-design.md`.
-- **Emoji app** next — = sketch + **S3 quantizer** + emoji image import. The
-  color problem is a **downscale + palette-reduction** problem: too many source
-  colors don't survive shrinking to 8×8, so we deliberately quantize (reduce to
-  a small palette, e.g. nearest-color or k-means to ~8–16 colors) before display.
-  Doing sketch first makes emoji incremental, not a rebuild.
+- **Emoji app** 🟠 built — pending hardware test. Added a **vibrance/saturation
+  punch** (HSV) + a Vibrance slider to `emoji.html`: averaging to 8×8 desaturates
+  colors into gray soup, so we push saturation (and lift dim cells) toward bold,
+  fewer hues that read at 8×8 — exactly the "degrade quality so it shrinks
+  better" the user asked for. Reuses the existing downscale + normalize pipeline.
 
 ### Phase 4 — Calendar app 🔵
 More self-contained (date/NTP logic + rendering — reuses the clock's NTP). Lower
