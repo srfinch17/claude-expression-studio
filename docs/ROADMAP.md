@@ -69,7 +69,11 @@ quantizer** must clamp colors above — so S4 and the emoji work share the model
 Build **S1 (brightness widget)** first and retrofit existing pages, then **S2**
 and **S3** scaffolding. Everything downstream assumes these exist.
 
-### Phase 2 — Liquid/fluid fixes 🔵
+### Phase 2 — Liquid/fluid fixes 🟠 built — pending hardware test + IMU calibration
+Spec: `docs/superpowers/specs/2026-06-08-liquid-fixes-design.md`. Color bug fixed
+(reuses fire's `activePalette`), physics reworked to a 2D gravity-projection
+closed container, custom top/bottom gradient added. **First flash is an IMU
+axis-calibration pass** — see the spec's "VERIFY ON HARDWARE" mapping block.
 Actively annoying, and self-contained (firmware physics + color). Three parts:
 1. **Color bug** — the 4 color selectors don't work / colors wrong. Root-cause
    first (suspect palette→CRGB mapping or an assumption fighting the RGB order;
