@@ -15,8 +15,11 @@ Several requested features are the same machinery wearing different hats. The
 order below is chosen so we build each shared component once, then every later
 feature just consumes it. Three reusable pieces carry most of the work:
 
-### S1 · Brightness widget (per-app brightness control) 🟡 spec'd
+### S1 · Brightness widget (per-app brightness control) 🟠 built — pending hardware test
 Spec: `docs/superpowers/specs/2026-06-08-per-app-brightness-design.md`.
+Shipped as `data/bright.js` (auto-mount or explicit). On index.html + 9 pages
+that lacked brightness; the 4 preview-coupled pages (animations/matrix_rain/
+emoji/grid_test) intentionally keep their bespoke controls.
 A small reusable HTML/JS snippet that hits the existing `POST /api/brightness`.
 You want it on **every** app page. Build it once as an include and drop it into
 each page — and into every *new* page from the start, so we never retrofit.

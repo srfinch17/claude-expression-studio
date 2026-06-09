@@ -97,28 +97,40 @@ MatrixBright.mount('#brightnessSlot', {
 
 ---
 
-## Page integration (per page)
+## Page integration — two mechanisms
 
-Each app page gets a one-time edit:
-1. Add a container where the control should appear:
-   `<div id="brightnessSlot"></div>`
-2. Before `</body>`: `<script src="bright.js"></script>` then
-   `MatrixBright.mount('#brightnessSlot', { onStatus });`
-3. Remove any page-local brightness slider/handler (notably animations.html's
-   `sun_brightness` block).
+The widget self-styles and carries its own status line, so a page needs no
+markup of its own. Two ways to add it:
 
-### Pages to retrofit
-All control pages: `animations.html`, `clock.html`, `emoji.html`, `fire.html`,
-`imu.html`, `liquid.html`, `matrix_rain.html`, `temp.html`, `text.html`,
-`timer.html`, `weather.html`, `weather2.html`, `grid_test.html`.
+- **Auto-mount (drop-in):** `<script src="bright.js" data-auto></script>`.
+  On load it inserts itself right under the page's `<h1>`/`.subtitle` (or atop
+  the main container if there's no heading). One line, no other edits. Used for
+  every page that has no brightness control today.
+- **Explicit:** `<div id="brightnessSlot"></div>` + `<script src="bright.js">`
+  + `MatrixBright.mount('#brightnessSlot', { onStatus: setStatus })`. Used where
+  we want a specific location and to wire the page's own status line.
 
-### index.html
-Replace its inline brightness block with `MatrixBright.mount(...)` too, so there
-is genuinely one implementation. Its existing markup becomes the widget's
-template, so the main page looks unchanged.
+### What actually got the widget (scope as built)
+- **Explicit:** `index.html` — its rich inline brightness block (slider + heat
+  track + lock) was replaced by the widget; that markup became the widget's
+  template, so it looks unchanged and is now the single source of truth.
+- **Auto-mount (9 pages with no prior brightness control):** `clock`, `fire`,
+  `imu`, `liquid`, `temp`, `text`, `timer`, `weather`, `weather2`.
 
-> Placement convention: put the slot near the top of each page's controls (above
-> mode-specific options) so it's consistently reachable.
+### Deliberately NOT touched — specialized brightness pages
+`animations.html`, `matrix_rain.html`, `emoji.html`, `grid_test.html` keep their
+**bespoke** brightness sliders. On these, brightness is not a generic control —
+it is wired into the live preview canvas (dims it via the exact FastLED
+`nscale8x3` formula), drives emoji's "minimum visible channel" hints, and is the
+entire purpose of `grid_test` (a calibration tool that intentionally starts at
+255). The generic widget would break that coupling. They already give you
+in-page brightness, so the "don't make me go back to the main page" goal is met.
+
+> **Follow-up (parked):** these specialized pages persist under their own
+> localStorage keys (`emoji_brightness`, `gridtest_brightness`; `matrix_rain`
+> already uses the shared `matrix_brightness`). So the global value isn't fully
+> consistent with emoji/grid_test. Unifying keys needs care (grid_test's 255
+> calibration default), so it's deferred — not part of S1.
 
 ---
 
@@ -128,10 +140,10 @@ template, so the main page looks unchanged.
 - `data/bright.js` — the shared widget (logic + injected styles)
 
 **Modified (web only)**
-- `data/index.html` — swap inline brightness for the widget
-- All 13 app pages listed above — add slot + script, remove ad-hoc brightness
-- `docs/PITFALLS.md` — note the shared-include pattern if anything bites
-- `README.md` — mention per-page brightness (optional)
+- `data/index.html` — inline brightness replaced by `MatrixBright.mount(...)`
+- `data/{clock,fire,imu,liquid,temp,text,timer,weather,weather2}.html` — added
+  the one-line `data-auto` script tag (9 pages)
+- *(unchanged: animations, matrix_rain, emoji, grid_test — see scope note above)*
 
 **Firmware:** none.
 
