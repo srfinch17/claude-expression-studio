@@ -62,13 +62,23 @@ previewColor(hex, bri):
 (`matrix_rain`, the animation previews) currently render at **full brightness**
 and do not reflect the real dimmed look — see the proposed shared module below.
 
-## Proposed shared module — `ledsim.js` (roadmap)
+## Shared module — `ledsim.js` (shipped, S4)
 
-Extract the math above into one include (companion to `bright.js`) exposing
-`effective()`, `minVisibleChannel()`, and `previewColor()`, and have it subscribe
-to brightness changes so every preview canvas re-renders at the true appearance.
-Build once, reuse on emoji, sketch, animations, and any future preview. Tracked
-in `docs/ROADMAP.md`.
+The math above is now a single include (companion to `bright.js`): global
+`LedSim` exposes `effective()`, `minVisibleChannel()`, `displayGamma()`,
+`previewColor(color, bri)`, `bri()`, and `onChange(cb)`. `bright.js` fires a
+`matrixbrightness` window event on every change so `LedSim.onChange()` previews
+update live with the slider.
+
+**Accurate-dim preview is opt-in, not global.** Animation previews
+(fire, matrix_rain, sun, …) were deliberately set to render at *full* brightness
+because dim previews looked too dark — do **not** retrofit them. Use `LedSim`
+where color fidelity matters (emoji, sketch, calibration) or as an inspector
+(show `minVisibleChannel(bri)`). Spec:
+`docs/superpowers/specs/2026-06-08-ledsim-preview-design.md`.
+
+Usage: `LedSim.onChange(render)` then inside `render` use
+`LedSim.previewColor(hex, LedSim.bri())`.
 
 ## Empirical observations (TO FILL IN)
 
