@@ -59,8 +59,10 @@ NOT the Tools menu; close the Serial Monitor first). The LittleFS *library* in
 Library Manager is unrelated — it adds no upload command. See `docs/PITFALLS.md`.
 
 **Board settings (Tools menu):**
-- Board: `ESP32S3 Dev Module`
-- USB Mode: `Hardware CDC and JTAG` · USB CDC On Boot: `Enabled`
+- Board: `Waveshare ESP32-S3-Matrix` (or `ESP32S3 Dev Module`)
+- **PSRAM: `Enabled`** — the board has 2MB. Leaving it Disabled starves the heap
+  (~300KB SRAM only) and caused WiFi / web-server instability under load. Keep ON.
+- USB Mode: `Hardware CDC and JTAG` · USB CDC On Boot: `Enabled` (needed for the Serial Monitor over USB)
 - Upload Speed: `921600`
 - Flash Size: `4MB (32Mb)` (this board is 4MB — verified via esptool)
 - Partition Scheme: `Huge APP (3MB No OTA / 1MB SPIFFS)` — LittleFS data folder is

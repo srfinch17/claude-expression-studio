@@ -42,3 +42,21 @@ Upload speed 921600. (Board is 4MB — verified via esptool.)
 ## 5. Close the loop
 Only call a change "working" after the user confirms the observed behavior. If a
 non-obvious problem cost time, append a dated entry to `docs/PITFALLS.md`.
+
+## 6. Board offline / can't reach it (connectivity triage)
+**Get the serial log FIRST — don't theorize before reading it.** The boot LED
+color signals WiFi state (blue = connecting, amber = setup portal, green flash =
+connected). Then read Serial (115200; needs USB CDC On Boot: Enabled):
+- `*wm:No wifi saved` → **credentials were wiped** → board opens the portal.
+  Recover: join `ESP32-Matrix-Setup` → `192.168.4.1` → re-enter WiFi. (Causes,
+  both hardened: BOOT held at boot wipes creds — now needs a ~1s hold; heavy NVS
+  writes churn the partition that holds creds — auto-resume writes are debounced.)
+- `WiFi DISCONNECTED reason=NN` → connected then dropped. 200/201 = signal/range;
+  2/15 = auth; 8/4 = router kicked it. Self-heal (`setAutoReconnect` +
+  `setSleep(false)` + loop reconnect watchdog) should restore it within ~5s.
+- `[heap] free=` trending toward ~14KB then an auto-restart → low heap. Confirm
+  **PSRAM is Enabled** in Tools (this board has 2MB; Disabled starves the heap and
+  destabilizes WiFi/web-server under load).
+- `.local` fails but the raw IP works → it's mDNS, not WiFi. Use the IP.
+
+Full history of these in `docs/PITFALLS.md` (WiFi-drop + credential-loss entries).
