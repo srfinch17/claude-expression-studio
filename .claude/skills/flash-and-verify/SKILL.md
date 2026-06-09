@@ -19,8 +19,9 @@ what comes back. (See the `esp32-dev-loop` memory.)
 
 ## 2. Pre-flight (only if uploads are failing)
 Confirm board settings (Tools menu) match `CLAUDE.md`:
-ESP32S3 Dev Module · USB CDC On Boot **Enabled** · Flash **8MB (64Mb)** ·
-Partition **8MB with spiffs (3MB APP, 5MB SPIFFS)** · Upload speed 921600.
+ESP32S3 Dev Module (or "Waveshare ESP32-S3-Matrix") · USB CDC On Boot **Enabled** ·
+Flash **4MB (32Mb)** · Partition **Huge APP (3MB No OTA / 1MB SPIFFS)** ·
+Upload speed 921600. (Board is 4MB — verified via esptool.)
 
 ## 3. Common errors → fix
 | Symptom | Likely cause | Fix |
