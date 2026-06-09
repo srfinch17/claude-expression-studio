@@ -25,11 +25,14 @@ You want it on **every** app page. Build it once as an include and drop it into
 each page — and into every *new* page from the start, so we never retrofit.
 **Consumed by:** all pages. **Firmware:** already done (`/api/brightness` exists).
 
-### S2 · Palette + color-picker component
-The clock/animations pages already have a 64-swatch palette + color pickers
-(DF_PAL). Extract it into a shared include. **Consumed by:** liquid gradient
-mode, sketch app, emoji, and any future "pick colors" UI. Don't re-hand-roll
-pickers per page.
+### S2 · Palette + color-picker component 🟢 built
+Shipped as `data/palette.js` (global `Palette`): `Palette.mount(el, {count, labels,
+defaults, presets, onChange})` renders preset swatch chips + N labeled color
+pickers, unified look, self-styled. Spec:
+`docs/superpowers/specs/2026-06-09-palette-component-design.md`. First consumer:
+the Calendar app. **Retrofit later (parked):** clock, liquid, animations still
+hand-roll their pickers — migrate them to `Palette` for a uniform look when next
+touched.
 
 ### S3 · 8×8 canvas + matrix-push pipeline
 `POST /api/display/matrix` (8×8 hex) already exists on the firmware. A shared JS
