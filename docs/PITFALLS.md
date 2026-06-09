@@ -35,6 +35,20 @@ right (clockwise) → fluid pools right. If a future board mounts the IMU
 differently and left/right or up/down reads reversed, negate the corresponding
 axis in `stepLiquidFrame()` (`anim_liquid.ino`).
 
+## 2026-06-09 — Arduino multi-.ino concatenation order
+**Symptom:** A new `anim_X.ino` that uses a `#define` (or file-scope variable)
+from another tab fails to compile, even though calling that tab's *functions* works.
+**Cause:** The Arduino build concatenates the main sketch (`esp32_matrix_webserver.ino`)
+FIRST, then the other `.ino` files **alphabetically**. Function *prototypes* are
+auto-generated so functions are callable across tabs in any order — but `#define`
+macros and file-scope variables are only visible to files concatenated *after*
+them. So `anim_calendar.ino` cannot see `FONT_CHAR_W` (defined in `fonts.ino`,
+which sorts later).
+**Fix / rule:** Put shared constants/globals in the **main sketch** (it's first,
+so visible everywhere). In a new `anim_*.ino`, only rely on cross-tab *functions*,
+not on another tab's macros/vars. (e.g. anim_calendar hardcodes the 4px font
+stride instead of using `FONT_CHAR_W`.)
+
 ## Standing gotchas (board-level, always true)
 
 ### Color order is RGB, not GRB
