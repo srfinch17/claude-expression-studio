@@ -78,6 +78,15 @@ WiFiManager opened the setup portal. Two contributors, both now mitigated:
   handlers set a dirty flag, loop() flushes to NVS once changes settle (~8s).
 Recovery when it happens: join `ESP32-Matrix-Setup` → 192.168.4.1 → re-enter WiFi.
 
+**…and a THIRD: `autoConnect()` drops into the portal on a transient failure.**
+`wm.autoConnect()` tries saved creds for `setConnectTimeout` (10s) then opens the
+BLOCKING config portal if it fails — wrong for an appliance (a slow/marginal
+connect strands it in the portal). Fix: if `wm.getWiFiIsSaved()`, use plain
+`WiFi.begin()` + a 25s wait, then proceed and let `setAutoReconnect` + the loop
+watchdog keep retrying the saved network FOREVER. Portal only for an unconfigured
+board or a held BOOT. **Also: the ESP32 is 2.4GHz-only** — a connect that keeps
+failing is often a 5GHz-only SSID or a wrong password, not code.
+
 ## Standing gotchas (board-level, always true)
 
 ### Color order is RGB, not GRB
