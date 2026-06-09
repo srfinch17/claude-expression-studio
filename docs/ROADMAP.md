@@ -29,10 +29,16 @@ each page — and into every *new* page from the start, so we never retrofit.
 Shipped as `data/palette.js` (global `Palette`): `Palette.mount(el, {count, labels,
 defaults, presets, onChange})` renders preset swatch chips + N labeled color
 pickers, unified look, self-styled. Spec:
-`docs/superpowers/specs/2026-06-09-palette-component-design.md`. First consumer:
-the Calendar app. **Retrofit later (parked):** clock, liquid, animations still
-hand-roll their pickers — migrate them to `Palette` for a uniform look when next
-touched.
+`docs/superpowers/specs/2026-06-09-palette-component-design.md`. Consumers:
+Calendar, Sound, **clock** (migrated — 3-color), and **liquid** custom gradient
+(migrated — 2-color).
+
+**`animations.html` migration DEFERRED (deliberate, 2026-06-09).** Its 12 effects
+wire bespoke pickers into `buildPayload` by element ID, and dancefloor/rainbow use
+the 64-preset DF_PAL (not an N-color-picker pattern S2 models). A full rewrite of
+that 1100-line file — with no compiler/hardware test loop — is high regression
+risk for low benefit (cross-page uniformity is already achieved by the standalone
+clock/liquid pages). Revisit only if animations.html is being reworked anyway.
 
 ### S3 · 8×8 canvas + matrix-push pipeline
 `POST /api/display/matrix` (8×8 hex) already exists on the firmware. A shared JS
