@@ -79,44 +79,87 @@ async function post(path: string, body: object = {}) {
 // 8×8 pixel block — alpha-composited against black so transparent edges
 // don't wash out the colors.
 // ------------------------------------------------------------
+// These mirror data/emoji.html so the MCP tool produces the same 8×8 the web
+// preview shows (192px render + inverse-luminance downsample + normalize + vibrance).
+function parseHex(hex: string): [number, number, number] {
+  return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+}
+function toHex(r: number, g: number, b: number): string {
+  return "#" + [r, g, b].map(v => Math.min(255, Math.round(v)).toString(16).padStart(2, "0")).join("");
+}
+function rgb2hsv(r: number, g: number, b: number): [number, number, number] {
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  let h = 0;
+  if (d) { if (mx === r) h = ((g - b) / d) % 6; else if (mx === g) h = (b - r) / d + 2; else h = (r - g) / d + 4; h *= 60; if (h < 0) h += 360; }
+  return [h, mx === 0 ? 0 : d / mx, mx];
+}
+function hsv2rgb(h: number, s: number, v: number): [number, number, number] {
+  const c = v * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = v - c;
+  let r = 0, g = 0, b = 0;
+  if (h < 60) { r = c; g = x; } else if (h < 120) { r = x; g = c; } else if (h < 180) { g = c; b = x; }
+  else if (h < 240) { g = x; b = c; } else if (h < 300) { r = x; b = c; } else { r = c; b = x; }
+  return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
+}
+function punch(matrix: string[][], amount: number): string[][] {
+  const k = amount / 100;
+  return matrix.map(row => row.map(hex => {
+    const [r, g, b] = parseHex(hex);
+    if (r === 0 && g === 0 && b === 0) return "#000000";
+    let [h, s, v] = rgb2hsv(r, g, b);
+    s = Math.min(1, s + (1 - s) * k);
+    v = Math.min(1, v + (1 - v) * k * 0.45);
+    const [nr, ng, nb] = hsv2rgb(h, s, v);
+    return toHex(nr, ng, nb);
+  }));
+}
+function normalize(matrix: string[][]): string[][] {
+  let maxCh = 0;
+  for (const row of matrix) for (const hex of row) { const [r, g, b] = parseHex(hex); maxCh = Math.max(maxCh, r, g, b); }
+  if (maxCh === 0 || maxCh >= 255) return matrix;
+  const scale = 255 / maxCh;
+  return matrix.map(row => row.map(hex => {
+    const [r, g, b] = parseHex(hex);
+    if (r === 0 && g === 0 && b === 0) return "#000000";
+    return toHex(r * scale, g * scale, b * scale);
+  }));
+}
+
 function emojiToMatrix(emoji: string): string[][] {
-  const SIZE = 64;
-  const BLOCK = SIZE / 8;   // 8 pixels per output cell
+  const SIZE = 192;
+  const BLOCK = SIZE / 8;
+  const MIN_OPAQUE = Math.floor(BLOCK * BLOCK * 0.06);
   const canvas = createCanvas(SIZE, SIZE);
   const ctx = canvas.getContext("2d");
 
-  ctx.fillStyle = "#000000";
-  ctx.fillRect(0, 0, SIZE, SIZE);
+  ctx.clearRect(0, 0, SIZE, SIZE);   // transparent bg so we can detect opaque emoji pixels
   ctx.font = `${Math.floor(SIZE * 0.82)}px serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(emoji, SIZE / 2, SIZE / 2);
 
-  const { data } = ctx.getImageData(0, 0, SIZE, SIZE);  // RGBA flat array
-  const matrix: string[][] = [];
-
+  const { data } = ctx.getImageData(0, 0, SIZE, SIZE);
+  const raw: string[][] = [];
   for (let by = 0; by < 8; by++) {
     const row: string[] = [];
     for (let bx = 0; bx < 8; bx++) {
-      let r = 0, g = 0, b = 0;
+      let r = 0, g = 0, b = 0, totalW = 0, count = 0;
       for (let py = 0; py < BLOCK; py++) {
         for (let px = 0; px < BLOCK; px++) {
-          const ix = bx * BLOCK + px;
-          const iy = by * BLOCK + py;
-          const i  = (iy * SIZE + ix) * 4;
-          const a  = data[i + 3] / 255;   // premultiply alpha against black
-          r += data[i]     * a;
-          g += data[i + 1] * a;
-          b += data[i + 2] * a;
+          const i = ((by * BLOCK + py) * SIZE + (bx * BLOCK + px)) * 4;
+          if (data[i + 3] > 50) {
+            const pL = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+            const w = Math.pow((255 - pL + 20) / 275, 2);   // inverse-luminance weight (keep dark features)
+            r += data[i] * w; g += data[i + 1] * w; b += data[i + 2] * w;
+            totalW += w; count++;
+          }
         }
       }
-      const n   = BLOCK * BLOCK;
-      const hex = (v: number) => Math.round(v / n).toString(16).padStart(2, "0");
-      row.push(`#${hex(r)}${hex(g)}${hex(b)}`);
+      row.push(count < MIN_OPAQUE ? "#000000" : toHex(r / totalW, g / totalW, b / totalW));
     }
-    matrix.push(row);
+    raw.push(row);
   }
-  return matrix;
+  return punch(normalize(raw), 60);   // match the web page's normalize + default vibrance
 }
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -406,8 +449,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "matrix_set_brightness": {
-        const r = await post("/api/brightness", { level: args.level });
-        return { content: [{ type: "text", text: r.ok ? `Brightness set to ${args.level}.` : `Error ${r.status}: ${r.body}` }] };
+        const n = Number(args.level);
+        if (!Number.isFinite(n)) return { content: [{ type: "text", text: "level must be a number 0-255." }] };
+        const lvl = Math.max(0, Math.min(255, Math.round(n)));   // clamp to the board's real range
+        const r = await post("/api/brightness", { level: lvl });
+        return { content: [{ type: "text", text: r.ok ? `Brightness set to ${lvl}.` : `Error ${r.status}: ${r.body}` }] };
       }
 
       case "matrix_show_text": {
