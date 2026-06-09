@@ -50,8 +50,13 @@ top-left, x→right, y→down. Out-of-bounds returns `-1`. Always draw via
 
 **Libraries (Tools → Manage Libraries):** FastLED · ArduinoJson · PNGdec ·
 **WiFiManager *by tzapu*** (watch for lookalikes). WiFi/WebServer/mDNS/
-WiFiClientSecure are in the ESP32 core. Web-file upload needs the **ESP32
-LittleFS Data Upload** tool/plugin (separate from the LittleFS library).
+WiFiClientSecure are in the ESP32 core.
+
+**Web-file (`data/`) upload — Arduino IDE 2.x:** install the
+**`arduino-littlefs-upload`** `.vsix` plugin into `~/.arduinoIDE/plugins/`, then
+**Ctrl+Shift+P → "Upload LittleFS to Pico/ESP8266/ESP32"** (Command Palette only,
+NOT the Tools menu; close the Serial Monitor first). The LittleFS *library* in
+Library Manager is unrelated — it adds no upload command. See `docs/PITFALLS.md`.
 
 **Board settings (Tools menu):**
 - Board: `ESP32S3 Dev Module`

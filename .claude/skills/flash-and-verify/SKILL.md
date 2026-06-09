@@ -11,8 +11,10 @@ what comes back. (See the `esp32-dev-loop` memory.)
 
 ## 1. Which upload does this change need?
 - **Firmware (`.ino`) changed** → Arduino IDE **Sketch → Upload**.
-- **Web UI (`data/*.html`) changed** → **Tools → ESP32 LittleFS Data Upload**
-  (a *separate* step — uploading the sketch does NOT update web files).
+- **Web UI (`data/*.html`) changed** → IDE 2.x: **Ctrl+Shift+P → "Upload
+  LittleFS to Pico/ESP8266/ESP32"** (needs the `arduino-littlefs-upload` .vsix
+  plugin; Command Palette only, close Serial Monitor first). A *separate* step —
+  uploading the sketch does NOT update web files. See `docs/PITFALLS.md`.
 - **Both changed** → do both. Firmware first, then the data upload.
 
 ## 2. Pre-flight (only if uploads are failing)

@@ -14,6 +14,20 @@ Entry template:
 
 ---
 
+## 2026-06-08 — LittleFS upload: IDE 2.x needs a .vsix plugin, not the library
+**Symptom:** Installed "LittleFS" but the Command Palette can't find any LittleFS
+upload command, and there's no "ESP32 LittleFS Data Upload" under Tools.
+**Cause:** Two different things share the name. The **LittleFS library** (Library
+Manager) only lets firmware read the filesystem — it adds no upload command. The
+old "ESP32 Sketch/LittleFS Data Upload" Tools-menu item is **Arduino IDE 1.x
+only**; IDE 2.x dropped it.
+**Fix / rule:** In IDE 2.x install the **`arduino-littlefs-upload`** plugin: drop
+the `.vsix` from github.com/earlephilhower/arduino-littlefs-upload/releases into
+`C:\Users\srfin\.arduinoIDE\plugins\` (create the folder), fully restart the IDE,
+then **Ctrl+Shift+P → "Upload LittleFS to Pico/ESP8266/ESP32"**. The command
+lives ONLY in the Command Palette, never the Tools menu. **Close the Serial
+Monitor first** or the upload fails on a busy port. Needs IDE ≥ 2.2.1.
+
 ## Standing gotchas (board-level, always true)
 
 ### Color order is RGB, not GRB
