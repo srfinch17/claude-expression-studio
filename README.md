@@ -23,9 +23,14 @@ You talk to Claude in plain English — *"show a purple matrix rain animation"* 
 | `weather` | Animated weather icon + live data (temp, humidity, UV, pressure) via wttr.in |
 | `chiptemp` | ESP32 chip temperature display with pulsing background |
 | `clock` | Live 12-hour clock synced via NTP |
+| `calendar` | Today's date — scrolling text, big day number, month grid, or clock-style month/day (NTP) |
 | `timer_fill` | Countdown as a gradient LED fill (bottom → top) |
 | `timer_snow` | Countdown as snowfall accumulation |
 | `timer_text` | Countdown as MM:SS digits |
+| `sound` | Vibration-reactive VU bar — lights dance to the bass (uses the IMU; no microphone) |
+
+### Sketch & Emoji
+Paint pixel-by-pixel on an 8×8 grid (Sketch) or render any emoji down to 8×8 with a vibrance control (Emoji), then push to the board.
 
 ### Text Scrolling
 Scrolling text in three font sizes (5×7, 3×5, 3×3), with solid or two-color gradient support.
@@ -83,7 +88,6 @@ esp32_matrix_webserver/     # Arduino sketch (all .ino files compile as one unit
 │   weather.ino                 — weather fetch + display
 │   fonts.ino                   — 3×3 and 3×5 pixel fonts
 │   scroll_text.ino             — 5×7, 3×5, 3×3 scrolling text
-│   secrets.h.example           — copy to secrets.h and add your WiFi credentials
 └── data/                       — web UI pages (uploaded via LittleFS)
 
 mcp_server/                 # Node.js MCP server
@@ -102,6 +106,7 @@ mcp_server/                 # Node.js MCP server
 - FastLED
 - ArduinoJson
 - PNGdec
+- WiFiManager (by tzapu) — runtime WiFi setup via captive portal
 
 **Board settings** (Tools menu):
 - Board: `ESP32S3 Dev Module`
@@ -110,14 +115,38 @@ mcp_server/                 # Node.js MCP server
 - Flash Size: `8MB (64Mb)`
 - Partition Scheme: `8MB with spiffs (3MB APP, 5MB SPIFFS)`
 
-**WiFi credentials:**
-```
-cp esp32_matrix_webserver/secrets.h.example esp32_matrix_webserver/secrets.h
-# Edit secrets.h and fill in your SSID and password
-```
+**WiFi:** No credentials are compiled in — the board is configured at runtime
+via a captive portal (see *First-time WiFi setup* below).
 
 Flash firmware, then upload the web UI:  
 `Tools → ESP32 LittleFS Data Upload`
+
+### First-time WiFi setup (and moving to a new network)
+
+WiFi credentials live in the board's flash, not in the source. On first boot —
+or any time the saved network can't be reached — the board falls back to a
+setup hotspot.
+
+1. Power on the board. It tries the saved network for ~10 s (LEDs **blue**).
+2. If that fails, it opens a WiFi hotspot named **`ESP32-Matrix-Setup`** (LEDs **amber**).
+3. On a phone or laptop, join **`ESP32-Matrix-Setup`**. A captive portal opens
+   automatically — if it doesn't, browse to **`192.168.4.1`**.
+4. Tap **Configure WiFi**, choose your network, enter the password, and save.
+5. The board reboots, joins the network, and is reachable at
+   **`http://esp32matrix.local`**.
+
+**Moving the board to a different WiFi network:** just power it on at the new
+location. When the old saved network isn't found, it automatically opens the
+`ESP32-Matrix-Setup` hotspot — repeat the steps above with the new network.
+
+**Force setup immediately:** hold the **BOOT button (GPIO 0)** while powering
+on. This wipes the saved credentials and jumps straight to the hotspot without
+waiting for the 10 s timeout.
+
+| LED color | Meaning |
+|---|---|
+| Blue | Trying to connect to saved WiFi |
+| Amber | Setup portal open — join `ESP32-Matrix-Setup` |
 
 ### 2. MCP Server
 

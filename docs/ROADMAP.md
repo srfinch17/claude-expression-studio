@@ -99,13 +99,19 @@ Actively annoying, and self-contained (firmware physics + color). Three parts:
   fewer hues that read at 8×8 — exactly the "degrade quality so it shrinks
   better" the user asked for. Reuses the existing downscale + normalize pipeline.
 
-### Phase 4 — Calendar app 🔵
-More self-contained (date/NTP logic + rendering — reuses the clock's NTP). Lower
-shared-code overlap; reuses **S1/S2**. Slots in flexibly mid-stream.
+### Phase 4 — Calendar app 🟠 built — pending hardware test
+Spec: `docs/superpowers/specs/2026-06-09-calendar-app-design.md`. Firmware
+`anim_calendar.ino` (4 styles: scroll / bignum / grid / clock) reusing the
+clock's NTP + the font helpers; web `calendar.html` hub with style buttons +
+**S2 palette** (its first consumer) + brightness widget; home Calendar card; MCP
+`calendar` mode. Reuses clock NTP + S1/S2.
 
-### Phase 5 — Sound/vibration visualizer (experimental, last) 🔵
-See feasibility note below. Riskiest, shares the least — do it once the
-foundations are proven. Reuses the IMU driver (in `anim_liquid.ino`) and **S2**.
+### Phase 5 — Sound/vibration visualizer 🟠 built — pending hardware test
+Spec: `docs/superpowers/specs/2026-06-09-sound-visualizer-design.md`. Firmware
+`anim_sound.ino`: VU bar driven by IMU vibration-energy (baseline-subtracted
+magnitude → fast-attack/slow-release level + peak hold), gradient + S2 colors;
+web `sound.html` (S2 palette + sensitivity + brightness); home Sound card; MCP
+`sound` mode. Beat/energy visualizer only — not a spectrum EQ (see note below).
 
 ---
 

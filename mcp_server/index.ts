@@ -255,6 +255,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 - frostbite: shimmering pale mist backdrop with bright diamond sparkles. All pixels always lit. params: color (base hue, default #DCE6FF cool white), sparkle (0-100, default 20)
 - comet: bobbing comet at right edge with wave tail and occasional sparks. params: color1 (heart), color2 (shell), color3 (tail tip)
 - sun: glowing disc with 4 colored dots orbiting around it. Dots are evenly spaced and each keeps its own color as they revolve. params: color1 (disc/sun color), color2 (orbit dot 1, lightest), color3 (orbit dot 2), color4 (orbit dot 3), color5 (orbit dot 4, darkest), discBri (0-100, sun disc brightness, default 78), ringBri (0-100, orbit dot brightness, default 78)
+- calendar: today's date from NTP. params: style (scroll = "Tue Jun 9" scrolls; bignum = big day-of-month number; grid = mini month grid with today highlighted; clock = month over day in the clock layout), color1 (primary: day/today/scroll text), color2 (secondary: month/other days), color3 (accent: separator dots), timezone (UTC offset integer, e.g. -7 for Arizona)
+- sound: vibration-reactive VU bar. NOTE: there is no microphone — it reacts to low-frequency vibration (bass) felt through a surface via the IMU, best with the board on/near a speaker. params: color1 (bar bottom), color2 (bar top), sensitivity (0-10, default 5)
 
 Scale guidance for 0-10 and 1-10 params: 2-3 = low, 5 = medium, 8-9 = high, 10 = max.
 Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
@@ -272,6 +274,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
               "dancefloor",
               "spiral", "starfield", "fireworks", "fireworks2", "comet", "sun",
               "frostbite",
+              "calendar", "sound",
             ],
             description: "The animation type to start.",
           },
@@ -302,6 +305,8 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
           discBri:     { type: "number",  description: "Sun disc brightness 0-100. Default 78." },
           ringBri:     { type: "number",  description: "Sun orbit dot brightness 0-100. Default 78." },
           speed:       { type: "number",  description: "Animation speed 1-5. 1 = slow, 3 = normal, 5 = fast. Applies to all animations." },
+          style:       { type: "string",  description: "Calendar style: scroll, bignum, grid, or clock." },
+          sensitivity: { type: "number",  description: "Sound visualizer sensitivity 0-10. Higher reacts to gentler vibration. Default 5." },
         },
         required: ["type"],
       },
