@@ -43,6 +43,16 @@ frame. **Consumed by:** sketch (paint→push), emoji (downscale→push), any
 > Net effect: once S1–S3 exist, **sketch ≈ S3 paint grid + S1**, and
 > **emoji ≈ sketch + the quantizer + image import**. We build the hard part once.
 
+### S4 · `ledsim.js` — brightness-accurate preview model
+The FastLED dimming + visibility-threshold + gamma math (currently duplicated in
+`emoji.html` / `grid_test.html`) extracted into one include, subscribed to the
+S1 brightness widget so **every** preview renders what the LED actually looks
+like at the current brightness. Today most previews render full-brightness and
+lie. **Consumed by:** emoji, sketch, animation previews. Reference + threshold
+table: `docs/LED_BRIGHTNESS.md`. The same threshold (`minVisibleChannel(bri) =
+ceil(256/(bri+1))`) is what the **emoji quantizer** must clamp colors above —
+so S4 and the emoji work share the model.
+
 ---
 
 ## Recommended order
