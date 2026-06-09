@@ -9,6 +9,29 @@ Status: 🔵 planned · 🟡 spec'd · 🟠 in progress · ✅ done
 
 ---
 
+## ▶ Where we are (updated 2026-06-09 — read this first after a restart)
+
+All work is on branch **`feature/shared-ui-brightness`** (~32 commits, **not yet
+merged to master**). Built this session: per-app brightness (S1, non-linear
+slider), S2 palette, S4 ledsim, liquid fixes, Sketch (+20 starters), Emoji
+vibrance, Calendar (4 styles), Sound (IMU VU), auto-resume (NVS), DST timezones,
+and a long WiFi-stability fight (see `docs/PITFALLS.md`).
+
+**Immediate next steps (hardware):**
+1. **Flash the latest firmware + LittleFS upload**, then **reconnect WiFi via the
+   portal** (`ESP32-Matrix-Setup` → 192.168.4.1) — creds were wiped during the
+   WiFi debugging. Confirm **PSRAM is Enabled** in Tools (see CLAUDE.md).
+2. **Verify** with Serial open (115200): weather/sketch stay online (`[heap]`
+   stable), WiFi self-heals (`WiFi DISCONNECTED reason=` then reconnect), calendar
+   grid shows a full month, calendar month/day style (no colon) looks right,
+   auto-resume + DST work.
+3. **Empirical brightness table** — drop real `grid_test` numbers into
+   `docs/LED_BRIGHTNESS.md` (the user said "next round").
+4. When hardware-confirmed, flip the 🟠 items below to ✅ and consider merging the
+   branch to master.
+
+---
+
 ## The big idea: build shared pieces ONCE
 
 Several requested features are the same machinery wearing different hats. The
