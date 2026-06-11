@@ -14,6 +14,22 @@ Entry template:
 
 ---
 
+## 2026-06-11 — Clock/calendar pulse dim white "forever" right after boot
+**Symptom:** Every calendar style (and the clock) shows only the pulsing dim
+white "waiting" screen, looking completely broken — while WiFi/internet are fine.
+Minutes later it spontaneously works.
+**Cause:** Two stacked facts. (1) Clock/calendar draw NOTHING but the pulse until
+the FIRST NTP sync lands (`getLocalTime` gate). (2) `startNtp()` used to call
+configTzTime/configTime on every animation start, which **restarts the SNTP
+client from scratch** — so clicking through calendar styles right after boot
+kept aborting the in-flight first sync; each click reset the wait.
+**Fix / rule:** `startNtp()` now no-ops when the requested tz/offset matches what
+SNTP was already started with (`ntpActiveCfg` in `api_handlers.ino`). Rule of
+thumb: pulsing white = "no valid time yet", not "calendar is broken" — check
+`/api/status` (`ntp_synced`) and give a fresh boot ~10s on a working network
+before concluding anything. USB CDC On Boot must be "Enabled" in Tools or none
+of the firmware's own serial diagnostics appear (only ESP-IDF [W]/[E] lines).
+
 ## 2026-06-08 — LittleFS upload: IDE 2.x needs a .vsix plugin, not the library
 **Symptom:** Installed "LittleFS" but the Command Palette can't find any LittleFS
 upload command, and there's no "ESP32 LittleFS Data Upload" under Tools.
