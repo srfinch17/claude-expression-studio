@@ -55,9 +55,16 @@ const BOARD_URL = process.env.ESP32_URL ?? "http://esp32matrix.local";
 // to repeat the same fetch boilerplate.
 // ------------------------------------------------------------
 
+// Both helpers carry a hard timeout: without one, a board that accepts the TCP
+// connection but stalls before responding (its HTTP handlers share the loop task
+// with animation frames and blocking weather fetches) would hang the tool call
+// for undici's default ~5 minutes. The TimeoutError lands in the CallTool
+// handler's catch, which turns it into a readable "could not reach board" reply.
+const FETCH_TIMEOUT_MS = 8000;
+
 // GET — for read-only requests (sensor data, status)
 async function get(path: string) {
-  const res = await fetch(`${BOARD_URL}${path}`);
+  const res = await fetch(`${BOARD_URL}${path}`, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
   return { ok: res.ok, status: res.status, body: await res.text() };
 }
 
@@ -68,6 +75,7 @@ async function post(path: string, body: object = {}) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),   // convert JS object → JSON string for the wire
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
   return { ok: res.ok, status: res.status, body: await res.text() };
 }
@@ -107,7 +115,10 @@ function punch(matrix: string[][], amount: number): string[][] {
     const [r, g, b] = parseHex(hex);
     if (r === 0 && g === 0 && b === 0) return "#000000";
     let [h, s, v] = rgb2hsv(r, g, b);
-    s = Math.min(1, s + (1 - s) * k);
+    // Ramp the saturation boost in by the ORIGINAL saturation (mirrors
+    // emoji.html punchColors): achromatic cells (s≈0, hue undefined → defaults
+    // to red) must stay achromatic or white/gray emoji render pink.
+    s = Math.min(1, s + (1 - s) * k * Math.min(1, s / 0.15));
     v = Math.min(1, v + (1 - v) * k * 0.45);
     const [nr, ng, nb] = hsv2rgb(h, s, v);
     return toHex(nr, ng, nb);
@@ -288,7 +299,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 - timer_fill: countdown timer shown as a gradient fill from bottom to top. params: duration (seconds), color1, color2, color3 (hex)
 - timer_snow: countdown timer shown as snowfall accumulation. Also called "snow timer" or "snowfall timer". params: duration (seconds), color1, color2, color3 (hex)
 - timer_text: countdown timer shown as MM:SS digits. params: duration (seconds), color1 (minutes color), color2 (seconds color), color3 (colon color, default white)
-- clock: live 12-hour clock synced via NTP. params: timezone (UTC offset as integer, e.g. -7 for Arizona), color1 (hours color), color2 (minutes color), color3 (colon color)
+- clock: live 12-hour clock synced via NTP. params: tz (POSIX TZ string, DST-aware — PREFERRED) or timezone (fixed UTC offset integer), color1 (hours color), color2 (minutes color), color3 (colon color)
 - matrix_rain: digital rain / matrix screensaver with falling character drops. Also called "matrix screensaver" or "digital rain". params: theme (classic/blue/red/purple), speed (1-5)
 - dancefloor: 16 independent 2×2 disco tiles cycling through a 4-color palette. params: palette (0-63, see palette list in firmware), hold (4-40 frames per color, 4=fast/stroby, 40=slow/chill, default 12)
 - spiral: gradient snake flowing along a clockwise inward spiral — all 64 LEDs lit at all times. params: color1 (gradient start), color2 (gradient end)
@@ -298,7 +309,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 - frostbite: shimmering pale mist backdrop with bright diamond sparkles. All pixels always lit. params: color (base hue, default #DCE6FF cool white), sparkle (0-100, default 20)
 - comet: bobbing comet at right edge with wave tail and occasional sparks. params: color1 (heart), color2 (shell), color3 (tail tip)
 - sun: glowing disc with 4 colored dots orbiting around it. Dots are evenly spaced and each keeps its own color as they revolve. params: color1 (disc/sun color), color2 (orbit dot 1, lightest), color3 (orbit dot 2), color4 (orbit dot 3), color5 (orbit dot 4, darkest), discBri (0-100, sun disc brightness, default 78), ringBri (0-100, orbit dot brightness, default 78)
-- calendar: today's date from NTP. params: style (scroll = "Tue Jun 9" scrolls; bignum = big day-of-month number; grid = mini month grid with today highlighted; clock = month over day in the clock layout), color1 (primary: day/today/scroll text), color2 (secondary: month/other days), color3 (accent: separator dots), timezone (UTC offset integer, e.g. -7 for Arizona)
+- calendar: today's date from NTP. params: style (scroll = "Tue Jun 9" scrolls; bignum = big day-of-month number; grid = mini month grid with today highlighted; clock = month over day in the clock layout), color1 (primary: day/today/scroll text), color2 (secondary: month/other days), color3 (accent: weekday letter in clock style, weekend columns in grid style), tz (POSIX TZ string, DST-aware — PREFERRED) or timezone (fixed UTC offset integer)
 - sound: vibration-reactive VU bar. NOTE: there is no microphone — it reacts to low-frequency vibration (bass) felt through a surface via the IMU, best with the board on/near a speaker. params: color1 (bar bottom), color2 (bar top), sensitivity (0-10, default 5)
 
 Scale guidance for 0-10 and 1-10 params: 2-3 = low, 5 = medium, 8-9 = high, 10 = max.
@@ -327,7 +338,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
           intensity:   { type: "number",  description: "Fire intensity 1-10. Default 6. Use 3 for low, 6 for medium, 9 for high." },
           tendrils:    { type: "number",  description: "Fire tendrils 0-10. 0 = off, 5 = medium wisps, 10 = very wispy. Default 0." },
           sparks:      { type: "number",  description: "Fire spark rate 0-10. 0 = off, 5 = medium, 10 = many sparks. Default 0." },
-          color:       { type: "string",  description: "Color hex for solid fill or clock background." },
+          color:       { type: "string",  description: "Color hex for solid fill (or frostbite base hue). The clock has no background color — use color1/2/3 for its digits." },
           color1:      { type: "string",  description: "Primary color hex." },
           color2:      { type: "string",  description: "Secondary color hex." },
           color3:      { type: "string",  description: "Tertiary color hex." },
@@ -337,7 +348,8 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
           data_mode:   { type: "string",  description: "Weather data to display: temp, humidity, uv, pressure, or cycle." },
           icon_source: { type: "string",  description: "Weather icon source: animated or remote." },
           duration:    { type: "number",  description: "Timer duration in seconds." },
-          timezone:    { type: "number",  description: "UTC offset in hours, e.g. -7 for Arizona (no DST)." },
+          timezone:    { type: "number",  description: "Fixed UTC offset in hours, e.g. -7 for Arizona (no DST). Prefer tz for zones that observe DST." },
+          tz:          { type: "string",  description: "POSIX TZ string — DST-aware, preferred over timezone. e.g. MST7 (Phoenix), MST7MDT,M3.2.0,M11.1.0 (Denver), EST5EDT,M3.2.0,M11.1.0 (New York), GMT0BST,M3.5.0/1,M10.5.0 (London)." },
           theme:       { type: "string",  description: "Matrix rain color theme: classic, blue, red, or purple." },
           color4:      { type: "string",  description: "Quaternary color hex. Used by sun animation for orbit dot 3." },
           color5:      { type: "string",  description: "Quinary color hex. Used by sun animation for orbit dot 4 (darkest)." },
@@ -470,12 +482,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         // Claude uses a human-friendly 1-5 scale, but the firmware expects
         // milliseconds per frame (lower ms = faster animation).
         // We map here so Claude never has to think in milliseconds.
+        // ALWAYS translate — never forward the raw value. Outside 1-5 the unit
+        // would silently change from "scale points" to "milliseconds per frame"
+        // (e.g. speed 10 meaning "extra fast" becomes a 10ms frame tick).
         if (payload.speed !== undefined) {
-          const spd = Number(payload.speed);
-          if (spd >= 1 && spd <= 5) {
-            const msMap: Record<number, number> = { 1: 150, 2: 100, 3: 66, 4: 40, 5: 20 };
-            payload.speed = msMap[Math.round(spd)] ?? 66;
-          }
+          const msMap: Record<number, number> = { 1: 150, 2: 100, 3: 66, 4: 40, 5: 20 };
+          const spd = Math.round(Number(payload.speed));
+          payload.speed = Number.isFinite(spd) ? msMap[Math.max(1, Math.min(5, spd))] : 66;
         }
 
         // TRANSLATION 2: solid color param name

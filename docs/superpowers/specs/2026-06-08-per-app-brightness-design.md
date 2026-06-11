@@ -117,20 +117,27 @@ markup of its own. Two ways to add it:
 - **Auto-mount (9 pages with no prior brightness control):** `clock`, `fire`,
   `imu`, `liquid`, `temp`, `text`, `timer`, `weather`, `weather2`.
 
-### Deliberately NOT touched — specialized brightness pages
-`animations.html`, `matrix_rain.html`, `emoji.html`, `grid_test.html` keep their
-**bespoke** brightness sliders. On these, brightness is not a generic control —
-it is wired into the live preview canvas (dims it via the exact FastLED
-`nscale8x3` formula), drives emoji's "minimum visible channel" hints, and is the
-entire purpose of `grid_test` (a calibration tool that intentionally starts at
-255). The generic widget would break that coupling. They already give you
-in-page brightness, so the "don't make me go back to the main page" goal is met.
+### Scope update (2026-06-10 — reflects what was actually built)
+The original plan left `animations.html`, `matrix_rain.html`, `emoji.html`, and
+`grid_test.html` with bespoke sliders. The build went further:
+- **`matrix_rain.html` and `emoji.html` were MIGRATED** to bright.js + ledsim.js
+  (their bespoke sliders and the `emoji_brightness` key are gone — the shared
+  `matrixbrightness` broadcast drives their previews now).
+- **`animations.html`** got the auto-mounted widget; its leftover bespoke Sun-panel
+  "Board Brightness" slider (which bypassed the >100 heat lock and fought the
+  widget over the board's one brightness) was removed in the 2026-06-10 review
+  pass. The `sun_brightness` localStorage key is retired.
+- **`grid_test.html` alone keeps a bespoke control** — brightness IS the
+  calibration tool there (intentionally starts at 255). The firmware guards the
+  hazard: grid-test brightness never persists to NVS (`resumeBri` snapshots only
+  values committed via `/api/brightness`), so the board can't boot back into 255.
 
-> **Follow-up (parked):** these specialized pages persist under their own
-> localStorage keys (`emoji_brightness`, `gridtest_brightness`; `matrix_rain`
-> already uses the shared `matrix_brightness`). So the global value isn't fully
-> consistent with emoji/grid_test. Unifying keys needs care (grid_test's 255
-> calibration default), so it's deferred — not part of S1.
+### Mount semantics update (2026-06-10)
+Mount no longer POSTs localStorage to the board. The board is the source of
+truth: mount reads `/api/status` and shows the board's real brightness
+(localStorage is just the placeholder/offline fallback). Only user input POSTs.
+This is what makes Model A true in practice — and it stops page loads from
+clobbering NVS auto-resume and MCP-set brightness.
 
 ---
 
@@ -143,7 +150,8 @@ in-page brightness, so the "don't make me go back to the main page" goal is met.
 - `data/index.html` — inline brightness replaced by `MatrixBright.mount(...)`
 - `data/{clock,fire,imu,liquid,temp,text,timer,weather,weather2}.html` — added
   the one-line `data-auto` script tag (9 pages)
-- *(unchanged: animations, matrix_rain, emoji, grid_test — see scope note above)*
+- `data/{animations,matrix_rain,emoji}.html` — migrated to the shared widget
+  (see scope update above); only `grid_test.html` keeps a bespoke control
 
 **Firmware:** none.
 

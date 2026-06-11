@@ -9,13 +9,22 @@ Status: 🔵 planned · 🟡 spec'd · 🟠 in progress · ✅ done
 
 ---
 
-## ▶ Where we are (updated 2026-06-09 — read this first after a restart)
+## ▶ Where we are (updated 2026-06-10 — read this first after a restart)
 
-All work is on branch **`feature/shared-ui-brightness`** (~32 commits, **not yet
-merged to master**). Built this session: per-app brightness (S1, non-linear
-slider), S2 palette, S4 ledsim, liquid fixes, Sketch (+20 starters), Emoji
-vibrance, Calendar (4 styles), Sound (IMU VU), auto-resume (NVS), DST timezones,
-and a long WiFi-stability fight (see `docs/PITFALLS.md`).
+All work is on branch **`feature/shared-ui-brightness`** (**not yet merged to
+master**). Built 2026-06-08/09: per-app brightness (S1, non-linear slider), S2
+palette, S4 ledsim, liquid fixes, Sketch (+20 starters), Emoji vibrance,
+Calendar (4 styles), Sound (IMU VU), auto-resume (NVS), DST timezones, and a
+long WiFi-stability fight (see `docs/PITFALLS.md`).
+
+**2026-06-10: pre-merge multi-agent review pass** — 33 findings raised, 23
+unique confirmed by adversarial verification, all fixed. Highlights: weather
+stream-parse broke on chunked encoding (`useHTTP10(true)` fix — weather NEVER
+updated as built, so re-verify on hardware), bright.js no longer clobbers board
+brightness on page load (board is source of truth via /api/status), grid-test
+255 can't persist to NVS (brownout guard), calendar scroll slider now honored,
+unknown animation types rejected, MCP fetches time out at 8s + tz (DST) param
+exposed, README flash settings corrected to 4MB.
 
 **Immediate next steps (hardware):**
 1. **Flash the latest firmware + LittleFS upload**, then **reconnect WiFi via the
@@ -41,8 +50,12 @@ feature just consumes it. Three reusable pieces carry most of the work:
 ### S1 · Brightness widget (per-app brightness control) 🟠 built — pending hardware test
 Spec: `docs/superpowers/specs/2026-06-08-per-app-brightness-design.md`.
 Shipped as `data/bright.js` (auto-mount or explicit). On index.html + 9 pages
-that lacked brightness; the 4 preview-coupled pages (animations/matrix_rain/
-emoji/grid_test) intentionally keep their bespoke controls.
+that lacked brightness, AND migrated animations/matrix_rain/emoji to the shared
+widget (animations' bespoke Sun-panel slider removed 2026-06-10 — it bypassed
+the heat lock). Only grid_test keeps a bespoke control (brightness IS its
+calibration tool). Mount reads the board's brightness from /api/status and
+never POSTs on load — the board is the source of truth (see spec's 2026-06-10
+scope update).
 A small reusable HTML/JS snippet that hits the existing `POST /api/brightness`.
 You want it on **every** app page. Build it once as an include and drop it into
 each page — and into every *new* page from the start, so we never retrofit.

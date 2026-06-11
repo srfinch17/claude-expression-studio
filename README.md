@@ -49,7 +49,7 @@ Each mode has a dedicated HTML control page served directly from the board's fla
                    ▼
 ┌─────────────────────────────────────────────────────┐
 │  MCP Server  (mcp_server/index.ts — Node.js)        │
-│  • 8 registered tools                               │
+│  • 9 registered tools                               │
 │  • Translates natural language params → HTTP JSON   │
 │  • Runs as a stdio process managed by Claude Code   │
 └──────────────────┬──────────────────────────────────┘
@@ -72,7 +72,7 @@ Each mode has a dedicated HTML control page served directly from the board's fla
 - **Board:** Waveshare ESP32-S3-Matrix
 - **Display:** 8×8 WS2812B RGB LED grid (64 LEDs), data pin 14
 - **IMU:** QMI8658C 6-axis (accelerometer + gyroscope), I2C SDA=11 SCL=12
-- **Flash:** 8MB with LittleFS partition for web UI files
+- **Flash:** 4MB (verified via esptool) + 2MB PSRAM; web UI lives in the 1MB LittleFS region
 
 ## Project Structure
 
@@ -109,11 +109,12 @@ mcp_server/                 # Node.js MCP server
 - WiFiManager (by tzapu) — runtime WiFi setup via captive portal
 
 **Board settings** (Tools menu):
-- Board: `ESP32S3 Dev Module`
+- Board: `ESP32S3 Dev Module` (or `Waveshare ESP32-S3-Matrix`)
 - USB Mode: `Hardware CDC and JTAG`
 - USB CDC On Boot: `Enabled`
-- Flash Size: `8MB (64Mb)`
-- Partition Scheme: `8MB with spiffs (3MB APP, 5MB SPIFFS)`
+- PSRAM: `Enabled` — required; without it the heap starves and WiFi/web server get unstable
+- Flash Size: `4MB (32Mb)` — the board is 4MB (verified via esptool); 8MB settings won't flash
+- Partition Scheme: `Huge APP (3MB No OTA / 1MB SPIFFS)` — LittleFS data fits the 1MB region
 
 **WiFi:** No credentials are compiled in — the board is configured at runtime
 via a captive portal (see *First-time WiFi setup* below).
@@ -187,7 +188,9 @@ POST /api/brightness              { "level": 0-255 }
 POST /api/display/text            { "text", "color", "color2", "gradient", "small", "tiny", "scroll_speed" }
 POST /api/display/animation       { "type", ...animation-specific params }
 POST /api/display/matrix          { "matrix": [[8 rows × 8 hex colors]] }
+POST /api/display/temperature     { "matrix" } or { "value", "unit", "color" }   (legacy)
 POST /api/weather/mode            { "mode": "temp"|"humidity"|"uv"|"pressure"|"cycle" }
+POST /api/grid-test/set           { "mode": "color"|"brightness", "brightness": 0-255 }   (diagnostic)
 ```
 
 ## Tech Stack
