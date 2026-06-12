@@ -26,6 +26,18 @@ brightness on page load (board is source of truth via /api/status), grid-test
 unknown animation types rejected, MCP fetches time out at 8s + tz (DST) param
 exposed, README flash settings corrected to 4MB.
 
+**⭐ 2026-06-11: NEW TOP PRIORITY — Claude expression display** (user: "the
+natural evolution of this interface"). The matrix becomes Claude's autonomous
+status/emotion window: canned vetted glyphs (working/done/alert/party/
+spaceship/…), Claude-drawn custom frame animations, and a saved library that
+grows. 🟠 Built — pending hardware test. Spec:
+`docs/superpowers/specs/2026-06-11-claude-expression-display.md`. Firmware
+`/api/display/frames` + `anim_frames.ino`; MCP `matrix_express` /
+`matrix_animate` / `matrix_list_expressions`; canned art in
+`mcp_server/expressions.ts`; saved library in `mcp_server/expressions/`;
+doctrine in CLAUDE.md ("use it ambiently"). Needs: firmware flash + Claude Code
+restart, then the spec's verification list.
+
 **Immediate next steps (hardware):**
 1. **Flash the latest firmware + LittleFS upload**, then **reconnect WiFi via the
    portal** (`ESP32-Matrix-Setup` → 192.168.4.1) — creds were wiped during the

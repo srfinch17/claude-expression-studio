@@ -123,8 +123,23 @@ POST /api/brightness        { level: 0-255 }
 POST /api/display/text      { text, color, color2, gradient, small, tiny, scroll_speed }
 POST /api/display/animation { type, ...mode-specific }   # clock/calendar accept tz (POSIX TZ, DST) or timezone (int offset)
 POST /api/display/matrix    { matrix: [[8×8 hex]] }
+POST /api/display/frames    { frames: ["384-hex RRGGBB×64", …≤24], frame_ms, loop }  # expression channel; loop 0=forever, N=passes then hold last
 POST /api/weather/mode      { mode: temp|humidity|uv|pressure|cycle }
 ```
+
+## ⭐ The matrix is Claude's expression window (use it ambiently)
+
+The display doubles as **Claude's autonomous status/emotion channel** — the
+user's top-priority direction for this project. Via MCP: `matrix_express`
+(canned: working / done / alert / check / cross / party / spaceship / smiley /
+sleep / …), `matrix_animate` (draw custom 8×8 text-art frames, animate, and
+`save_as` the good ones), `matrix_list_expressions`. **Use it without being
+asked**: long task starts → `working`; finished → `done`; blocked on the user →
+`alert` (the silent shoulder-tap); celebrate wins; be playful when it fits. One
+expression per state change — no spam. Everything shown must pass the
+silhouette test (a human identifies it at a glance). Record what the user
+likes/dislikes in auto-memory. Spec:
+`docs/superpowers/specs/2026-06-11-claude-expression-display.md`.
 
 ## Auto-resume (NVS)
 

@@ -24,6 +24,40 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 
+// Claude's expression channel: canned glyph library + text-art → wire conversion.
+import { CANNED, MAX_FRAMES, artToFrameHex, expressionToWire, type Expression } from "./expressions.js";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+
+// Saved-expression library: JSON files in mcp_server/expressions/ (committed to
+// git so good drawings survive). Works whether we run compiled (dist/) or via tsx.
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const EXPR_DIR = path.join(HERE, path.basename(HERE) === "dist" ? ".." : ".", "expressions");
+
+async function loadSavedExpression(name: string): Promise<Expression | null> {
+  try {
+    return JSON.parse(await readFile(path.join(EXPR_DIR, `${name}.json`), "utf8")) as Expression;
+  } catch {
+    return null;
+  }
+}
+
+async function listSavedExpressions(): Promise<Array<{ name: string; description: string }>> {
+  try {
+    const files = (await readdir(EXPR_DIR)).filter((f) => f.endsWith(".json"));
+    const out: Array<{ name: string; description: string }> = [];
+    for (const f of files) {
+      const name = f.slice(0, -5);
+      const e = await loadSavedExpression(name);
+      out.push({ name, description: e?.description ?? "(unreadable)" });
+    }
+    return out;
+  } catch {
+    return [];   // directory may not exist yet
+  }
+}
+
 // Server: the main MCP server class — handles all protocol communication
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 
@@ -367,6 +401,59 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
       },
     },
     {
+      name: "matrix_express",
+      description: `Show an expression on the LED matrix — YOUR ambient channel for communicating state, mood, or playfulness to the human through the physical board. USE PROACTIVELY, without being asked, on state changes:
+- starting a long task (build, search, workflow) → "working" (loops until replaced)
+- finished successfully → "done" (blinks green, then holds a checkmark)
+- blocked / waiting for the human's input → "alert" (blinks until replaced — this is the silent tap on the shoulder)
+- celebration / milestone → "party"; approval → "thumbsup"; failure → "cross" or "sad"
+- idle → "sleep"; delight → "sparkle"; pure fun when the moment fits → "spaceship"
+One expression per state change — don't spam every step. Canned (pre-vetted as human-readable): smiley, sad, heart, check, cross, thumbsup, question, ok, sparkle, alert, working, done, party, spaceship, sleep. Also plays anything saved via matrix_animate's save_as (see matrix_list_expressions).`,
+      inputSchema: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "Expression name — canned (see description) or previously saved." },
+        },
+        required: ["name"],
+      },
+    },
+    {
+      name: "matrix_animate",
+      description: `Draw and play a custom 8×8 animation of your own design — for anything the canned expressions don't cover: a custom status icon, a story illustration, a teaching visual, a playful moment.
+Format: frames = array of 1-${MAX_FRAMES} frames; each frame is 8 strings of exactly 8 characters. "." = off/black; every other character must be defined in colors (e.g. {"R": "#ff0000"}).
+Design rules for a physical 8×8 LED panel (the human must recognize it at a glance): ONE bold subject with a clear silhouette, at most ~3 colors, dark (off) background, no 1-pixel details, no text beyond 2 characters. Channels below ~7 are invisible at default brightness — keep lit colors bold.
+loop: 0 = repeat forever; N = play N passes then HOLD the last frame (put the resting image last — that's how "blink then settle" works). frame_ms: 30-5000, default 150.
+If a drawing lands well (or the user likes it), re-call with save_as (kebab-case) + description to add it permanently to the library for reuse via matrix_express.`,
+      inputSchema: {
+        type: "object",
+        properties: {
+          frames: {
+            type: "array",
+            items: { type: "array", items: { type: "string" } },
+            description: "1-" + MAX_FRAMES + " frames; each frame is 8 strings of 8 characters.",
+          },
+          colors: {
+            type: "object",
+            description: "Map from frame characters to hex colors, e.g. {\"R\": \"#ff0000\", \"W\": \"#ffffff\"}. \".\" is always off.",
+          },
+          frame_ms: { type: "number", description: "Milliseconds per frame, 30-5000. Default 150." },
+          loop: { type: "number", description: "0 = loop forever (default); N = play N passes then hold the last frame." },
+          save_as: { type: "string", description: "Optional kebab-case name — saves this animation to the permanent library for reuse via matrix_express." },
+          description: { type: "string", description: "What this expression means / when to use it (required when saving)." },
+        },
+        required: ["frames", "colors"],
+      },
+    },
+    {
+      name: "matrix_list_expressions",
+      description: "List every available matrix expression — canned and saved — with descriptions. Call when unsure what exists or what a saved expression was for.",
+      inputSchema: {
+        type: "object",
+        properties: {},
+        required: [],
+      },
+    },
+    {
       name: "matrix_get_temperature",
       description:
         "Read the ESP32 chip temperature in both Celsius and Fahrenheit. Note: chip temperature runs 10-15 degrees above ambient room temperature — this is normal.",
@@ -502,6 +589,55 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         const r = await post("/api/display/animation", payload);
         return { content: [{ type: "text", text: r.ok ? `Animation started: ${args.type}` : `Error ${r.status}: ${r.body}` }] };
+      }
+
+      case "matrix_express": {
+        const exprName = String(args.name ?? "");
+        const expr = CANNED[exprName] ?? (await loadSavedExpression(exprName));
+        if (!expr) {
+          const saved = await listSavedExpressions();
+          return { content: [{ type: "text", text:
+            `No expression named "${exprName}". Canned: ${Object.keys(CANNED).join(", ")}. Saved: ${saved.map((s) => s.name).join(", ") || "(none)"}.` }] };
+        }
+        const wire = expressionToWire(expr);
+        const r = await post("/api/display/frames", wire);
+        return { content: [{ type: "text", text: r.ok
+          ? `Expressing "${exprName}" on the matrix (${wire.frames.length} frame${wire.frames.length > 1 ? "s" : ""}${wire.loop ? `, ${wire.loop} pass(es) then hold` : ", looping"}).`
+          : `Error ${r.status}: ${r.body}` }] };
+      }
+
+      case "matrix_animate": {
+        const expr: Expression = {
+          description: String(args.description ?? "custom animation"),
+          frames: args.frames as string[][],
+          colors: (args.colors ?? {}) as Record<string, string>,
+          frame_ms: args.frame_ms as number | undefined,
+          loop: args.loop as number | undefined,
+        };
+        let wire;
+        try {
+          wire = expressionToWire(expr);   // validates shape, rows, colors
+        } catch (e) {
+          return { content: [{ type: "text", text: `Invalid animation: ${e instanceof Error ? e.message : String(e)}` }] };
+        }
+        const r = await post("/api/display/frames", wire);
+        if (!r.ok) return { content: [{ type: "text", text: `Error ${r.status}: ${r.body}` }] };
+
+        let savedNote = "";
+        if (args.save_as) {
+          const saveName = String(args.save_as).toLowerCase().replace(/[^a-z0-9-]/g, "-");
+          await mkdir(EXPR_DIR, { recursive: true });
+          await writeFile(path.join(EXPR_DIR, `${saveName}.json`), JSON.stringify(expr, null, 2), "utf8");
+          savedNote = ` Saved to the library as "${saveName}" — replay anytime with matrix_express.`;
+        }
+        return { content: [{ type: "text", text: `Animating ${wire.frames.length} frame(s) on the matrix.${savedNote}` }] };
+      }
+
+      case "matrix_list_expressions": {
+        const canned = Object.entries(CANNED).map(([n, e]) => `- ${n}: ${e.description}`);
+        const saved = (await listSavedExpressions()).map((s) => `- ${s.name}: ${s.description}`);
+        return { content: [{ type: "text", text:
+          `Canned expressions:\n${canned.join("\n")}\n\nSaved expressions:\n${saved.length ? saved.join("\n") : "(none yet — create with matrix_animate save_as)"}` }] };
       }
 
       case "matrix_get_temperature": {

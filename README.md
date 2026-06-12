@@ -49,7 +49,7 @@ Each mode has a dedicated HTML control page served directly from the board's fla
                    ▼
 ┌─────────────────────────────────────────────────────┐
 │  MCP Server  (mcp_server/index.ts — Node.js)        │
-│  • 9 registered tools                               │
+│  • 12 registered tools                              │
 │  • Translates natural language params → HTTP JSON   │
 │  • Runs as a stdio process managed by Claude Code   │
 └──────────────────┬──────────────────────────────────┘
@@ -188,6 +188,7 @@ POST /api/brightness              { "level": 0-255 }
 POST /api/display/text            { "text", "color", "color2", "gradient", "small", "tiny", "scroll_speed" }
 POST /api/display/animation       { "type", ...animation-specific params }
 POST /api/display/matrix          { "matrix": [[8 rows × 8 hex colors]] }
+POST /api/display/frames          { "frames": ["384-hex × ≤24"], "frame_ms", "loop" }   (animations / Claude expressions)
 POST /api/display/temperature     { "matrix" } or { "value", "unit", "color" }   (legacy)
 POST /api/weather/mode            { "mode": "temp"|"humidity"|"uv"|"pressure"|"cycle" }
 POST /api/grid-test/set           { "mode": "color"|"brightness", "brightness": 0-255 }   (diagnostic)
