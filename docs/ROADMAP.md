@@ -143,7 +143,9 @@ Actively annoying, and self-contained (firmware physics + color). Three parts:
 
 ### Phase 4 — Calendar app 🟠 built — pending hardware test
 Spec: `docs/superpowers/specs/2026-06-09-calendar-app-design.md`. Firmware
-`anim_calendar.ino` (4 styles: scroll / bignum / grid / clock) reusing the
+`anim_calendar.ino` (5 styles: scroll / bignum / grid / clock / square — square
+added 2026-06-11: 2-letter weekday over big day number; NTP wait now shows an
+animated hourglass instead of the white pulse, shared with the clock) reusing the
 clock's NTP + the font helpers; web `calendar.html` hub with style buttons +
 **S2 palette** (its first consumer) + brightness widget; home Calendar card; MCP
 `calendar` mode. Reuses clock NTP + S1/S2.
