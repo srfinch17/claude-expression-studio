@@ -14,6 +14,26 @@ Entry template:
 
 ---
 
+## 2026-06-11 — USB-CDC Serial prints FREEZE the whole board when no monitor is attached
+**Symptom:** Every animation hitches/catches on a regular interval and the web
+server turns sluggish — feels like "some background process on a timer". Started
+right after enabling **USB CDC On Boot** in Tools.
+**Cause:** With CDC enabled, `Serial` is the hardware USB-CDC port. In core
+3.3.9, `HWCDC::write` blocks up to `tx_timeout_ms` (100ms) per chunk and allows
+20 consecutive timeouts (~2s total) when the cable is plugged but the host isn't
+draining the port — i.e. the NORMAL state: Serial Monitor closed (we close it
+for every LittleFS upload). The 10-second `[heap]` log line alone froze loop()
+— animations, FastLED, and HTTP all live there. With CDC *Disabled* (the old
+setting) prints went to UART0, which never blocks — that's why it "was fast
+before".
+**Fix / rule:** `Serial.setTxTimeoutMs(0)` right after `Serial.begin()` (guarded
+by `#if ARDUINO_USB_CDC_ON_BOOT && ARDUINO_USB_MODE`) — prints become
+best-effort: they flow when a monitor is attached, drop when it isn't, and NEVER
+block. Rule: on USB-CDC boards, diagnostics must never be allowed to stall the
+loop. The 10s `[heap]` line now also prints `max-stall=<ms>` (longest loop()
+gap that window) — use it to verify: >50ms hitches with the monitor closed
+mean something is blocking again.
+
 ## 2026-06-11 — Clock/calendar pulse dim white "forever" right after boot
 **Symptom:** Every calendar style (and the clock) shows only the pulsing dim
 white "waiting" screen, looking completely broken — while WiFi/internet are fine.
