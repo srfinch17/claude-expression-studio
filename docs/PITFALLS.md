@@ -14,6 +14,24 @@ Entry template:
 
 ---
 
+## 2026-06-11 — Web UI slow: single-client WebServer × per-page script refetches
+**Symptom:** Every page load noticeably sluggish; got worse as pages gained the
+shared scripts (bright.js / palette.js / ledsim.js).
+**Cause:** Two multiplying facts. (1) Arduino WebServer serves ONE connection at
+a time — `accept()` only runs after the current client finishes, and an idle
+connection (Chrome opens speculative parallel sockets that send nothing) pins
+the server for up to `HTTP_MAX_DATA_WAIT` (5s, core #define). (2) Each page
+load made ~5-6 requests because the shared .js files were re-served with no
+caching — more sockets, more chances to get pinned behind an idle one.
+**Fix / rule:** Static assets (.js/.css/.png/.ico) are served with
+`Cache-Control: max-age=86400`, so the browser fetches them once; HTML stays
+uncached so LittleFS uploads appear on plain reload. `server.enableDelay(false)`
+removes the idle 1ms sleep. **⚠ Dev-loop consequence: after re-uploading a
+CHANGED .js file, do ONE hard refresh (Ctrl+F5)** — a plain reload serves the
+day-old cached copy and your change "mysteriously" won't appear. Also: browsing
+via IP beats `esp32matrix.local` (mDNS adds per-connection lookups), and the
+phone-hotspot path is inherently slower than the home LAN — judge speed there.
+
 ## 2026-06-11 — USB-CDC Serial prints FREEZE the whole board when no monitor is attached
 **Symptom:** Every animation hitches/catches on a regular interval and the web
 server turns sluggish — feels like "some background process on a timer". Started
