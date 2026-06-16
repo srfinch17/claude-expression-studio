@@ -9,7 +9,16 @@ Status: 🔵 planned · 🟡 spec'd · 🟠 in progress · ✅ done
 
 ---
 
-## ▶ Where we are (updated 2026-06-10 — read this first after a restart)
+## ▶ Where we are (updated 2026-06-15 — read this first after a restart)
+
+**✅ 2026-06-15: FULL HARDWARE VERIFICATION COMPLETE.** Every 🟠 "built, pending
+hardware test" item below is now hardware-confirmed (brightness, ledsim, sketch,
+emoji, calendar, sound, liquid, weather, expression display). Also done this
+session: emoji face downscale fixed (feature-snap + contrast-gated vibrance);
+calendar overhaul (per-style colors, 32 presets, live auto-apply, all-style
+framebuffer preview, 3-color scroll); new reusable `GET /api/display/framebuffer`;
+weather partly-cloudy sun polish; frames heap-crash closed (PSRAM + guard). Branch
+is ready to consider merging to master.
 
 All work is on branch **`feature/shared-ui-brightness`** (**not yet merged to
 master**). Built 2026-06-08/09: per-app brightness (S1, non-linear slider), S2
@@ -30,7 +39,7 @@ exposed, README flash settings corrected to 4MB.
 natural evolution of this interface"). The matrix becomes Claude's autonomous
 status/emotion window: canned vetted glyphs (working/done/alert/party/
 spaceship/…), Claude-drawn custom frame animations, and a saved library that
-grows. 🟠 Built — pending hardware test. Spec:
+grows. ✅ Built — hardware-verified 2026-06-15. Spec:
 `docs/superpowers/specs/2026-06-11-claude-expression-display.md`. Firmware
 `/api/display/frames` + `anim_frames.ino`; MCP `matrix_express` /
 `matrix_animate` / `matrix_list_expressions`; canned art in
@@ -59,7 +68,7 @@ Several requested features are the same machinery wearing different hats. The
 order below is chosen so we build each shared component once, then every later
 feature just consumes it. Three reusable pieces carry most of the work:
 
-### S1 · Brightness widget (per-app brightness control) 🟠 built — pending hardware test
+### S1 · Brightness widget (per-app brightness control) ✅ built — hardware-verified 2026-06-15
 Spec: `docs/superpowers/specs/2026-06-08-per-app-brightness-design.md`.
 Shipped as `data/bright.js` (auto-mount or explicit). On index.html + 9 pages
 that lacked brightness, AND migrated animations/matrix_rain/emoji to the shared
@@ -100,7 +109,7 @@ frame. **Consumed by:** sketch (paint→push), emoji (downscale→push), any
 > Net effect: once S1–S3 exist, **sketch ≈ S3 paint grid + S1**, and
 > **emoji ≈ sketch + the quantizer + image import**. We build the hard part once.
 
-### S4 · `ledsim.js` — brightness-accurate preview model 🟠 built — pending hardware test
+### S4 · `ledsim.js` — brightness-accurate preview model ✅ built — hardware-verified 2026-06-15
 Spec: `docs/superpowers/specs/2026-06-08-ledsim-preview-design.md`. Shipped as
 `data/ledsim.js` (global `LedSim`) + a `matrixbrightness` broadcast in
 `bright.js`. The FastLED dimming + visibility-threshold + gamma math, extracted
@@ -126,7 +135,7 @@ quantizer** must clamp colors above — so S4 and the emoji work share the model
 Build **S1 (brightness widget)** first and retrofit existing pages, then **S2**
 and **S3** scaffolding. Everything downstream assumes these exist.
 
-### Phase 2 — Liquid/fluid fixes 🟠 built — pending hardware test + IMU calibration
+### Phase 2 — Liquid/fluid fixes ✅ built — hardware-verified 2026-06-15 + IMU calibration
 Spec: `docs/superpowers/specs/2026-06-08-liquid-fixes-design.md`. Color bug fixed
 (reuses fire's `activePalette`), physics reworked to a 2D gravity-projection
 closed container, custom top/bottom gradient added. **First flash is an IMU
@@ -142,18 +151,18 @@ Actively annoying, and self-contained (firmware physics + color). Three parts:
    palette pickers, clock-style) to show frothiness. Full per-page color
    selector can come later; for now the 4 presets + gradient.
 
-### Phase 3 — Static-image apps (share the most) 🟠 in progress
-- **Sketch app** 🟠 built — pending hardware test. `data/sketch.html`: 8×8 paint
+### Phase 3 — Static-image apps (share the most) ✅ hardware-verified 2026-06-15
+- **Sketch app** ✅ built — hardware-verified 2026-06-15. `data/sketch.html`: 8×8 paint
   grid (mouse+touch), swatches, eraser, ledsim board preview, POSTs
   `/api/display/matrix`. Reuses bright.js + ledsim.js. Spec:
   `docs/superpowers/specs/2026-06-09-sketch-app-design.md`.
-- **Emoji app** 🟠 built — pending hardware test. Added a **vibrance/saturation
+- **Emoji app** ✅ built — hardware-verified 2026-06-15. Added a **vibrance/saturation
   punch** (HSV) + a Vibrance slider to `emoji.html`: averaging to 8×8 desaturates
   colors into gray soup, so we push saturation (and lift dim cells) toward bold,
   fewer hues that read at 8×8 — exactly the "degrade quality so it shrinks
   better" the user asked for. Reuses the existing downscale + normalize pipeline.
 
-### Phase 4 — Calendar app 🟠 built — pending hardware test
+### Phase 4 — Calendar app ✅ built — hardware-verified 2026-06-15
 Spec: `docs/superpowers/specs/2026-06-09-calendar-app-design.md`. Firmware
 `anim_calendar.ino` (5 styles: scroll / bignum / grid / clock / square — square
 added 2026-06-11: 2-letter weekday over big day number; NTP wait now shows an
@@ -162,7 +171,7 @@ clock's NTP + the font helpers; web `calendar.html` hub with style buttons +
 **S2 palette** (its first consumer) + brightness widget; home Calendar card; MCP
 `calendar` mode. Reuses clock NTP + S1/S2.
 
-### Phase 5 — Sound/vibration visualizer 🟠 built — pending hardware test
+### Phase 5 — Sound/vibration visualizer ✅ built — hardware-verified 2026-06-15
 Spec: `docs/superpowers/specs/2026-06-09-sound-visualizer-design.md`. Firmware
 `anim_sound.ino`: VU bar driven by IMU vibration-energy (baseline-subtracted
 magnitude → fast-attack/slow-release level + peak hold), gradient + S2 colors;
