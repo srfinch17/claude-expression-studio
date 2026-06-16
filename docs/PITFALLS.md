@@ -14,6 +14,27 @@ Entry template:
 
 ---
 
+## 2026-06-15 — Board "dies" when the Serial Monitor closes (only while USB-tethered to a PC)
+**Symptom:** With `USB CDC On Boot: Enabled`, the board appears to drop WiFi / stop
+serving the web UI and "turn off" whenever the Serial Monitor is closed — and only stays
+alive with the monitor open. Looks alarming, like a crash.
+**Cause:** A **PC-USB-host artifact**, NOT a firmware bug. Enabling CDC On Boot reroutes
+`Serial` to the USB-Serial-JTAG (HWCDC) peripheral; its relationship with the *host PC*
+(port close / USB selective-suspend / SOF stop) is what disturbs the board. The firmware
+loop itself is clean: writes are non-blocking (`Serial.setTxTimeoutMs(0)`), there is no
+`flush()`, no `while(!Serial)` guard, no `delay()` in the loop, and only ~one print per 10s
+— so the loop has no mechanism to stall on monitor-close. The whole project ran headless
+fine until CDC On Boot was enabled (for live debugging) this session.
+**Proof / decisive test:** Power the board from a **USB wall charger / power bank (no PC)**
+— it runs rock-solid indefinitely. The issue ONLY appears tethered to a PC with the
+monitor closed (a transient dev-loop state).
+**Fix / rule:** Not a deployment bug — real-world use is wall-powered with no serial host,
+so it's unaffected; don't block a release on it. For DEBUGGING, just keep the monitor open
+while tethered. If you ever need a headless board **powered from an always-on computer's
+USB** (not a wall adapter), flash with `USB CDC On Boot: Disabled` (the original headless
+config — `Serial` then goes to harmless UART0 and the USB peripheral stays dormant except
+for flashing). CDC-Enabled is a debug convenience, not the deployment default.
+
 ## 2026-06-11 — Web UI slow: single-client WebServer × per-page script refetches
 **Symptom:** Every page load noticeably sluggish; got worse as pages gained the
 shared scripts (bright.js / palette.js / ledsim.js).
