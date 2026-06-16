@@ -1,0 +1,9 @@
+{
+  "description": "Friendly yellow smiley face — cheerful idle goof. Part of the bored-Claude rotation.",
+  "frames": [
+    ["..YYYY..", ".YYYYYY.", "YY.YY.YY", "YYYYYYYY", "Y.YYYY.Y", "YY....YY", ".YYYYYY.", "..YYYY.."]
+  ],
+  "colors": { "Y": "#ffc800" },
+  "frame_ms": 150,
+  "loop": 0
+}

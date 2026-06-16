@@ -1,0 +1,19 @@
+{
+  "_comment": "Merge this 'hooks' block into your ~/.claude/settings.json. Fix the absolute path to wherever you put the scripts, and use 'python' or 'python3' to match your system. Hooks load at session start, so restart Claude Code after editing.",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" working" }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" done" }
+        ]
+      }
+    ]
+  }
+}
