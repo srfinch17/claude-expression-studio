@@ -36,8 +36,13 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const EXPR_DIR = path.join(HERE, path.basename(HERE) === "dist" ? ".." : ".", "expressions");
 
 async function loadSavedExpression(name: string): Promise<Expression | null> {
+  // Sanitize exactly like save_as before building the path: path.join collapses
+  // "..", so an unsanitized name (e.g. "../../package") could escape EXPR_DIR and
+  // probe arbitrary .json files (a file-existence oracle). Saved names are already
+  // kebab-lowercase, so this is a no-op for real expressions.
+  const safe = String(name).toLowerCase().replace(/[^a-z0-9-]/g, "-");
   try {
-    return JSON.parse(await readFile(path.join(EXPR_DIR, `${name}.json`), "utf8")) as Expression;
+    return JSON.parse(await readFile(path.join(EXPR_DIR, `${safe}.json`), "utf8")) as Expression;
   } catch {
     return null;
   }
@@ -121,14 +126,21 @@ async function post(path: string, body: object = {}) {
 // 8×8 pixel block — alpha-composited against black so transparent edges
 // don't wash out the colors.
 // ------------------------------------------------------------
-// These mirror data/emoji.html so the MCP tool produces the same 8×8 the web
-// preview shows (192px render + inverse-luminance downsample + normalize + vibrance).
+// These MUST stay in sync with data/emoji.html's render pipeline so matrix_show_emoji
+// produces the SAME 8×8 the web preview shows: 192px render → feature-snap downsample →
+// normalize → contrast-gated vibrance. Tune one, tune the other (shared knobs below).
+// KEEP IN SYNC WITH: esp32_matrix_webserver/data/emoji.html (renderEmoji + punchColors).
+const FEATURE_RATIO = 0.50;     // a source pixel is "ink" (a feature) if its luminance < fieldL * this
+const FEATURE_SNAP = 0.30;      // a cell snaps to ink if at least this fraction of its pixels are ink
+const LOCAL_DARK_RATIO = 0.70;  // a cell is a "feature" if darker than this × its neighbour-mean luminance
+const FEATURE_DEEPEN = 0.85;    // deepen a detected feature cell's value by this (crisper, no lift)
 function parseHex(hex: string): [number, number, number] {
   return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
 }
 function toHex(r: number, g: number, b: number): string {
   return "#" + [r, g, b].map(v => Math.min(255, Math.round(v)).toString(16).padStart(2, "0")).join("");
 }
+function luma(r: number, g: number, b: number): number { return r * 0.299 + g * 0.587 + b * 0.114; }
 function rgb2hsv(r: number, g: number, b: number): [number, number, number] {
   r /= 255; g /= 255; b /= 255;
   const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
@@ -145,15 +157,29 @@ function hsv2rgb(h: number, s: number, v: number): [number, number, number] {
 }
 function punch(matrix: string[][], amount: number): string[][] {
   const k = amount / 100;
-  return matrix.map(row => row.map(hex => {
+  // Per-cell luminance grid (black cells = 0) so we can judge local contrast.
+  const L = matrix.map(row => row.map(hex => { const [r, g, b] = parseHex(hex); return luma(r, g, b); }));
+  return matrix.map((row, y) => row.map((hex, x) => {
     const [r, g, b] = parseHex(hex);
     if (r === 0 && g === 0 && b === 0) return "#000000";
     let [h, s, v] = rgb2hsv(r, g, b);
-    // Ramp the saturation boost in by the ORIGINAL saturation (mirrors
-    // emoji.html punchColors): achromatic cells (s≈0, hue undefined → defaults
-    // to red) must stay achromatic or white/gray emoji render pink.
+    // Ramp the saturation boost in by the ORIGINAL saturation (mirrors emoji.html
+    // punchColors): achromatic cells (s≈0, hue undefined → defaults to red) must
+    // stay achromatic or white/gray emoji render pink.
     s = Math.min(1, s + (1 - s) * k * Math.min(1, s / 0.15));
-    v = Math.min(1, v + (1 - v) * k * 0.45);
+    // Local-contrast gate: a cell darker than its (non-black) neighbours is a feature
+    // (eye/mouth) — keep it dark (deepen, no lift); otherwise lift muddy/dark FILL cells.
+    let sum = 0, n = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dy && !dx) continue;
+      const ny = y + dy, nx = x + dx;
+      if (ny < 0 || ny > 7 || nx < 0 || nx > 7) continue;
+      if (L[ny][nx] <= 0) continue;
+      sum += L[ny][nx]; n++;
+    }
+    const localMean = n ? sum / n : 0;
+    if (n && L[y][x] < localMean * LOCAL_DARK_RATIO) v = v * FEATURE_DEEPEN;
+    else v = Math.min(1, v + (1 - v) * k * 0.45);
     const [nr, ng, nb] = hsv2rgb(h, s, v);
     return toHex(nr, ng, nb);
   }));
@@ -184,27 +210,41 @@ function emojiToMatrix(emoji: string): string[][] {
   ctx.fillText(emoji, SIZE / 2, SIZE / 2);
 
   const { data } = ctx.getImageData(0, 0, SIZE, SIZE);
+
+  // Pass 1 — bright-field luminance = 75th percentile of opaque pixels (the dominant
+  // fill, e.g. a face's yellow). Pixels darker than fieldL*FEATURE_RATIO are "ink".
+  const lumas: number[] = [];
+  for (let i = 0; i < data.length; i += 4) if (data[i + 3] > 50) lumas.push(luma(data[i], data[i + 1], data[i + 2]));
+  if (!lumas.length) return Array.from({ length: 8 }, () => Array(8).fill("#000000"));
+  lumas.sort((a, b) => a - b);
+  const fieldL = lumas[Math.min(lumas.length - 1, Math.floor(lumas.length * 0.75))];
+  const inkThreshold = fieldL * FEATURE_RATIO;
+
+  // Pass 2 — per 8×8 cell, split ink (feature) vs field pixels; snap the cell to the
+  // dark feature when enough of it is ink, else average only the clean field.
   const raw: string[][] = [];
   for (let by = 0; by < 8; by++) {
     const row: string[] = [];
     for (let bx = 0; bx < 8; bx++) {
-      let r = 0, g = 0, b = 0, totalW = 0, count = 0;
+      let iR = 0, iG = 0, iB = 0, iN = 0, fR = 0, fG = 0, fB = 0, fN = 0;
       for (let py = 0; py < BLOCK; py++) {
         for (let px = 0; px < BLOCK; px++) {
           const i = ((by * BLOCK + py) * SIZE + (bx * BLOCK + px)) * 4;
-          if (data[i + 3] > 50) {
-            const pL = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
-            const w = Math.pow((255 - pL + 20) / 275, 2);   // inverse-luminance weight (keep dark features)
-            r += data[i] * w; g += data[i + 1] * w; b += data[i + 2] * w;
-            totalW += w; count++;
-          }
+          if (data[i + 3] <= 50) continue;
+          const Lp = luma(data[i], data[i + 1], data[i + 2]);
+          if (Lp < inkThreshold) { iR += data[i]; iG += data[i + 1]; iB += data[i + 2]; iN++; }
+          else { fR += data[i]; fG += data[i + 1]; fB += data[i + 2]; fN++; }
         }
       }
-      row.push(count < MIN_OPAQUE ? "#000000" : toHex(r / totalW, g / totalW, b / totalW));
+      const opaque = iN + fN;
+      if (opaque < MIN_OPAQUE) row.push("#000000");
+      else if (iN / opaque >= FEATURE_SNAP) row.push(toHex(iR / iN, iG / iN, iB / iN)); // snap to feature
+      else if (fN) row.push(toHex(fR / fN, fG / fN, fB / fN));                          // clean field
+      else row.push(toHex(iR / iN, iG / iN, iB / iN));                                  // all-ink cell
     }
     raw.push(row);
   }
-  return punch(normalize(raw), 60);   // match the web page's normalize + default vibrance
+  return punch(normalize(raw), 60);   // normalize + contrast-gated vibrance (matches emoji.html)
 }
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
