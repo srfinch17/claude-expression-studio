@@ -118,6 +118,7 @@ over `esp32matrix.local`** in MCP config (mDNS is unreliable in spawned procs).
 ```
 GET  /api/status
 GET  /api/sensors/{temperature,accelerometer,weather}
+GET  /api/display/framebuffer  # live 8×8 leds[] as 64 "RRGGBB" (row-major) — exact board mirror any page can poll for a preview
 POST /api/display/clear
 POST /api/brightness        { level: 0-255 }
 POST /api/display/text      { text, color, color2, gradient, small, tiny, scroll_speed }
