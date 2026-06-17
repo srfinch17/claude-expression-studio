@@ -21,6 +21,9 @@ MCP tool that picks a random app from a curated, owner-approved lineup and launc
    const.
 5. **Scope: tool only.** The existing bored/idle Claude Code hook is unchanged; wiring it to
    call `matrix_idle` automatically is explicitly out of scope for now.
+6. **Brightness 5 on every launch.** `matrix_idle` sets board brightness to **5** (the user's
+   standing ambient baseline) as part of launching, so an idle pick never blasts at full
+   brightness regardless of what the board was last set to.
 
 ## The approved lineup (6 apps)
 
@@ -49,6 +52,7 @@ Three small units, all in `mcp_server/`:
 ### 1. `mcp_server/idle.ts` — the lineup + the pure picker
 - `export interface IdleApp { type: string; label: string; params: Record<string, unknown>; }`
 - `export const IDLE_APPS: IdleApp[]` — the fixed curated list above.
+- `export const IDLE_BRIGHTNESS = 5;` — the ambient brightness every idle launch applies.
 - `export function pickIdleApp(apps: IdleApp[], lastType: string | null): IdleApp` — returns a
   random member; when `apps.length >= 2` it never returns the app whose `type === lastType`
   (re-roll/filter so consecutive picks differ). Pure and deterministic-testable via an
@@ -58,14 +62,16 @@ Keeping the list + picker in their own module makes the picker unit-testable wit
 SDK or the board, and isolates the one thing the user edits (the list).
 
 ### 2. `mcp_server/index.ts` — the `matrix_idle` tool
-- Import `IDLE_APPS`, `pickIdleApp` from `./idle.js`.
+- Import `IDLE_APPS`, `IDLE_BRIGHTNESS`, `pickIdleApp` from `./idle.js`.
 - Module-level `let lastIdleType: string | null = null;` to enforce avoid-immediate-repeat
   across calls within a server session.
 - ListTools entry `matrix_idle` (no params), with a description telling Claude to use it when
   idle/bored to show a pre-approved "something cool."
 - Dispatch case: `const app = pickIdleApp(IDLE_APPS, lastIdleType); lastIdleType = app.type;`
-  then `POST /api/display/animation` with `{ type: app.type, ...app.params }` (reuse the
-  existing `post()` helper). Report `Idle pick: ${app.label}` on success, or the HTTP error.
+  then **set ambient brightness** `POST /api/brightness { level: IDLE_BRIGHTNESS }`, then
+  **launch** `POST /api/display/animation` with `{ type: app.type, ...app.params }` (reuse the
+  existing `post()` helper for both). The launch result determines success; report
+  `Idle pick: ${app.label} (brightness ${IDLE_BRIGHTNESS})` on success, or the HTTP error.
 
 ### 3. `mcp_server/idle.test.ts` — unit tests (Node built-in runner, type-stripping)
 
@@ -74,6 +80,7 @@ SDK or the board, and isolates the one thing the user edits (the list).
 ```
 Claude (judgment: "I'm idle, show something cool")
   └─ matrix_idle  → pickIdleApp(IDLE_APPS, lastIdleType)   [avoids repeating last]
+       ├─ POST /api/brightness        { level: 5 }         → ambient brightness
        └─ POST /api/display/animation { type, ...params }  → board launches the app
   (lastIdleType updated so the next call differs)
 ```
@@ -83,6 +90,9 @@ Claude (judgment: "I'm idle, show something cool")
 - **Board unreachable / HTTP error:** the `post()` helper's result is checked; the tool
   returns `Error ${status}: ${body}` (or the fetch-timeout catch in the dispatch's try/catch,
   same as every other tool). It does not throw.
+- **Brightness POST fails but launch succeeds (or vice-versa):** the launch result is what the
+  tool reports success on; a failed brightness set is non-fatal (the app still shows, just not
+  re-dimmed) — note it in the reply but don't fail the call.
 - **`IDLE_APPS` empty:** guard in the dispatch — if the list is empty, return a clear message
   ("no idle apps configured") rather than calling the picker. (With a fixed in-code list this
   is effectively unreachable, but the guard keeps the tool honest if someone empties it.)
@@ -99,6 +109,7 @@ Claude (judgment: "I'm idle, show something cool")
 - `IDLE_APPS` sanity: non-empty; every entry has `type`, `label`, and a `params` object; all
   `type`s are among the firmware's known animation types (fire, dancefloor, fireworks, clock,
   frostbite, matrix_rain).
+- `IDLE_BRIGHTNESS === 5` (guards against an accidental edit that un-dims idle launches).
 - **Smoke (manual / no board needed):** `tools/list` includes `matrix_idle`; a focused
   smoke that the dispatch builds a `{type,...params}` body. Live board verification is a user
   step (call `matrix_idle` a few times, confirm varied approved apps appear).
