@@ -117,6 +117,8 @@ over `esp32matrix.local`** in MCP config (mDNS is unreliable in spawned procs).
 
 ```
 GET  /api/status            # + fw_version, fw_built (__DATE__ __TIME__), web_version — see Versioning
+GET  /api/presence          # current PresenceMessage (semantic status for any renderer)
+POST /api/presence          { intent, headline?, detail?, data?, urgency? }  # board stamps ts
 GET  /api/sensors/{temperature,accelerometer,weather}
 GET  /api/display/framebuffer  # live 8×8 leds[] as 64 "RRGGBB" (row-major) — exact board mirror any page can poll for a preview
 POST /api/display/clear
@@ -141,6 +143,17 @@ expression per state change — no spam. Everything shown must pass the
 silhouette test (a human identifies it at a glance). Record what the user
 likes/dislikes in auto-memory. Spec:
 `docs/superpowers/specs/2026-06-11-claude-expression-display.md`.
+
+## Presence (semantic status — the protocol-in-embryo)
+
+`presence_set` (MCP) emits a **PresenceMessage** — `intent` (working/thinking/done/ok/
+celebrate/alert/error/question/info/idle) + optional `headline`/`detail`/`data`
+(progress | 1–3 readouts | sparkline) + `urgency`. One call renders on BOTH the 8×8
+(canned glyph via the frame path) and the **desktop card** (`/presence-card.html`, polls
+`/api/presence`). The board stores the last message at `/api/presence` (RAM). This is the
+first slice of the "presence protocol" — one semantic message, many renderers. v0 = card is
+the rich renderer; 8×8 stays glyph-only (board-native LED data rendering is v0.5). Spec:
+`docs/superpowers/specs/2026-06-17-presence-protocol-v0-design.md`.
 
 ## Versioning (know what's actually deployed)
 
