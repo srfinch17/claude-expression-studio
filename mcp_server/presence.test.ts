@@ -41,6 +41,10 @@ test("data.values accepts 1..3 readouts, rejects 0 or 4 or non-number", () => {
   assert.throws(() => normalizePresence({ intent: "info", data: { values: [{ unit: "C" }] } }), /value/);
 });
 
+test("data.values rejects a non-object element with a clear message", () => {
+  assert.throws(() => normalizePresence({ intent: "info", data: { values: [5] } }), /must be an object/);
+});
+
 test("data.series accepts 1..32 numbers, rejects 33 or non-number", () => {
   assert.deepEqual(normalizePresence({ intent: "info", data: { series: [1,2,3] } }).data, { series: [1,2,3] });
   assert.throws(() => normalizePresence({ intent: "info", data: { series: Array(33).fill(0) } }), /1-32/);

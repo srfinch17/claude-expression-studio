@@ -60,8 +60,8 @@ function normalizeData(d: unknown): PresenceData | undefined {
     if (!Array.isArray(arr) || arr.length < 1 || arr.length > 3)
       throw new Error("data.values must be an array of 1-3 readouts");
     const values: Readout[] = arr.map((r, i) => {
-      if (!isObj(r) || !Number.isFinite(Number(r.value)))
-        throw new Error(`data.values[${i}].value must be a number`);
+      if (!isObj(r)) throw new Error(`data.values[${i}] must be an object`);
+      if (!Number.isFinite(Number(r.value))) throw new Error(`data.values[${i}].value must be a number`);
       const out: Readout = { value: Number(r.value) };
       if (r.unit != null) out.unit = String(r.unit);
       if (r.label != null) out.label = String(r.label);

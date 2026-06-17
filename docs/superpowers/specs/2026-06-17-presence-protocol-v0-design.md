@@ -97,6 +97,12 @@ Starter vocabulary (maps onto existing canned glyphs where they exist):
 - No NVS persistence in v0 (RAM only; resets to idle on reboot). Retaining last presence
   across reboots is a deferred nicety.
 - Wired in `setup()` alongside the other routes; handler lives in `api_handlers.ino`.
+- In v0 the board is a **verbatim store**: it performs only minimal validation (intent present
+  and a string) and serves back exactly what was POSTed (plus the stamped `ts`), rather than
+  re-validating against the full schema — `mcp_server/presence.ts` is the canonical validator
+  and the board trusts that the MCP layer has already normalized the message. Like all board
+  endpoints, `/api/presence` is unauthenticated and trusts the LAN, which is acceptable for
+  v0's personal-first scope.
 
 ### 2. MCP `presence_set` tool (TypeScript)
 New tool in `mcp_server/index.ts`. Claude emits one PresenceMessage. The handler:
