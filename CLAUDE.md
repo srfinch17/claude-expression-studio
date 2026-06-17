@@ -144,6 +144,11 @@ silhouette test (a human identifies it at a glance). Record what the user
 likes/dislikes in auto-memory. Spec:
 `docs/superpowers/specs/2026-06-11-claude-expression-display.md`.
 
+`matrix_idle` (MCP) puts a random PRE-APPROVED app on the board (fire / dance floor /
+fireworks / clock / frostbite / matrix rain) at ambient brightness 5 — use it unprompted when
+idle/bored to show something cool. Lineup is a fixed const in `mcp_server/idle.ts` (edit + `npx
+tsc` + reconnect to change). Spec: `docs/superpowers/specs/2026-06-17-matrix-idle-design.md`.
+
 ## Presence (semantic status — the protocol-in-embryo)
 
 `presence_set` (MCP) emits a **PresenceMessage** — `intent` (working/thinking/done/ok/

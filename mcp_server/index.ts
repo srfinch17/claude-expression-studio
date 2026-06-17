@@ -27,6 +27,7 @@ import { createCanvas } from "@napi-rs/canvas";
 // Claude's expression channel: canned glyph library + text-art → wire conversion.
 import { CANNED, MAX_FRAMES, artToFrameHex, expressionToWire, type Expression } from "./expressions.js";
 import { normalizePresence, cannedFor } from "./presence.js";
+import { IDLE_APPS, IDLE_BRIGHTNESS, pickIdleApp } from "./idle.js";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -99,6 +100,9 @@ import {
 // The ?? operator means "use the right side if the left is null/undefined".
 // ------------------------------------------------------------
 const BOARD_URL = process.env.ESP32_URL ?? "http://esp32matrix.local";
+
+// Remembers the last matrix_idle pick so consecutive idle launches differ.
+let lastIdleType: string | null = null;
 
 // ------------------------------------------------------------
 // HTTP HELPERS
@@ -529,6 +533,12 @@ One expression per state change — don't spam every step. Canned (pre-vetted as
       },
     },
     {
+      name: "matrix_idle",
+      description:
+        "Show a random PRE-APPROVED 'something cool' on the board — use when you're idle or bored and want to put an ambient display up unprompted. Picks randomly from a curated lineup (fire, dance floor, fireworks, clock, frostbite, matrix rain), avoids repeating the last pick, and sets a gentle ambient brightness (5). No parameters.",
+      inputSchema: { type: "object", properties: {}, required: [] },
+    },
+    {
       name: "matrix_animate",
       description: `Draw and play a custom 8×8 animation of your own design — for anything the canned expressions don't cover: a custom status icon, a story illustration, a teaching visual, a playful moment.
 Format: frames = array of 1-${MAX_FRAMES} frames; each frame is 8 strings of exactly 8 characters. "." = off/black; every other character must be defined in colors (e.g. {"R": "#ff0000"}).
@@ -743,6 +753,19 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
 
         return { content: [{ type: "text", text: `Presence "${msg.intent}" set (${cardNote}; ${ledNote}).` }] };
+      }
+
+      case "matrix_idle": {
+        if (IDLE_APPS.length === 0) return { content: [{ type: "text", text: "No idle apps configured." }] };
+        const app = pickIdleApp(IDLE_APPS, lastIdleType);
+        lastIdleType = app.type;
+
+        const br = await post("/api/brightness", { level: IDLE_BRIGHTNESS });
+        const r = await post("/api/display/animation", { type: app.type, ...app.params });
+        if (!r.ok) return { content: [{ type: "text", text: `Error ${r.status}: ${r.body}` }] };
+
+        const brNote = br.ok ? "" : ` (brightness set failed: ${br.status})`;
+        return { content: [{ type: "text", text: `Idle pick: ${app.label} at brightness ${IDLE_BRIGHTNESS}${brNote}.` }] };
       }
 
       case "matrix_animate": {
