@@ -26,6 +26,7 @@ import { createCanvas } from "@napi-rs/canvas";
 
 // Claude's expression channel: canned glyph library + text-art → wire conversion.
 import { CANNED, MAX_FRAMES, artToFrameHex, expressionToWire, type Expression } from "./expressions.js";
+import { normalizePresence, cannedFor } from "./presence.js";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -512,6 +513,22 @@ One expression per state change — don't spam every step. Canned (pre-vetted as
       },
     },
     {
+      name: "presence_set",
+      description:
+        "Set Claude's ambient PRESENCE — a semantic status rendered on every connected output (the 8x8 LEDs and the desktop presence card) from one call. Prefer this over matrix_express for status/mood: it carries intent + optional headline/detail/data + urgency. intent vocab: working, thinking, done, ok, celebrate, alert, error, question, info, idle (others accepted, render generic).",
+      inputSchema: {
+        type: "object",
+        properties: {
+          intent: { type: "string", description: "Required. One of: working, thinking, done, ok, celebrate, alert, error, question, info, idle." },
+          headline: { type: "string", description: "Short status line, ~<=24 chars (e.g. 'building...')." },
+          detail: { type: "string", description: "One line of extra context (e.g. 'running tests')." },
+          data: { type: "object", description: "Optional readout: {progress:0..1} OR {values:[{value,unit?,label?}] (1-3)} OR {series:[numbers] (<=32), label?, unit?}." },
+          urgency: { type: "string", enum: ["ambient", "notice", "urgent"], description: "Attention level; default ambient." },
+        },
+        required: ["intent"],
+      },
+    },
+    {
       name: "matrix_animate",
       description: `Draw and play a custom 8×8 animation of your own design — for anything the canned expressions don't cover: a custom status icon, a story illustration, a teaching visual, a playful moment.
 Format: frames = array of 1-${MAX_FRAMES} frames; each frame is 8 strings of exactly 8 characters. "." = off/black; every other character must be defined in colors (e.g. {"R": "#ff0000"}).
@@ -702,6 +719,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: r.ok
           ? `Expressing "${exprName}" on the matrix (${wire.frames.length} frame${wire.frames.length > 1 ? "s" : ""}${wire.loop ? `, ${wire.loop} pass(es) then hold` : ", looping"}).`
           : `Error ${r.status}: ${r.body}` }] };
+      }
+
+      case "presence_set": {
+        let msg;
+        try {
+          msg = normalizePresence(args);
+        } catch (e) {
+          return { content: [{ type: "text", text: `Invalid presence: ${(e as Error).message}` }] };
+        }
+
+        // Publish the semantic message for the card.
+        const pr = await post("/api/presence", msg);
+        const cardNote = pr.ok ? "card updated" : `card POST error ${pr.status}`;
+
+        // Render the intent on the 8x8 via the existing canned-expression path.
+        const canned = cannedFor(msg.intent);
+        const expr = CANNED[canned] ?? (await loadSavedExpression(canned));
+        let ledNote = `no 8x8 glyph for "${canned}"`;
+        if (expr) {
+          const lr = await post("/api/display/frames", expressionToWire(expr));
+          ledNote = lr.ok ? `8x8 → ${canned}` : `8x8 error ${lr.status}`;
+        }
+
+        return { content: [{ type: "text", text: `Presence "${msg.intent}" set (${cardNote}; ${ledNote}).` }] };
       }
 
       case "matrix_animate": {

@@ -8,5 +8,6 @@
     "outDir": "./dist",
     "esModuleInterop": true,
     "types": ["node"]
-  }
+  },
+  "exclude": ["**/*.test.ts"]
 }
