@@ -739,17 +739,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           return { content: [{ type: "text", text: `Invalid presence: ${(e as Error).message}` }] };
         }
 
-        // Publish the semantic message for the card.
+        // Always publish the full message for the card.
         const pr = await post("/api/presence", msg);
         const cardNote = pr.ok ? "card updated" : `card POST error ${pr.status}`;
 
-        // Render the intent on the 8x8 via the existing canned-expression path.
-        const canned = cannedFor(msg.intent);
-        const expr = CANNED[canned] ?? (await loadSavedExpression(canned));
-        let ledNote = `no 8x8 glyph for "${canned}"`;
-        if (expr) {
-          const lr = await post("/api/display/frames", expressionToWire(expr));
-          ledNote = lr.ok ? `8x8 → ${canned}` : `8x8 error ${lr.status}`;
+        let ledNote: string;
+        if (msg.data) {
+          // Data present → the board renders it natively (v0.5).
+          const lr = await post("/api/display/animation", { type: "presence" });
+          ledNote = lr.ok ? "8x8 → data" : `8x8 data error ${lr.status}`;
+        } else {
+          // No data → render the intent's canned glyph via the frame path (v0 behavior).
+          const canned = cannedFor(msg.intent);
+          const expr = CANNED[canned] ?? (await loadSavedExpression(canned));
+          if (expr) {
+            const lr = await post("/api/display/frames", expressionToWire(expr));
+            ledNote = lr.ok ? `8x8 → ${canned}` : `8x8 error ${lr.status}`;
+          } else {
+            ledNote = `no 8x8 glyph for "${canned}"`;
+          }
         }
 
         return { content: [{ type: "text", text: `Presence "${msg.intent}" set (${cardNote}; ${ledNote}).` }] };
