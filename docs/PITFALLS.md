@@ -14,6 +14,23 @@ Entry template:
 
 ---
 
+## 2026-06-17 — A `#define` macro from another `.ino` isn't visible (depends on alphabetical concat order)
+**Symptom:** `error: 'FONT_CHAR_W' was not declared in this scope ... the macro 'FONT_CHAR_W' had not yet
+been defined ... it was later defined here (fonts.ino)`. The macro plainly exists in another `.ino`,
+yet a function in `anim_presence.ino` can't see it — even though that same file calls *functions*
+from fonts.ino just fine.
+**Cause:** Arduino builds a sketch by concatenating all `.ino` files into one `.cpp` — the main
+sketch (folder-named `.ino`) first, then the rest **alphabetically** — and auto-hoists *function
+prototypes* to the top. But the C preprocessor is purely textual top-to-bottom: a `#define` is only
+in effect *below the line where it appears*. `anim_presence.ino` sorts before `fonts.ino`, so
+`FONT_CHAR_W`/`FONT_CHAR_GAP` (defined in fonts.ino) are undefined where anim_presence uses them.
+Functions work (prototypes are hoisted); macros and types defined in a later-sorted file do NOT.
+Note `MATRIX_W` etc. work because they're `#define`d in the MAIN sketch, which is concatenated first.
+**Fix / rule:** Don't reference a `#define`/`typedef` that lives in an alphabetically-later `.ino`.
+Either inline the literal (we used `4*len - 1` instead of `len*FONT_CHAR_W + (len-1)*FONT_CHAR_GAP`),
+or put shared macros in a real header (`.h`) that the file `#include`s, or in the main sketch (sorts
+first). Reviewing for "does the symbol exist?" is not enough for macros — check concat order.
+
 ## 2026-06-15 — Board "dies" when the Serial Monitor closes (only while USB-tethered to a PC)
 **Symptom:** With `USB CDC On Boot: Enabled`, the board appears to drop WiFi / stop
 serving the web UI and "turn off" whenever the Serial Monitor is closed — and only stays
