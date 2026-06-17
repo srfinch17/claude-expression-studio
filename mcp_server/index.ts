@@ -27,13 +27,24 @@ import { createCanvas } from "@napi-rs/canvas";
 // Claude's expression channel: canned glyph library + text-art → wire conversion.
 import { CANNED, MAX_FRAMES, artToFrameHex, expressionToWire, type Expression } from "./expressions.js";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 // Saved-expression library: JSON files in mcp_server/expressions/ (committed to
 // git so good drawings survive). Works whether we run compiled (dist/) or via tsx.
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const EXPR_DIR = path.join(HERE, path.basename(HERE) === "dist" ? ".." : ".", "expressions");
+// mcp_server/ whether we run from dist/ (compiled) or directly (tsx) — package.json
+// and the expressions/ folder both live there.
+const MCP_DIR = path.join(HERE, path.basename(HERE) === "dist" ? ".." : ".");
+const EXPR_DIR = path.join(MCP_DIR, "expressions");
+const REPO_ROOT = path.join(MCP_DIR, "..");
+
+// Read our own version from package.json at runtime, so `npm run bump` updates
+// the reported MCP version with NO tsc rebuild (only a reconnect). Replaces the
+// old hardcoded "1.0.0" that never changed and gave a false sense of versioning.
+const MCP_VERSION: string =
+  JSON.parse(readFileSync(path.join(MCP_DIR, "package.json"), "utf8")).version ?? "0.0.0";
 
 async function loadSavedExpression(name: string): Promise<Expression | null> {
   // Sanitize exactly like save_as before building the path: path.join collapses
@@ -117,6 +128,39 @@ async function post(path: string, body: object = {}) {
     signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
   return { ok: res.ok, status: res.status, body: await res.text() };
+}
+
+// ------------------------------------------------------------
+// VERSION DRIFT REPORT (for the matrix_version tool)
+// Compares the repo's canonical /VERSION against what each artifact actually
+// reports: firmware + web bundle via /api/status, MCP via package.json. Mirrors
+// scripts/version-check.js — kept inline so the TS build doesn't depend on the
+// repo-root tooling (which is plain JS with no type declarations).
+// ------------------------------------------------------------
+function versionMark(reported: string | undefined, expected: string): string {
+  if (!reported || reported === "unknown") return "? unknown";
+  return reported === expected ? "✓ match" : "⚠ DRIFT";
+}
+
+async function versionReport(): Promise<string> {
+  let expected = "unknown";
+  try { expected = readFileSync(path.join(REPO_ROOT, "VERSION"), "utf8").trim(); } catch { /* leave unknown */ }
+  const lines = [`repo VERSION: ${expected}`];
+  try {
+    const r = await get("/api/status");
+    if (r.ok) {
+      const s = JSON.parse(r.body);
+      const built = s.fw_built ? `  (built ${s.fw_built})` : "";
+      lines.push(`  firmware  ${String(s.fw_version ?? "unknown").padEnd(8)} ${versionMark(s.fw_version, expected)}${built}`);
+      lines.push(`  web       ${String(s.web_version ?? "unknown").padEnd(8)} ${versionMark(s.web_version, expected)}`);
+    } else {
+      lines.push(`  firmware/web   ✗ board returned ${r.status}`);
+    }
+  } catch {
+    lines.push(`  firmware/web   ✗ board unreachable`);
+  }
+  lines.push(`  mcp       ${MCP_VERSION.padEnd(8)} ${versionMark(MCP_VERSION, expected)}`);
+  return lines.join("\n");
 }
 
 // ------------------------------------------------------------
@@ -259,7 +303,7 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 const server = new Server(
   {
     name: "esp32-matrix",
-    version: "1.0.0",
+    version: MCP_VERSION,
   },
   {
     capabilities: { tools: {} },
@@ -295,6 +339,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "matrix_clear",
       description: "Turn off all LEDs and stop any running animation or text scroll.",
+      inputSchema: {
+        type: "object",
+        properties: {},
+        required: [],
+      },
+    },
+    {
+      name: "matrix_version",
+      description:
+        "Check version drift across the three artifacts. Compares the repo's canonical VERSION against the flashed firmware (with its build timestamp), the uploaded web bundle, and this MCP server. Use to answer 'are we current?' — a ⚠ DRIFT row means that artifact needs a redeploy (reflash / LittleFS re-upload / reconnect).",
       inputSchema: {
         type: "object",
         properties: {},
@@ -585,6 +639,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "matrix_clear": {
         const r = await post("/api/display/clear");
         return { content: [{ type: "text", text: r.ok ? "Display cleared." : `Error ${r.status}: ${r.body}` }] };
+      }
+
+      case "matrix_version": {
+        return { content: [{ type: "text", text: await versionReport() }] };
       }
 
       case "matrix_set_brightness": {
