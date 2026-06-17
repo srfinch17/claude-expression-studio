@@ -72,10 +72,9 @@ uses that string in the server `initialize` metadata. Because this reads `packag
 Plain text, repo root. Canonical.
 
 ### 2. Stamp script — `scripts/version-stamp.js` (node, ESM)
-Scripts live in repo-root `scripts/`. The only `package.json` is in `mcp_server/`, so
-its npm-script entries invoke them by relative path (`node ../scripts/version-stamp.js`),
-and the scripts resolve repo paths from their own location (repo root = one level up
-from `scripts/`), not from the npm cwd.
+Scripts live in repo-root `scripts/`, invoked by the **root tooling `package.json`**
+(see component 7) whose cwd is the repo root, so `VERSION` and all artifact paths
+resolve naturally without `../` gymnastics.
 
 Reads `VERSION`, writes the value into:
 - `esp32_matrix_webserver/version.h` (regenerated header; includes a
@@ -89,8 +88,7 @@ Idempotent: running it without a version change reproduces identical files (exce
 records when the web bundle was last stamped).
 
 ### 3. Bump script — invoked via npm scripts
-`mcp_server/package.json` scripts (the repo's only `package.json`, so npm scripts live
-there):
+Scripts live in the **root tooling `package.json`** (component 7):
 - `bump:patch` / `bump:minor` / `bump:major` → compute next SemVer from `VERSION`,
   write `VERSION`, run `version-stamp.js`, then `git add VERSION
   esp32_matrix_webserver/version.h esp32_matrix_webserver/data/version.json
@@ -140,6 +138,21 @@ Because the skill is user-scoped, its files live under `~/.claude/skills/` and a
 part of this repo's git** — only the auto-memory pointer and this spec reference it. A
 one-line pointer is added to auto-memory so future sessions know the skill exists and
 that this repo already implements the pattern.
+
+### 7. Root tooling `package.json`
+A small `package.json` at the repo root, `"private": true`, existing purely to host the
+versioning tooling — making the bump/check commands discoverable from where you'd look
+first (the repo root) rather than buried in `mcp_server/`. It holds:
+- `scripts`: `bump:patch` / `bump:minor` / `bump:major` / `check` (and a `test` for the
+  script unit tests).
+- any devDependencies the scripts/tests need (kept minimal; the scripts use only node
+  built-ins + `fetch` where possible).
+
+This `package.json` is **not** a version source — its own `version` field is irrelevant
+and left at a static placeholder; the canonical version is always the `VERSION` file.
+`mcp_server/package.json` remains the MCP server's own manifest and stays the **stamp
+target** that the runtime reads for the MCP version. Two `package.json` files with
+distinct jobs: root = repo tooling, `mcp_server/` = the MCP app.
 
 ## Data flow
 
