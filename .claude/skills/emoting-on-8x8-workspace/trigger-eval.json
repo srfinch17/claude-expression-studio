@@ -1,0 +1,22 @@
+[
+  {"query": "the working spinner looks like garbage on the panel, can you redesign it so it actually reads as 'busy' when you're compiling something?", "should_trigger": true},
+  {"query": "make a new expression for when you're blocked waiting on me — something that grabs my attention on the matrix but isn't annoying like a strobe", "should_trigger": true},
+  {"query": "the sparkle expression just looks like one flat blue color at brightness 5, i can't see any of the twinkle. fix it", "should_trigger": true},
+  {"query": "draw a little custom animation of a coffee cup with steam rising and save it so you can replay it later when you take a break", "should_trigger": true},
+  {"query": "the heart glyph is reading as pink instead of red on the LEDs, sort out the color", "should_trigger": true},
+  {"query": "can you make the done checkmark flash a few times before it settles instead of just popping on?", "should_trigger": true},
+  {"query": "i want a rocket expression that flies upward with a flame trail, the last attempt was super choppy and only had like 3 frames", "should_trigger": true},
+  {"query": "the party celebration looks disjointed — every frame is a totally different shape. make it read more like falling confetti", "should_trigger": true},
+  {"query": "add a thumbs-down to your canned expressions for when a test fails", "should_trigger": true},
+  {"query": "firing that 24-frame full-panel sparkle froze the whole board and i had to reflash. why, and how do i keep it from happening?", "should_trigger": true},
+  {"query": "add a new fire animation mode to the firmware with its own control page and a palette picker, wire it into the dispatch", "should_trigger": false},
+  {"query": "i just edited the .ino, walk me through uploading it and the LittleFS data and confirming it runs on the board", "should_trigger": false},
+  {"query": "the board won't join my wifi, it keeps falling back to the ESP32-Matrix-Setup hotspot at 192.168.4.1", "should_trigger": false},
+  {"query": "add a humidity option to the weather2 page's F/C mode toggle", "should_trigger": false},
+  {"query": "the MCP server is throwing -32000 and won't reconnect after i rebuilt it", "should_trigger": false},
+  {"query": "scroll the text 'HELLO WORLD' across the matrix in green at medium speed", "should_trigger": false},
+  {"query": "create a new matrix-rain animation mode but make the drops fall faster than the existing one", "should_trigger": false},
+  {"query": "the calendar 'square' style is misaligned by one pixel column, fix the layout math", "should_trigger": false},
+  {"query": "what default brightness should the NTP clock use so it's readable but not blinding at night?", "should_trigger": false},
+  {"query": "write unit tests for the hex color parsing in expressions.ts", "should_trigger": false}
+]

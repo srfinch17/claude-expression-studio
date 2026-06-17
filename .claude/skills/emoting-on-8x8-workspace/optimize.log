@@ -1,0 +1,88 @@
+Split: 12 train, 8 test (holdout=0.4)
+
+============================================================
+Iteration 1/5
+Description: Design legible expressions and custom animations for the ESP32-S3 8x8 LED matrix (Claude's expression channel — matrix_express / matrix_animate / the CANNED library in mcp_server/expressions.ts). Use whenever creating, redesigning, or debugging a glyph or animation that has to read on the physical 64-pixel panel — including when an expression "doesn't read," looks like one flat color, flickers, or freezes the board.
+============================================================
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Warning: query failed: [WinError 10038] An operation was attempted on something that is not a socket
+Traceback (most recent call last):
+  File "<frozen runpy>", line 203, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\srfin\.claude\plugins\cache\claude-plugins-official\skill-creator\unknown\skills\skill-creator\scripts\run_loop.py", line 328, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\srfin\.claude\plugins\cache\claude-plugins-official\skill-creator\unknown\skills\skill-creator\scripts\run_loop.py", line 293, in main
+    output = run_loop(
+        eval_set=eval_set,
+    ...<11 lines>...
+        log_dir=log_dir,
+    )
+  File "C:\Users\srfin\.claude\plugins\cache\claude-plugins-official\skill-creator\unknown\skills\skill-creator\scripts\run_loop.py", line 151, in run_loop
+    live_report_path.write_text(generate_html(partial_output, auto_refresh=True, skill_name=name))
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python314\Lib\pathlib\__init__.py", line 810, in write_text
+    return f.write(data)
+           ~~~~~~~^^^^^^
+  File "C:\Python314\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2717' in position 10688: character maps to <undefined>

@@ -1,0 +1,73 @@
+{
+  "description": "A lightbulb that breathes dim-to-bright and back — \"I have an idea / a suggestion.\" Glass bulb on top, tapered white base.",
+  "frames": [
+    [
+      "..DDDD..",
+      ".DDDDDD.",
+      ".DDDDDD.",
+      ".DDDDDD.",
+      "..DDDD..",
+      "..wwww..",
+      "..wwww..",
+      "...ww..."
+    ],
+    [
+      "..MMMM..",
+      ".MMMMMM.",
+      ".MMMMMM.",
+      ".MMMMMM.",
+      "..MMMM..",
+      "..wwww..",
+      "..wwww..",
+      "...ww..."
+    ],
+    [
+      "..YYYY..",
+      ".YYYYYY.",
+      ".YYYYYY.",
+      ".YYYYYY.",
+      "..YYYY..",
+      "..wwww..",
+      "..wwww..",
+      "...ww..."
+    ],
+    [
+      "..YYYY..",
+      ".YYYYYY.",
+      ".YYYYYY.",
+      ".YYYYYY.",
+      "..YYYY..",
+      "..wwww..",
+      "..wwww..",
+      "...ww..."
+    ],
+    [
+      "..MMMM..",
+      ".MMMMMM.",
+      ".MMMMMM.",
+      ".MMMMMM.",
+      "..MMMM..",
+      "..wwww..",
+      "..wwww..",
+      "...ww..."
+    ],
+    [
+      "..DDDD..",
+      ".DDDDDD.",
+      ".DDDDDD.",
+      ".DDDDDD.",
+      "..DDDD..",
+      "..wwww..",
+      "..wwww..",
+      "...ww..."
+    ]
+  ],
+  "colors": {
+    "Y": "#ffd000",
+    "M": "#a08800",
+    "D": "#5a4c00",
+    "w": "#b8c0c8"
+  },
+  "frame_ms": 180,
+  "loop": 0
+}

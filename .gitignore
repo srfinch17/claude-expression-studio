@@ -16,6 +16,9 @@ mcp_server/.env
 # Claude Code — local/machine-specific settings (permissions, local overrides)
 .claude/settings.local.json
 
+# Superpowers local brainstorm/cache (machine-specific, not part of the repo)
+.superpowers/
+
 # .mcp.json contains machine-specific absolute paths; .claude/settings.json is the portable config
 .mcp.json
 
