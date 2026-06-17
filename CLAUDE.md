@@ -156,8 +156,10 @@ celebrate/alert/error/question/info/idle) + optional `headline`/`detail`/`data`
 (progress | 1–3 readouts | sparkline) + `urgency`. One call renders on BOTH the 8×8
 (canned glyph via the frame path) and the **desktop card** (`/presence-card.html`, polls
 `/api/presence`). The board stores the last message at `/api/presence` (RAM). This is the
-first slice of the "presence protocol" — one semantic message, many renderers. v0 = card is
-the rich renderer; 8×8 stays glyph-only (board-native LED data rendering is v0.5). Spec:
+first slice of the "presence protocol" — one semantic message, many renderers. The 8×8 shows the intent glyph (MCP frame push) for glyph-only presences; when a presence
+carries `data`, the board renders it NATIVELY (v0.5) — progress as a bottom-up panel fill,
+`series` as a column sparkline, `values` as a cycling 3×5 number, all in the intent's color
+(`anim_presence.ino`). The desktop card always renders the full rich message. Spec:
 `docs/superpowers/specs/2026-06-17-presence-protocol-v0-design.md`.
 
 ## Versioning (know what's actually deployed)
