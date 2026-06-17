@@ -51,7 +51,8 @@ PresenceMessage {
             | { values: [{ value, unit?, label? }, ...] }   // 1..3 labeled readouts
             | { series: [number, ...], label?, unit? }      // sparkline, <=32 points
   urgency:  "ambient" | "notice" | "urgent"   // default "ambient"
-  ts:       string     // ISO 8601, stamped by the hub on store (not sent by client)
+  ts:       number     // epoch seconds, stamped by the hub on store (not sent by
+                       //   client); lets the card format to local time
 }
 ```
 - `data` is a **closed union** of four cases: `null`, a `progress` fraction, a `values`
