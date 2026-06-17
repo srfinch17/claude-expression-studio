@@ -1,0 +1,15 @@
+{
+  "name": "esp32-matrix-tooling",
+  "private": true,
+  "type": "module",
+  "description": "Repo-level versioning tooling (bump/stamp/check). NOT a version source — the canonical version is the /VERSION file.",
+  "version": "0.0.0",
+  "scripts": {
+    "bump:patch": "node scripts/version-bump.js patch",
+    "bump:minor": "node scripts/version-bump.js minor",
+    "bump:major": "node scripts/version-bump.js major",
+    "stamp": "node scripts/version-stamp.js",
+    "check": "node scripts/version-check.js",
+    "test": "node --test \"scripts/**/*.test.js\""
+  }
+}

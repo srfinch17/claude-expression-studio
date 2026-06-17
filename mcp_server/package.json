@@ -1,6 +1,6 @@
 {
   "name": "esp32-matrix-mcp",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "MCP server that connects Claude to the ESP32-S3-Matrix LED board",
   "type": "module",
   "scripts": {

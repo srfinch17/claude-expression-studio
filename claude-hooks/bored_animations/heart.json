@@ -1,0 +1,9 @@
+{
+  "description": "Red heart — warm idle goof. Part of the bored-Claude rotation.",
+  "frames": [
+    [".RR..RR.", "RRRRRRRR", "RRRRRRRR", "RRRRRRRR", ".RRRRRR.", "..RRRR..", "...RR...", "........"]
+  ],
+  "colors": { "R": "#ff1432" },
+  "frame_ms": 150,
+  "loop": 0
+}

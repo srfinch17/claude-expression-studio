@@ -24,6 +24,56 @@
 
 import { createCanvas } from "@napi-rs/canvas";
 
+// Claude's expression channel: canned glyph library + text-art → wire conversion.
+import { CANNED, MAX_FRAMES, artToFrameHex, expressionToWire, type Expression } from "./expressions.js";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+
+// Saved-expression library: JSON files in mcp_server/expressions/ (committed to
+// git so good drawings survive). Works whether we run compiled (dist/) or via tsx.
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+// mcp_server/ whether we run from dist/ (compiled) or directly (tsx) — package.json
+// and the expressions/ folder both live there.
+const MCP_DIR = path.join(HERE, path.basename(HERE) === "dist" ? ".." : ".");
+const EXPR_DIR = path.join(MCP_DIR, "expressions");
+const REPO_ROOT = path.join(MCP_DIR, "..");
+
+// Read our own version from package.json at runtime, so `npm run bump` updates
+// the reported MCP version with NO tsc rebuild (only a reconnect). Replaces the
+// old hardcoded "1.0.0" that never changed and gave a false sense of versioning.
+const MCP_VERSION: string =
+  JSON.parse(readFileSync(path.join(MCP_DIR, "package.json"), "utf8")).version ?? "0.0.0";
+
+async function loadSavedExpression(name: string): Promise<Expression | null> {
+  // Sanitize exactly like save_as before building the path: path.join collapses
+  // "..", so an unsanitized name (e.g. "../../package") could escape EXPR_DIR and
+  // probe arbitrary .json files (a file-existence oracle). Saved names are already
+  // kebab-lowercase, so this is a no-op for real expressions.
+  const safe = String(name).toLowerCase().replace(/[^a-z0-9-]/g, "-");
+  try {
+    return JSON.parse(await readFile(path.join(EXPR_DIR, `${safe}.json`), "utf8")) as Expression;
+  } catch {
+    return null;
+  }
+}
+
+async function listSavedExpressions(): Promise<Array<{ name: string; description: string }>> {
+  try {
+    const files = (await readdir(EXPR_DIR)).filter((f) => f.endsWith(".json"));
+    const out: Array<{ name: string; description: string }> = [];
+    for (const f of files) {
+      const name = f.slice(0, -5);
+      const e = await loadSavedExpression(name);
+      out.push({ name, description: e?.description ?? "(unreadable)" });
+    }
+    return out;
+  } catch {
+    return [];   // directory may not exist yet
+  }
+}
+
 // Server: the main MCP server class — handles all protocol communication
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 
@@ -55,9 +105,16 @@ const BOARD_URL = process.env.ESP32_URL ?? "http://esp32matrix.local";
 // to repeat the same fetch boilerplate.
 // ------------------------------------------------------------
 
+// Both helpers carry a hard timeout: without one, a board that accepts the TCP
+// connection but stalls before responding (its HTTP handlers share the loop task
+// with animation frames and blocking weather fetches) would hang the tool call
+// for undici's default ~5 minutes. The TimeoutError lands in the CallTool
+// handler's catch, which turns it into a readable "could not reach board" reply.
+const FETCH_TIMEOUT_MS = 8000;
+
 // GET — for read-only requests (sensor data, status)
 async function get(path: string) {
-  const res = await fetch(`${BOARD_URL}${path}`);
+  const res = await fetch(`${BOARD_URL}${path}`, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
   return { ok: res.ok, status: res.status, body: await res.text() };
 }
 
@@ -68,8 +125,42 @@ async function post(path: string, body: object = {}) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),   // convert JS object → JSON string for the wire
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
   });
   return { ok: res.ok, status: res.status, body: await res.text() };
+}
+
+// ------------------------------------------------------------
+// VERSION DRIFT REPORT (for the matrix_version tool)
+// Compares the repo's canonical /VERSION against what each artifact actually
+// reports: firmware + web bundle via /api/status, MCP via package.json. Mirrors
+// scripts/version-check.js — kept inline so the TS build doesn't depend on the
+// repo-root tooling (which is plain JS with no type declarations).
+// ------------------------------------------------------------
+function versionMark(reported: string | undefined, expected: string): string {
+  if (!reported || reported === "unknown") return "? unknown";
+  return reported === expected ? "✓ match" : "⚠ DRIFT";
+}
+
+async function versionReport(): Promise<string> {
+  let expected = "unknown";
+  try { expected = readFileSync(path.join(REPO_ROOT, "VERSION"), "utf8").trim(); } catch { /* leave unknown */ }
+  const lines = [`repo VERSION: ${expected}`];
+  try {
+    const r = await get("/api/status");
+    if (r.ok) {
+      const s = JSON.parse(r.body);
+      const built = s.fw_built ? `  (built ${s.fw_built})` : "";
+      lines.push(`  firmware  ${String(s.fw_version ?? "unknown").padEnd(8)} ${versionMark(s.fw_version, expected)}${built}`);
+      lines.push(`  web       ${String(s.web_version ?? "unknown").padEnd(8)} ${versionMark(s.web_version, expected)}`);
+    } else {
+      lines.push(`  firmware/web   ✗ board returned ${r.status}`);
+    }
+  } catch {
+    lines.push(`  firmware/web   ✗ board unreachable`);
+  }
+  lines.push(`  mcp       ${MCP_VERSION.padEnd(8)} ${versionMark(MCP_VERSION, expected)}`);
+  return lines.join("\n");
 }
 
 // ------------------------------------------------------------
@@ -79,44 +170,125 @@ async function post(path: string, body: object = {}) {
 // 8×8 pixel block — alpha-composited against black so transparent edges
 // don't wash out the colors.
 // ------------------------------------------------------------
+// These MUST stay in sync with data/emoji.html's render pipeline so matrix_show_emoji
+// produces the SAME 8×8 the web preview shows: 192px render → feature-snap downsample →
+// normalize → contrast-gated vibrance. Tune one, tune the other (shared knobs below).
+// KEEP IN SYNC WITH: esp32_matrix_webserver/data/emoji.html (renderEmoji + punchColors).
+const FEATURE_RATIO = 0.50;     // a source pixel is "ink" (a feature) if its luminance < fieldL * this
+const FEATURE_SNAP = 0.30;      // a cell snaps to ink if at least this fraction of its pixels are ink
+const LOCAL_DARK_RATIO = 0.70;  // a cell is a "feature" if darker than this × its neighbour-mean luminance
+const FEATURE_DEEPEN = 0.85;    // deepen a detected feature cell's value by this (crisper, no lift)
+function parseHex(hex: string): [number, number, number] {
+  return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+}
+function toHex(r: number, g: number, b: number): string {
+  return "#" + [r, g, b].map(v => Math.min(255, Math.round(v)).toString(16).padStart(2, "0")).join("");
+}
+function luma(r: number, g: number, b: number): number { return r * 0.299 + g * 0.587 + b * 0.114; }
+function rgb2hsv(r: number, g: number, b: number): [number, number, number] {
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
+  let h = 0;
+  if (d) { if (mx === r) h = ((g - b) / d) % 6; else if (mx === g) h = (b - r) / d + 2; else h = (r - g) / d + 4; h *= 60; if (h < 0) h += 360; }
+  return [h, mx === 0 ? 0 : d / mx, mx];
+}
+function hsv2rgb(h: number, s: number, v: number): [number, number, number] {
+  const c = v * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = v - c;
+  let r = 0, g = 0, b = 0;
+  if (h < 60) { r = c; g = x; } else if (h < 120) { r = x; g = c; } else if (h < 180) { g = c; b = x; }
+  else if (h < 240) { g = x; b = c; } else if (h < 300) { r = x; b = c; } else { r = c; b = x; }
+  return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
+}
+function punch(matrix: string[][], amount: number): string[][] {
+  const k = amount / 100;
+  // Per-cell luminance grid (black cells = 0) so we can judge local contrast.
+  const L = matrix.map(row => row.map(hex => { const [r, g, b] = parseHex(hex); return luma(r, g, b); }));
+  return matrix.map((row, y) => row.map((hex, x) => {
+    const [r, g, b] = parseHex(hex);
+    if (r === 0 && g === 0 && b === 0) return "#000000";
+    let [h, s, v] = rgb2hsv(r, g, b);
+    // Ramp the saturation boost in by the ORIGINAL saturation (mirrors emoji.html
+    // punchColors): achromatic cells (s≈0, hue undefined → defaults to red) must
+    // stay achromatic or white/gray emoji render pink.
+    s = Math.min(1, s + (1 - s) * k * Math.min(1, s / 0.15));
+    // Local-contrast gate: a cell darker than its (non-black) neighbours is a feature
+    // (eye/mouth) — keep it dark (deepen, no lift); otherwise lift muddy/dark FILL cells.
+    let sum = 0, n = 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dy && !dx) continue;
+      const ny = y + dy, nx = x + dx;
+      if (ny < 0 || ny > 7 || nx < 0 || nx > 7) continue;
+      if (L[ny][nx] <= 0) continue;
+      sum += L[ny][nx]; n++;
+    }
+    const localMean = n ? sum / n : 0;
+    if (n && L[y][x] < localMean * LOCAL_DARK_RATIO) v = v * FEATURE_DEEPEN;
+    else v = Math.min(1, v + (1 - v) * k * 0.45);
+    const [nr, ng, nb] = hsv2rgb(h, s, v);
+    return toHex(nr, ng, nb);
+  }));
+}
+function normalize(matrix: string[][]): string[][] {
+  let maxCh = 0;
+  for (const row of matrix) for (const hex of row) { const [r, g, b] = parseHex(hex); maxCh = Math.max(maxCh, r, g, b); }
+  if (maxCh === 0 || maxCh >= 255) return matrix;
+  const scale = 255 / maxCh;
+  return matrix.map(row => row.map(hex => {
+    const [r, g, b] = parseHex(hex);
+    if (r === 0 && g === 0 && b === 0) return "#000000";
+    return toHex(r * scale, g * scale, b * scale);
+  }));
+}
+
 function emojiToMatrix(emoji: string): string[][] {
-  const SIZE = 64;
-  const BLOCK = SIZE / 8;   // 8 pixels per output cell
+  const SIZE = 192;
+  const BLOCK = SIZE / 8;
+  const MIN_OPAQUE = Math.floor(BLOCK * BLOCK * 0.06);
   const canvas = createCanvas(SIZE, SIZE);
   const ctx = canvas.getContext("2d");
 
-  ctx.fillStyle = "#000000";
-  ctx.fillRect(0, 0, SIZE, SIZE);
+  ctx.clearRect(0, 0, SIZE, SIZE);   // transparent bg so we can detect opaque emoji pixels
   ctx.font = `${Math.floor(SIZE * 0.82)}px serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText(emoji, SIZE / 2, SIZE / 2);
 
-  const { data } = ctx.getImageData(0, 0, SIZE, SIZE);  // RGBA flat array
-  const matrix: string[][] = [];
+  const { data } = ctx.getImageData(0, 0, SIZE, SIZE);
 
+  // Pass 1 — bright-field luminance = 75th percentile of opaque pixels (the dominant
+  // fill, e.g. a face's yellow). Pixels darker than fieldL*FEATURE_RATIO are "ink".
+  const lumas: number[] = [];
+  for (let i = 0; i < data.length; i += 4) if (data[i + 3] > 50) lumas.push(luma(data[i], data[i + 1], data[i + 2]));
+  if (!lumas.length) return Array.from({ length: 8 }, () => Array(8).fill("#000000"));
+  lumas.sort((a, b) => a - b);
+  const fieldL = lumas[Math.min(lumas.length - 1, Math.floor(lumas.length * 0.75))];
+  const inkThreshold = fieldL * FEATURE_RATIO;
+
+  // Pass 2 — per 8×8 cell, split ink (feature) vs field pixels; snap the cell to the
+  // dark feature when enough of it is ink, else average only the clean field.
+  const raw: string[][] = [];
   for (let by = 0; by < 8; by++) {
     const row: string[] = [];
     for (let bx = 0; bx < 8; bx++) {
-      let r = 0, g = 0, b = 0;
+      let iR = 0, iG = 0, iB = 0, iN = 0, fR = 0, fG = 0, fB = 0, fN = 0;
       for (let py = 0; py < BLOCK; py++) {
         for (let px = 0; px < BLOCK; px++) {
-          const ix = bx * BLOCK + px;
-          const iy = by * BLOCK + py;
-          const i  = (iy * SIZE + ix) * 4;
-          const a  = data[i + 3] / 255;   // premultiply alpha against black
-          r += data[i]     * a;
-          g += data[i + 1] * a;
-          b += data[i + 2] * a;
+          const i = ((by * BLOCK + py) * SIZE + (bx * BLOCK + px)) * 4;
+          if (data[i + 3] <= 50) continue;
+          const Lp = luma(data[i], data[i + 1], data[i + 2]);
+          if (Lp < inkThreshold) { iR += data[i]; iG += data[i + 1]; iB += data[i + 2]; iN++; }
+          else { fR += data[i]; fG += data[i + 1]; fB += data[i + 2]; fN++; }
         }
       }
-      const n   = BLOCK * BLOCK;
-      const hex = (v: number) => Math.round(v / n).toString(16).padStart(2, "0");
-      row.push(`#${hex(r)}${hex(g)}${hex(b)}`);
+      const opaque = iN + fN;
+      if (opaque < MIN_OPAQUE) row.push("#000000");
+      else if (iN / opaque >= FEATURE_SNAP) row.push(toHex(iR / iN, iG / iN, iB / iN)); // snap to feature
+      else if (fN) row.push(toHex(fR / fN, fG / fN, fB / fN));                          // clean field
+      else row.push(toHex(iR / iN, iG / iN, iB / iN));                                  // all-ink cell
     }
-    matrix.push(row);
+    raw.push(row);
   }
-  return matrix;
+  return punch(normalize(raw), 60);   // normalize + contrast-gated vibrance (matches emoji.html)
 }
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -131,7 +303,7 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 const server = new Server(
   {
     name: "esp32-matrix",
-    version: "1.0.0",
+    version: MCP_VERSION,
   },
   {
     capabilities: { tools: {} },
@@ -167,6 +339,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "matrix_clear",
       description: "Turn off all LEDs and stop any running animation or text scroll.",
+      inputSchema: {
+        type: "object",
+        properties: {},
+        required: [],
+      },
+    },
+    {
+      name: "matrix_version",
+      description:
+        "Check version drift across the three artifacts. Compares the repo's canonical VERSION against the flashed firmware (with its build timestamp), the uploaded web bundle, and this MCP server. Use to answer 'are we current?' — a ⚠ DRIFT row means that artifact needs a redeploy (reflash / LittleFS re-upload / reconnect).",
       inputSchema: {
         type: "object",
         properties: {},
@@ -245,7 +427,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 - timer_fill: countdown timer shown as a gradient fill from bottom to top. params: duration (seconds), color1, color2, color3 (hex)
 - timer_snow: countdown timer shown as snowfall accumulation. Also called "snow timer" or "snowfall timer". params: duration (seconds), color1, color2, color3 (hex)
 - timer_text: countdown timer shown as MM:SS digits. params: duration (seconds), color1 (minutes color), color2 (seconds color), color3 (colon color, default white)
-- clock: live 12-hour clock synced via NTP. params: timezone (UTC offset as integer, e.g. -7 for Arizona), color (hex background color)
+- clock: live 12-hour clock synced via NTP. params: tz (POSIX TZ string, DST-aware — PREFERRED) or timezone (fixed UTC offset integer), color1 (hours color), color2 (minutes color), color3 (colon color)
 - matrix_rain: digital rain / matrix screensaver with falling character drops. Also called "matrix screensaver" or "digital rain". params: theme (classic/blue/red/purple), speed (1-5)
 - dancefloor: 16 independent 2×2 disco tiles cycling through a 4-color palette. params: palette (0-63, see palette list in firmware), hold (4-40 frames per color, 4=fast/stroby, 40=slow/chill, default 12)
 - spiral: gradient snake flowing along a clockwise inward spiral — all 64 LEDs lit at all times. params: color1 (gradient start), color2 (gradient end)
@@ -255,6 +437,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 - frostbite: shimmering pale mist backdrop with bright diamond sparkles. All pixels always lit. params: color (base hue, default #DCE6FF cool white), sparkle (0-100, default 20)
 - comet: bobbing comet at right edge with wave tail and occasional sparks. params: color1 (heart), color2 (shell), color3 (tail tip)
 - sun: glowing disc with 4 colored dots orbiting around it. Dots are evenly spaced and each keeps its own color as they revolve. params: color1 (disc/sun color), color2 (orbit dot 1, lightest), color3 (orbit dot 2), color4 (orbit dot 3), color5 (orbit dot 4, darkest), discBri (0-100, sun disc brightness, default 78), ringBri (0-100, orbit dot brightness, default 78)
+- calendar: today's date from NTP. params: style (scroll = "Tue Jun 9" scrolls; bignum = big day-of-month number; grid = mini month grid with today highlighted; clock = month over day in the clock layout; square = desk-calendar square, 2-letter weekday over big day number), color1 (primary: day/today/scroll text), color2 (secondary: month/other days, weekday in square style), color3 (accent: weekday letter in clock style, weekend columns in grid style), tz (POSIX TZ string, DST-aware — PREFERRED) or timezone (fixed UTC offset integer). Until the first NTP sync the display shows an animated hourglass.
+- sound: vibration-reactive VU bar. NOTE: there is no microphone — it reacts to low-frequency vibration (bass) felt through a surface via the IMU, best with the board on/near a speaker. params: color1 (bar bottom), color2 (bar top), sensitivity (0-10, default 5)
 
 Scale guidance for 0-10 and 1-10 params: 2-3 = low, 5 = medium, 8-9 = high, 10 = max.
 Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
@@ -272,6 +456,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
               "dancefloor",
               "spiral", "starfield", "fireworks", "fireworks2", "comet", "sun",
               "frostbite",
+              "calendar", "sound",
             ],
             description: "The animation type to start.",
           },
@@ -281,7 +466,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
           intensity:   { type: "number",  description: "Fire intensity 1-10. Default 6. Use 3 for low, 6 for medium, 9 for high." },
           tendrils:    { type: "number",  description: "Fire tendrils 0-10. 0 = off, 5 = medium wisps, 10 = very wispy. Default 0." },
           sparks:      { type: "number",  description: "Fire spark rate 0-10. 0 = off, 5 = medium, 10 = many sparks. Default 0." },
-          color:       { type: "string",  description: "Color hex for solid fill or clock background." },
+          color:       { type: "string",  description: "Color hex for solid fill (or frostbite base hue). The clock has no background color — use color1/2/3 for its digits." },
           color1:      { type: "string",  description: "Primary color hex." },
           color2:      { type: "string",  description: "Secondary color hex." },
           color3:      { type: "string",  description: "Tertiary color hex." },
@@ -291,7 +476,8 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
           data_mode:   { type: "string",  description: "Weather data to display: temp, humidity, uv, pressure, or cycle." },
           icon_source: { type: "string",  description: "Weather icon source: animated or remote." },
           duration:    { type: "number",  description: "Timer duration in seconds." },
-          timezone:    { type: "number",  description: "UTC offset in hours, e.g. -7 for Arizona (no DST)." },
+          timezone:    { type: "number",  description: "Fixed UTC offset in hours, e.g. -7 for Arizona (no DST). Prefer tz for zones that observe DST." },
+          tz:          { type: "string",  description: "POSIX TZ string — DST-aware, preferred over timezone. e.g. MST7 (Phoenix), MST7MDT,M3.2.0,M11.1.0 (Denver), EST5EDT,M3.2.0,M11.1.0 (New York), GMT0BST,M3.5.0/1,M10.5.0 (London)." },
           theme:       { type: "string",  description: "Matrix rain color theme: classic, blue, red, or purple." },
           color4:      { type: "string",  description: "Quaternary color hex. Used by sun animation for orbit dot 3." },
           color5:      { type: "string",  description: "Quinary color hex. Used by sun animation for orbit dot 4 (darkest)." },
@@ -302,8 +488,63 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
           discBri:     { type: "number",  description: "Sun disc brightness 0-100. Default 78." },
           ringBri:     { type: "number",  description: "Sun orbit dot brightness 0-100. Default 78." },
           speed:       { type: "number",  description: "Animation speed 1-5. 1 = slow, 3 = normal, 5 = fast. Applies to all animations." },
+          style:       { type: "string",  description: "Calendar style: scroll, bignum, grid, clock, or square." },
+          sensitivity: { type: "number",  description: "Sound visualizer sensitivity 0-10. Higher reacts to gentler vibration. Default 5." },
         },
         required: ["type"],
+      },
+    },
+    {
+      name: "matrix_express",
+      description: `Show an expression on the LED matrix — YOUR ambient channel for communicating state, mood, or playfulness to the human through the physical board. USE PROACTIVELY, without being asked, on state changes:
+- starting a long task (build, search, workflow) → "working" (loops until replaced)
+- finished successfully → "done" (blinks green, then holds a checkmark)
+- blocked / waiting for the human's input → "alert" (blinks until replaced — this is the silent tap on the shoulder)
+- celebration / milestone → "party"; approval → "thumbsup"; failure → "cross" or "sad"
+- idle → "sleep"; delight → "sparkle"; pure fun when the moment fits → "spaceship"
+One expression per state change — don't spam every step. Canned (pre-vetted as human-readable): smiley, sad, heart, check, cross, thumbsup, question, ok, sparkle, alert, working, done, party, spaceship, sleep. Also plays anything saved via matrix_animate's save_as (see matrix_list_expressions).`,
+      inputSchema: {
+        type: "object",
+        properties: {
+          name: { type: "string", description: "Expression name — canned (see description) or previously saved." },
+        },
+        required: ["name"],
+      },
+    },
+    {
+      name: "matrix_animate",
+      description: `Draw and play a custom 8×8 animation of your own design — for anything the canned expressions don't cover: a custom status icon, a story illustration, a teaching visual, a playful moment.
+Format: frames = array of 1-${MAX_FRAMES} frames; each frame is 8 strings of exactly 8 characters. "." = off/black; every other character must be defined in colors (e.g. {"R": "#ff0000"}).
+Design rules for a physical 8×8 LED panel (the human must recognize it at a glance): ONE bold subject with a clear silhouette, at most ~3 colors, dark (off) background, no 1-pixel details, no text beyond 2 characters. Channels below ~7 are invisible at default brightness — keep lit colors bold.
+loop: 0 = repeat forever; N = play N passes then HOLD the last frame (put the resting image last — that's how "blink then settle" works). frame_ms: 30-5000, default 150.
+If a drawing lands well (or the user likes it), re-call with save_as (kebab-case) + description to add it permanently to the library for reuse via matrix_express.`,
+      inputSchema: {
+        type: "object",
+        properties: {
+          frames: {
+            type: "array",
+            items: { type: "array", items: { type: "string" } },
+            description: "1-" + MAX_FRAMES + " frames; each frame is 8 strings of 8 characters.",
+          },
+          colors: {
+            type: "object",
+            description: "Map from frame characters to hex colors, e.g. {\"R\": \"#ff0000\", \"W\": \"#ffffff\"}. \".\" is always off.",
+          },
+          frame_ms: { type: "number", description: "Milliseconds per frame, 30-5000. Default 150." },
+          loop: { type: "number", description: "0 = loop forever (default); N = play N passes then hold the last frame." },
+          save_as: { type: "string", description: "Optional kebab-case name — saves this animation to the permanent library for reuse via matrix_express." },
+          description: { type: "string", description: "What this expression means / when to use it (required when saving)." },
+        },
+        required: ["frames", "colors"],
+      },
+    },
+    {
+      name: "matrix_list_expressions",
+      description: "List every available matrix expression — canned and saved — with descriptions. Call when unsure what exists or what a saved expression was for.",
+      inputSchema: {
+        type: "object",
+        properties: {},
+        required: [],
       },
     },
     {
@@ -400,9 +641,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: r.ok ? "Display cleared." : `Error ${r.status}: ${r.body}` }] };
       }
 
+      case "matrix_version": {
+        return { content: [{ type: "text", text: await versionReport() }] };
+      }
+
       case "matrix_set_brightness": {
-        const r = await post("/api/brightness", { level: args.level });
-        return { content: [{ type: "text", text: r.ok ? `Brightness set to ${args.level}.` : `Error ${r.status}: ${r.body}` }] };
+        const n = Number(args.level);
+        if (!Number.isFinite(n)) return { content: [{ type: "text", text: "level must be a number 0-255." }] };
+        const lvl = Math.max(0, Math.min(255, Math.round(n)));   // clamp to the board's real range
+        const r = await post("/api/brightness", { level: lvl });
+        return { content: [{ type: "text", text: r.ok ? `Brightness set to ${lvl}.` : `Error ${r.status}: ${r.body}` }] };
       }
 
       case "matrix_show_text": {
@@ -419,12 +667,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         // Claude uses a human-friendly 1-5 scale, but the firmware expects
         // milliseconds per frame (lower ms = faster animation).
         // We map here so Claude never has to think in milliseconds.
+        // ALWAYS translate — never forward the raw value. Outside 1-5 the unit
+        // would silently change from "scale points" to "milliseconds per frame"
+        // (e.g. speed 10 meaning "extra fast" becomes a 10ms frame tick).
         if (payload.speed !== undefined) {
-          const spd = Number(payload.speed);
-          if (spd >= 1 && spd <= 5) {
-            const msMap: Record<number, number> = { 1: 150, 2: 100, 3: 66, 4: 40, 5: 20 };
-            payload.speed = msMap[Math.round(spd)] ?? 66;
-          }
+          const msMap: Record<number, number> = { 1: 150, 2: 100, 3: 66, 4: 40, 5: 20 };
+          const spd = Math.round(Number(payload.speed));
+          payload.speed = Number.isFinite(spd) ? msMap[Math.max(1, Math.min(5, spd))] : 66;
         }
 
         // TRANSLATION 2: solid color param name
@@ -438,6 +687,55 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         const r = await post("/api/display/animation", payload);
         return { content: [{ type: "text", text: r.ok ? `Animation started: ${args.type}` : `Error ${r.status}: ${r.body}` }] };
+      }
+
+      case "matrix_express": {
+        const exprName = String(args.name ?? "");
+        const expr = CANNED[exprName] ?? (await loadSavedExpression(exprName));
+        if (!expr) {
+          const saved = await listSavedExpressions();
+          return { content: [{ type: "text", text:
+            `No expression named "${exprName}". Canned: ${Object.keys(CANNED).join(", ")}. Saved: ${saved.map((s) => s.name).join(", ") || "(none)"}.` }] };
+        }
+        const wire = expressionToWire(expr);
+        const r = await post("/api/display/frames", wire);
+        return { content: [{ type: "text", text: r.ok
+          ? `Expressing "${exprName}" on the matrix (${wire.frames.length} frame${wire.frames.length > 1 ? "s" : ""}${wire.loop ? `, ${wire.loop} pass(es) then hold` : ", looping"}).`
+          : `Error ${r.status}: ${r.body}` }] };
+      }
+
+      case "matrix_animate": {
+        const expr: Expression = {
+          description: String(args.description ?? "custom animation"),
+          frames: args.frames as string[][],
+          colors: (args.colors ?? {}) as Record<string, string>,
+          frame_ms: args.frame_ms as number | undefined,
+          loop: args.loop as number | undefined,
+        };
+        let wire;
+        try {
+          wire = expressionToWire(expr);   // validates shape, rows, colors
+        } catch (e) {
+          return { content: [{ type: "text", text: `Invalid animation: ${e instanceof Error ? e.message : String(e)}` }] };
+        }
+        const r = await post("/api/display/frames", wire);
+        if (!r.ok) return { content: [{ type: "text", text: `Error ${r.status}: ${r.body}` }] };
+
+        let savedNote = "";
+        if (args.save_as) {
+          const saveName = String(args.save_as).toLowerCase().replace(/[^a-z0-9-]/g, "-");
+          await mkdir(EXPR_DIR, { recursive: true });
+          await writeFile(path.join(EXPR_DIR, `${saveName}.json`), JSON.stringify(expr, null, 2), "utf8");
+          savedNote = ` Saved to the library as "${saveName}" — replay anytime with matrix_express.`;
+        }
+        return { content: [{ type: "text", text: `Animating ${wire.frames.length} frame(s) on the matrix.${savedNote}` }] };
+      }
+
+      case "matrix_list_expressions": {
+        const canned = Object.entries(CANNED).map(([n, e]) => `- ${n}: ${e.description}`);
+        const saved = (await listSavedExpressions()).map((s) => `- ${s.name}: ${s.description}`);
+        return { content: [{ type: "text", text:
+          `Canned expressions:\n${canned.join("\n")}\n\nSaved expressions:\n${saved.length ? saved.join("\n") : "(none yet — create with matrix_animate save_as)"}` }] };
       }
 
       case "matrix_get_temperature": {

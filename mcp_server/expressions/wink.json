@@ -1,0 +1,61 @@
+{
+  "description": "Eyes looking forward, then the right eye winks shut while a little smile pops up, then back to both open. Charming idle goof — part of the bored-Claude rotation.",
+  "frames": [
+    [
+      "........",
+      "........",
+      "WWW..WWW",
+      "WBW..WBW",
+      "WWW..WWW",
+      "........",
+      "........",
+      "........"
+    ],
+    [
+      "........",
+      "........",
+      "WWW..WWW",
+      "WBW..WBW",
+      "WWW..WWW",
+      "........",
+      "........",
+      "........"
+    ],
+    [
+      "........",
+      "........",
+      "WWW.....",
+      "WBW..WWW",
+      "WWW.....",
+      ".W....W.",
+      "..WWWW..",
+      "........"
+    ],
+    [
+      "........",
+      "........",
+      "WWW..WWW",
+      "WBW..WBW",
+      "WWW..WWW",
+      "........",
+      "........",
+      "........"
+    ],
+    [
+      "........",
+      "........",
+      "WWW..WWW",
+      "WBW..WBW",
+      "WWW..WWW",
+      "........",
+      "........",
+      "........"
+    ]
+  ],
+  "colors": {
+    "W": "#ffffff",
+    "B": "#2060ff"
+  },
+  "frame_ms": 240,
+  "loop": 0
+}

@@ -1,0 +1,11 @@
+{
+  "description": "Rocket pointing up with a thrusting flame — playful 'off we go' idle goof. Part of the bored-Claude rotation.",
+  "frames": [
+    ["...RR...", "..RWWR..", "..WBBW..", ".RWWWWR.", ".R.WW.R.", "...RR...", "...OO...", "...OO..."],
+    ["...RR...", "..RWWR..", "..WBBW..", ".RWWWWR.", ".R.WW.R.", "...OO...", "...RR...", "...OO..."],
+    ["...RR...", "..RWWR..", "..WBBW..", ".RWWWWR.", ".R.WW.R.", "...OO...", "...OO...", "...RR..."]
+  ],
+  "colors": { "R": "#ff2828", "O": "#ff8c00", "W": "#ffffff", "B": "#2060ff" },
+  "frame_ms": 160,
+  "loop": 0
+}
