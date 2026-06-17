@@ -33,6 +33,9 @@ richer one scaling UP from the 64-pixel floor.* Nothing else.
 4. **Board is the presence hub** — it's the always-on HTTP service that already receives the
    intent. In v0 it stores + serves the semantic message; it does **not** natively render
    presence→8×8 (the LEDs keep being driven by the existing frame path).
+5. **`data` is rich from the start** — progress / 1–3 readouts / sparkline — but only the
+   **card** renders it in v0. Rendering data on the 8×8 (using the existing `fonts.ino`
+   3×3/3×5 fonts + column sparklines) is deferred to a focused **v0.5** (see that section).
 
 ## The protocol
 
@@ -43,13 +46,18 @@ PresenceMessage {
                        //   idle|thinking|ok|info|question
   headline: string?    // short, ~<=24 chars   e.g. "building..."
   detail:   string?    // one context line     e.g. "running tests"
-  data:     null | { progress: number }            // progress in 0..1
-                     | { value: number, unit?: string, label?: string }  // scalar readout
+  data:     null
+            | { progress: number }                          // 0..1 → bar
+            | { values: [{ value, unit?, label? }, ...] }   // 1..3 labeled readouts
+            | { series: [number, ...], label?, unit? }      // sparkline, <=32 points
   urgency:  "ambient" | "notice" | "urgent"   // default "ambient"
   ts:       string     // ISO 8601, stamped by the hub on store (not sent by client)
 }
 ```
-- `data` is a **closed two-case union** (progress OR scalar) — exactly one datum, no series.
+- `data` is a **closed union** of four cases: `null`, a `progress` fraction, a `values`
+  array of 1–3 labeled readouts (a single number is just a one-element `values`), or a
+  `series` sparkline. Caps — `values` ≤ 3, `series` ≤ 32 points — keep it legible and the
+  payload small; the validator rejects over-cap or mixed-case bodies.
 - `intent` is validated against the vocabulary but **unknown values are accepted** and render
   a generic "info" appearance (forward-compat as the vocab grows — never hard-fail on intent).
 
@@ -111,9 +119,11 @@ enhancement, out of scope here.)
 ### 3. Desktop ambient card — `data/presence-card.html` (web, served by board)
 - Polls `GET /api/presence` every ~1.5s, guarded by `document.hidden` (reuse the calendar.html
   pattern — don't hammer the single-client board when the card isn't visible).
-- Renders rich: an upscaled glyph (canvas), the headline (large), detail (small), the data
-  field (progress bar or scalar readout), plus a color wash + motion keyed by `intent` +
-  `urgency` (urgency escalates motion: ambient→still, notice→pulse, urgent→blink).
+- Renders rich: an upscaled glyph (canvas), the headline (large), detail (small), the full
+  `data` field — **progress bar**, **1–3 labeled readouts**, or a **sparkline** (canvas
+  line/bar chart) — plus a color wash + motion keyed by `intent` + `urgency` (urgency
+  escalates motion: ambient→still, notice→pulse, urgent→blink). Web fonts + canvas make all
+  four `data` shapes cheap on the card; this is where the richer data lives in v0.
 - Sized/styled for an always-on-top small window or second-monitor placement.
 - Pulls appearance from `presence-vocab.js`.
 
@@ -147,8 +157,9 @@ showing the most recent state until the next `presence_set` or a board reboot.
 ## Testing
 
 - **IR validator** (unit): target the canonical validator/normalizer in `mcp_server/presence.ts`.
-  Valid messages pass; missing/empty intent, wrong-typed fields, and malformed `data` unions
-  are rejected/normalized; unknown intent is accepted (forward-compat).
+  Valid messages pass; missing/empty intent and wrong-typed fields are rejected/normalized;
+  unknown intent is accepted (forward-compat). `data` union: each case (progress / values /
+  series) round-trips; over-cap (`values` > 3, `series` > 32) and mixed-case bodies are rejected.
 - **presence_set tool** (smoke): with a mock board, asserts it POSTs the normalized JSON to
   `/api/presence` and issues the mapped 8×8 frame call.
 - **`/api/presence`** (hardware): POST a message, GET it back, confirm round-trip + `ts` stamp;
@@ -165,12 +176,27 @@ showing the most recent state until the next `presence_set` or a board reboot.
   here; mention `presence_set` alongside the expression tools.
 - Update the global idea log (`ClaudeGlobalMem/ideas/ideas.md`) status: exploring → in progress.
 
-## Out of scope (YAGNI — deferred)
+## Planned next — v0.5: board-native 8×8 presence rendering (NOT in v0)
+
+The IR's `data` model already supports readouts + sparklines; in v0 only the **card** renders
+them (the 8×8 stays glyph-only via the existing MCP frame path). v0.5 moves presence rendering
+onto the board so the LEDs can show data too — and the firmware **already has the primitives**:
+- `fonts.ino`: `FONT_3X3` (+ `FONT_3X3_LIGHT` half-bright mask) and `FONT_3X5`, with static
+  draw helpers `drawStr3x3` / `drawStr3x5` / `drawStrCentered3x3` and **two-line stacking**
+  (3×3 in rows 0–2 + 3×5 in rows 3–7). Digits in `FONT_3X5` match `MINI_FONT` in
+  `clock_timer.ino`. The 5×7 font (`scroll_text.ino`) is the third size.
+- A **sparkline** maps `series` → column heights via `setPixel` — nearly free on 8×8.
+- `values` (1–2 short numbers) → stacked 3×3 / 3×5 lines.
+
+v0.5 also implies the board consuming `/api/presence` directly to render — the larger
+"board renders presence natively" step deliberately deferred so v0 stays small. Capturing the
+font inventory here so that follow-on doesn't re-discover it.
+
+## Out of scope (YAGNI — deferred beyond v0.5)
 
 - Dimensional/continuous mood model (named+payload only).
-- Multiple data fields, time series, history.
+- Data history / time-series beyond a single `series` snapshot.
 - Additional renderers (phone/PWA, e-ink, larger panels) and any SDK.
 - Publishing the protocol as an open spec.
-- On-device presence→8×8 rendering (keep the existing MCP frame path driving the LEDs).
 - NVS persistence / auto-resume of presence across reboots.
 - Auth, multi-client, cloud relay, push notifications, presence TTL/auto-idle.
