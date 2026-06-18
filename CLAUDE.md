@@ -9,6 +9,9 @@ current. Deeper material is split out:
 - `docs/superpowers/specs/` — per-feature design specs
 - `docs/superpowers/plans/` — per-feature implementation plans
 
+> **Privacy:** never use the maintainer's real name in code, comments, or docs —
+> this repo is distributable, so refer to "the user" instead.
+
 ---
 
 ## How we work (the dev loop)

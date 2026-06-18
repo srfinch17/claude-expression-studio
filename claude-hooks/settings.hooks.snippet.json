@@ -1,10 +1,10 @@
 {
-  "_comment": "Merge this 'hooks' block into your ~/.claude/settings.json. Fix the absolute path to wherever you put the scripts, and use 'python' or 'python3' to match your system. Hooks load at session start, so restart Claude Code after editing.",
+  "_comment": "Merge this 'hooks' block into your ~/.claude/settings.json. Fix the absolute path to wherever you put the scripts, and use 'python' or 'python3' to match your system. Hooks load at session start, so restart Claude Code after editing. UserPromptSubmit fires 'wait' = a weighted-random spinner from the wait pool (set odds in mcp_server/wait-weights.json); use 'working' instead to force the default snake.",
   "hooks": {
     "UserPromptSubmit": [
       {
         "hooks": [
-          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" working" }
+          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" wait" }
         ]
       }
     ],

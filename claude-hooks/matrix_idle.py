@@ -3,14 +3,14 @@
 matrix_idle.py — the "bored Claude" idle watcher for the ESP32-S3 LED matrix.
 
 Spawned (detached) by matrix_signal.py when the `done` checkmark fires. It waits,
-then — if Scott still hasn't come back — plays a RANDOM fun animation, and keeps
+then — if the user still hasn't come back — plays a RANDOM fun animation, and keeps
 doing so on a randomized cadence while the board stays idle. The point is the
 board looking like Claude got bored waiting for input and started goofing off.
 
-How it knows Scott is "still idle": matrix_signal.py stamps an activity TOKEN in
+How it knows the user is "still idle": matrix_signal.py stamps an activity TOKEN in
 .matrix_activity on every `working`/`done`. This watcher was handed the token that
 was current when it spawned. Each time it wakes it re-reads the file:
-  - token CHANGED  -> Scott submitted a prompt (or a newer checkmark spawned a
+  - token CHANGED  -> the user submitted a prompt (or a newer checkmark spawned a
                       newer watcher) -> this watcher exits silently.
   - token SAME     -> still idle -> play a fun animation, loop again.
 After MATRIX_IDLE_CAP seconds of continuous idle it settles on a calm sleepy face
@@ -127,7 +127,7 @@ def main():
         if os.path.exists(FLAG_OFF):
             return 0                      # silenced via kill switch
         if current_token() != my_token:
-            return 0                      # Scott's back, or a newer watcher owns the board
+            return 0                      # the user's back, or a newer watcher owns the board
         if time.monotonic() - start >= CAP_SECS:
             play(REST)                    # idle too long — settle on a calm face and stop
             return 0
