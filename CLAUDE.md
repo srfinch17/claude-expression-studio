@@ -166,16 +166,24 @@ snake (the "Default") **+ any saved expression named `wait-*`** (convention-base
 see `mcp_server/wait.ts`). To ADD a wait animation: design it live with
 `matrix_animate`, then `save_as: "wait-<name>"` — it auto-joins the pool with **zero
 code, zero rebuild, zero reconnect**. Force a specific one by its name (`working`,
-`wait-rainbow`, …). First two: `working` (snake) + `wait-rainbow` (spinning color
-wheel, `expressions/wait-rainbow.json`, regenerate via `scripts/gen-wait-rainbow.py`).
+`wait-rainbow`, …). Current pool: `working` (snake) + `wait-rainbow` (old-Mac
+pinwheel, `expressions/wait-rainbow.json`, regenerate via `scripts/gen-wait-rainbow.py`)
++ `wait-orbit` (six-hue color arc sweeping the panel perimeter,
+`expressions/wait-orbit.json`).
+
+**Also fired by the prompt hook:** the Claude Code `UserPromptSubmit` hook
+(`claude-hooks/matrix_signal.py wait`) plays a wait spinner on every prompt, so the
+indicator varies turn-to-turn. The hook reads the same pool + weights as the MCP path
+— add a `wait-*` expression and it shows up everywhere with no extra wiring.
 
 **Weighted preference:** the random pick is weighted by `mcp_server/wait-weights.json`
 (relative weights; unlisted = 1; 0 disables). It's pure weighted random — exact odds,
 repeats allowed (no anti-repeat, which would fight a preference). Read at RUNTIME, so
-retuning the odds needs no rebuild/reconnect. Default ships at `wait-rainbow:4,
-working:1` = 80% wheel. To honor a request like "show the rainbow 80% of the time,"
-just edit this file (and recompute shares if the pool has grown). Both
-`matrix_express("wait")` and `presence_set(intent:"working")` use this picker.
+retuning the odds needs no rebuild/reconnect. Ships at `wait-rainbow:50, wait-orbit:30,
+working:20` (the three sum to 100, so they read as percentages). To honor a request like
+"show the rainbow 80% of the time," just edit this file (and recompute shares if the
+pool has grown). All three callers — `matrix_express("wait")`,
+`presence_set(intent:"working")`, and the prompt hook — use this picker.
 
 `matrix_idle` (MCP) puts a random PRE-APPROVED app on the board (fire / dance floor /
 fireworks / clock / frostbite / matrix rain) at ambient brightness 5 — use it unprompted when
