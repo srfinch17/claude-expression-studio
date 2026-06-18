@@ -1,0 +1,7 @@
+{
+  "_comment": "Relative likelihoods for the random wait pool played by matrix_express(\"wait\") and presence_set(intent:\"working\"). Higher = more likely; any variant not listed defaults to 1; 0 disables it. With the two below, wait-rainbow shows 4/(4+1) = 80% of the time and the working snake 20%. Read at RUNTIME, so edits take effect on the next wait with no rebuild and no reconnect. Ships as the default preference; adjust freely.",
+  "weights": {
+    "wait-rainbow": 4,
+    "working": 1
+  }
+}

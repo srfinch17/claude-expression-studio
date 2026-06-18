@@ -105,11 +105,24 @@ setup. Reachable at `http://esp32matrix.local` once joined.
 
 ## MCP server (`mcp_server/`)
 
-TypeScript, pre-compiled to `dist/index.js`. After TS edits:
-`cd mcp_server; npx tsc --project tsconfig.json` then restart Claude Code.
+TypeScript, pre-compiled to `dist/index.js` — the live server runs the COMPILED
+dist, so TS edits are invisible until rebuilt **and** the server is reconnected.
+
+**Rebuild is automated.** A Claude Code hook (`.claude/settings.json` →
+`scripts/rebuild-mcp.mjs`) runs `tsc` whenever the `mcp_server/*.ts` sources are
+newer than `dist` — fired on every Edit/Write (PostToolUse) and at SessionStart.
+It's a no-op when dist is current, surfaces TS errors if the build fails, and on a
+successful rebuild prints a reminder. So after I edit TS you only need to **`/mcp`
+reconnect** to pick up the new build (the hook can't reconnect the running server).
+Manual fallback: `cd mcp_server; npx tsc --project tsconfig.json`.
+
 On Windows, MCP spawn is finicky — see global `~/.claude/CLAUDE.md` for the
-cmd.exe-wrapper template and debug checklist. Prefer the board's **IP address
-over `esp32matrix.local`** in MCP config (mDNS is unreliable in spawned procs).
+cmd.exe-wrapper template and debug checklist. `mcp_launch.cmd` must NOT redirect
+stderr to a fixed shared logfile: a long-lived server holds that handle, an orphan
+locks it, and the next spawn's redirect fails → `-32000 Connection closed` (the real
+error is in Claude's per-session `mcp-logs-esp32-matrix`, not the board). Prefer the
+board's **IP address over `esp32matrix.local`** in MCP config (mDNS is unreliable in
+spawned procs).
 
 ---
 
@@ -137,12 +150,29 @@ user's top-priority direction for this project. Via MCP: `matrix_express`
 (canned: working / done / alert / check / cross / party / spaceship / smiley /
 sleep / …), `matrix_animate` (draw custom 8×8 text-art frames, animate, and
 `save_as` the good ones), `matrix_list_expressions`. **Use it without being
-asked**: long task starts → `working`; finished → `done`; blocked on the user →
+asked**: long task starts → `wait`; finished → `done`; blocked on the user →
 `alert` (the silent shoulder-tap); celebrate wins; be playful when it fits. One
 expression per state change — no spam. Everything shown must pass the
 silhouette test (a human identifies it at a glance). Record what the user
 likes/dislikes in auto-memory. Spec:
 `docs/superpowers/specs/2026-06-11-claude-expression-display.md`.
+
+**Wait-animation library:** `matrix_express("wait")` plays a RANDOM wait spinner
+(no immediate repeat) so the busy indicator varies. The pool = the canned `working`
+snake (the "Default") **+ any saved expression named `wait-*`** (convention-based,
+see `mcp_server/wait.ts`). To ADD a wait animation: design it live with
+`matrix_animate`, then `save_as: "wait-<name>"` — it auto-joins the pool with **zero
+code, zero rebuild, zero reconnect**. Force a specific one by its name (`working`,
+`wait-rainbow`, …). First two: `working` (snake) + `wait-rainbow` (spinning color
+wheel, `expressions/wait-rainbow.json`, regenerate via `scripts/gen-wait-rainbow.py`).
+
+**Weighted preference:** the random pick is weighted by `mcp_server/wait-weights.json`
+(relative weights; unlisted = 1; 0 disables). It's pure weighted random — exact odds,
+repeats allowed (no anti-repeat, which would fight a preference). Read at RUNTIME, so
+retuning the odds needs no rebuild/reconnect. Default ships at `wait-rainbow:4,
+working:1` = 80% wheel. To honor a request like "show the rainbow 80% of the time,"
+just edit this file (and recompute shares if the pool has grown). Both
+`matrix_express("wait")` and `presence_set(intent:"working")` use this picker.
 
 `matrix_idle` (MCP) puts a random PRE-APPROVED app on the board (fire / dance floor /
 fireworks / clock / frostbite / matrix rain) at ambient brightness 5 — use it unprompted when
