@@ -26,6 +26,8 @@ import { createCanvas } from "@napi-rs/canvas";
 
 // Claude's expression channel: canned glyph library + text-art → wire conversion.
 import { CANNED, MAX_FRAMES, artToFrameHex, expressionToWire, type Expression } from "./expressions.js";
+// Wait-animation library: the random "wait" pool (snake + saved wait-* expressions).
+import { buildWaitPool, pickWait } from "./wait.js";
 import { normalizePresence, cannedFor } from "./presence.js";
 import { IDLE_APPS, IDLE_BRIGHTNESS, pickIdleApp } from "./idle.js";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
@@ -59,6 +61,26 @@ async function loadSavedExpression(name: string): Promise<Expression | null> {
   } catch {
     return null;
   }
+}
+
+// Relative likelihoods for the random wait pool, from mcp_server/wait-weights.json.
+// Read at runtime (no rebuild to retune); returns {} (→ uniform) if missing/corrupt
+// so a fresh install works with or without the file.
+async function loadWaitWeights(): Promise<Record<string, number>> {
+  try {
+    const raw = JSON.parse(await readFile(path.join(MCP_DIR, "wait-weights.json"), "utf8"));
+    return raw && typeof raw.weights === "object" && raw.weights ? raw.weights : {};
+  } catch {
+    return {};
+  }
+}
+
+// Resolve the "wait" group to a concrete expression name: build the pool (snake +
+// saved wait-*), apply the weight preferences, pick one (weighted random).
+// Shared by matrix_express("wait") and presence_set(intent:"working").
+async function resolveWait(): Promise<string> {
+  const pool = buildWaitPool((await listSavedExpressions()).map((s) => s.name));
+  return pickWait(pool, await loadWaitWeights());
 }
 
 async function listSavedExpressions(): Promise<Array<{ name: string; description: string }>> {
@@ -502,12 +524,12 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
     {
       name: "matrix_express",
       description: `Show an expression on the LED matrix — YOUR ambient channel for communicating state, mood, or playfulness to the human through the physical board. USE PROACTIVELY, without being asked, on state changes:
-- starting a long task (build, search, workflow) → "working" (loops until replaced)
+- starting a long task (build, search, workflow) → "wait" (a RANDOM wait spinner from the pool — prefer this so it varies; "working" forces the default snake, "wait-rainbow" the color wheel)
 - finished successfully → "done" (blinks green, then holds a checkmark)
 - blocked / waiting for the human's input → "alert" (blinks until replaced — this is the silent tap on the shoulder)
 - celebration / milestone → "party"; approval → "thumbsup"; failure → "cross" or "sad"
 - idle → "sleep"; delight → "sparkle"; pure fun when the moment fits → "spaceship"
-One expression per state change — don't spam every step. Canned (pre-vetted as human-readable): smiley, sad, heart, check, cross, thumbsup, question, ok, sparkle, alert, working, done, party, spaceship, sleep. Also plays anything saved via matrix_animate's save_as (see matrix_list_expressions).`,
+One expression per state change — don't spam every step. Canned (pre-vetted as human-readable): smiley, sad, heart, check, cross, thumbsup, question, ok, sparkle, alert, working, done, party, spaceship, sleep. "wait" = a random wait spinner (the working snake + any saved wait-* animation). Also plays anything saved via matrix_animate's save_as (see matrix_list_expressions).`,
       inputSchema: {
         type: "object",
         properties: {
@@ -717,7 +739,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "matrix_express": {
-        const exprName = String(args.name ?? "");
+        let exprName = String(args.name ?? "");
+        // "wait" is a GROUP, not a single expression: pick a weighted-random wait
+        // animation (snake built-in + saved wait-*), avoiding an immediate repeat.
+        if (exprName === "wait") exprName = await resolveWait();
         const expr = CANNED[exprName] ?? (await loadSavedExpression(exprName));
         if (!expr) {
           const saved = await listSavedExpressions();
@@ -750,7 +775,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           ledNote = lr.ok ? "8x8 → data" : `8x8 data error ${lr.status}`;
         } else {
           // No data → render the intent's canned glyph via the frame path (v0 behavior).
-          const canned = cannedFor(msg.intent);
+          // "working" routes through the weighted wait pool so presence varies too.
+          const canned = msg.intent === "working" ? await resolveWait() : cannedFor(msg.intent);
           const expr = CANNED[canned] ?? (await loadSavedExpression(canned));
           if (expr) {
             const lr = await post("/api/display/frames", expressionToWire(expr));
