@@ -22,8 +22,8 @@ Art/colors mirror peckworks-esp32s3matrix/mcp_server/expressions.ts (keep in syn
 if those change).
 
 Idle/"bored" feature: on the `done` signal this also (a) records an activity
-token and (b) spawns matrix_idle.py detached. That watcher waits and, if Scott
-hasn't come back, plays random fun animations until he does (or an idle cap is
+token and (b) spawns matrix_idle.py detached. That watcher waits and, if the user
+hasn't come back, plays random fun animations until they do (or an idle cap is
 hit). `working` re-stamps the token, which makes any pending watcher exit. See
 matrix_idle.py. The whole thing is silenced by the .matrix_off kill switch.
 """
@@ -215,7 +215,7 @@ def send_wait():
 
 def write_activity_token():
     """Stamp a fresh token marking 'Claude just did something'. A change in this
-    token is how a pending idle watcher learns Scott is back and should exit."""
+    token is how a pending idle watcher learns the user is back and should exit."""
     token = "%d-%04d" % (time.time_ns(), random.randint(0, 9999))
     try:
         with open(ACTIVITY_FILE, "w") as f:
@@ -260,7 +260,7 @@ def main():
         send_wait()       # weighted-random pick from the wait pool (the hook path)
     else:
         send_named(name)  # a specific expression by name (working forces the snake)
-    # The checkmark arms boredom: if Scott doesn't come back, the watcher goofs off.
+    # The checkmark arms boredom: if the user doesn't come back, the watcher goofs off.
     if name == "done" and token is not None:
         spawn_idle_watcher(token)
     return 0
