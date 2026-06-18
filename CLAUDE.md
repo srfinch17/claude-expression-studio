@@ -105,11 +105,24 @@ setup. Reachable at `http://esp32matrix.local` once joined.
 
 ## MCP server (`mcp_server/`)
 
-TypeScript, pre-compiled to `dist/index.js`. After TS edits:
-`cd mcp_server; npx tsc --project tsconfig.json` then restart Claude Code.
+TypeScript, pre-compiled to `dist/index.js` — the live server runs the COMPILED
+dist, so TS edits are invisible until rebuilt **and** the server is reconnected.
+
+**Rebuild is automated.** A Claude Code hook (`.claude/settings.json` →
+`scripts/rebuild-mcp.mjs`) runs `tsc` whenever the `mcp_server/*.ts` sources are
+newer than `dist` — fired on every Edit/Write (PostToolUse) and at SessionStart.
+It's a no-op when dist is current, surfaces TS errors if the build fails, and on a
+successful rebuild prints a reminder. So after I edit TS you only need to **`/mcp`
+reconnect** to pick up the new build (the hook can't reconnect the running server).
+Manual fallback: `cd mcp_server; npx tsc --project tsconfig.json`.
+
 On Windows, MCP spawn is finicky — see global `~/.claude/CLAUDE.md` for the
-cmd.exe-wrapper template and debug checklist. Prefer the board's **IP address
-over `esp32matrix.local`** in MCP config (mDNS is unreliable in spawned procs).
+cmd.exe-wrapper template and debug checklist. `mcp_launch.cmd` must NOT redirect
+stderr to a fixed shared logfile: a long-lived server holds that handle, an orphan
+locks it, and the next spawn's redirect fails → `-32000 Connection closed` (the real
+error is in Claude's per-session `mcp-logs-esp32-matrix`, not the board). Prefer the
+board's **IP address over `esp32matrix.local`** in MCP config (mDNS is unreliable in
+spawned procs).
 
 ---
 
