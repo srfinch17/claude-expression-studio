@@ -11,8 +11,12 @@ stdlib. It FAILS SILENTLY (exit 0) if the board is unreachable, so a turn/hook i
 never blocked or broken by the board being off.
 
 Usage:  python matrix_signal.py <name>
-        names: working | done | alert | sleep | party
+        names: wait | working | done | alert | sleep | party
+        ("wait" = weighted-random pick from the wait pool — the snake plus any
+         saved wait-* expression; this is what the UserPromptSubmit hook fires.
+         "working" forces the default snake specifically.)
 Env:    ESP32_URL (default http://esp32matrix.local)
+        MATRIX_MCP_DIR (path to the repo's mcp_server/, for the wait pool files)
 
 Art/colors mirror peckworks-esp32s3matrix/mcp_server/expressions.ts (keep in sync
 if those change).
@@ -129,6 +133,86 @@ def send_named(name):
     post_frames([art_to_hex(f, colors) for f in frames_art], frame_ms, loop)
 
 
+# --- Weighted wait pool (mirrors mcp_server/wait.ts + index.ts resolveWait) ---
+# matrix_express("wait") in the MCP plays a WEIGHTED-RANDOM pick from the wait
+# pool: the canned "working" snake plus any saved expression named "wait-*".
+# This lets the UserPromptSubmit hook do the SAME pick, so the automatic busy
+# indicator matches the MCP (default 50% wait-rainbow / 30% wait-orbit / 20%
+# working snake — set in mcp_server/wait-weights.json, read at RUNTIME). Reads
+# the repo's JSON directly; no MCP call. Fails silently back to "working" if
+# anything is missing, so a turn is never blocked.
+MCP_DIR = os.environ.get(
+    "MATRIX_MCP_DIR",
+    r"C:\Users\srfin\Dropbox\Dev\repos\peckworks-esp32s3matrix\mcp_server",
+)
+EXPR_DIR = os.path.join(MCP_DIR, "expressions")
+WAIT_WEIGHTS_FILE = os.path.join(MCP_DIR, "wait-weights.json")
+WAIT_BUILTINS = ["working"]   # canned wait animations (drawn from EXPR above)
+WAIT_PREFIX = "wait-"
+
+
+def build_wait_pool():
+    """Built-ins + any saved wait-*.json in the expressions dir (de-duped)."""
+    pool = list(WAIT_BUILTINS)
+    try:
+        for fn in os.listdir(EXPR_DIR):
+            if fn.startswith(WAIT_PREFIX) and fn.endswith(".json"):
+                nm = fn[:-5]
+                if nm not in pool:
+                    pool.append(nm)
+    except Exception:
+        pass
+    return pool
+
+
+def load_wait_weights():
+    try:
+        with open(WAIT_WEIGHTS_FILE, "r", encoding="utf-8") as f:
+            raw = json.load(f)
+        w = raw.get("weights")
+        return w if isinstance(w, dict) else {}
+    except Exception:
+        return {}
+
+
+def pick_wait(pool, weights):
+    """Weighted random, mirroring wait.ts pickWait: weight defaults to 1, clamped
+    >= 0; zero-weight dropped; if everything zeroes out, fall back to uniform."""
+    if not pool:
+        return WAIT_BUILTINS[0]
+    entries = [(n, max(0.0, float(weights.get(n, 1)))) for n in pool]
+    entries = [(n, w) for n, w in entries if w > 0] or [(n, 1.0) for n in pool]
+    total = sum(w for _, w in entries)
+    r = random.random() * total
+    for n, w in entries:
+        r -= w
+        if r < 0:
+            return n
+    return entries[-1][0]
+
+
+def send_saved(name):
+    """Load a saved wait-*.json {colors,frames,frame_ms,loop} and POST it."""
+    try:
+        with open(os.path.join(EXPR_DIR, name + ".json"), "r", encoding="utf-8") as f:
+            e = json.load(f)
+        colors = e.get("colors", {})
+        post_frames([art_to_hex(f, colors) for f in e["frames"]],
+                    e.get("frame_ms", 150), e.get("loop", 0))
+        return True
+    except Exception:
+        return False
+
+
+def send_wait():
+    """Pick one wait animation by weight and play it (snake or a saved wait-*)."""
+    name = pick_wait(build_wait_pool(), load_wait_weights())
+    if name in EXPR:
+        send_named(name)
+    elif not send_saved(name):
+        send_named("working")  # never leave the board blank
+
+
 def write_activity_token():
     """Stamp a fresh token marking 'Claude just did something'. A change in this
     token is how a pending idle watcher learns Scott is back and should exit."""
@@ -169,10 +253,13 @@ def main():
     if os.path.exists(FLAG_OFF):
         return 0
     name = sys.argv[1].strip().lower()
-    # working + done are the real "Claude activity" beats — stamp the token so any
-    # stale idle watcher exits. (Manual alert/sleep/party don't touch it.)
-    token = write_activity_token() if name in ("working", "done") else None
-    send_named(name)
+    # wait + working + done are the real "Claude activity" beats — stamp the token
+    # so any stale idle watcher exits. (Manual alert/sleep/party don't touch it.)
+    token = write_activity_token() if name in ("wait", "working", "done") else None
+    if name == "wait":
+        send_wait()       # weighted-random pick from the wait pool (the hook path)
+    else:
+        send_named(name)  # a specific expression by name (working forces the snake)
     # The checkmark arms boredom: if Scott doesn't come back, the watcher goofs off.
     if name == "done" and token is not None:
         spawn_idle_watcher(token)

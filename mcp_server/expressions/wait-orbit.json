@@ -1,0 +1,135 @@
+{
+  "description": "Rainbow perimeter orbit — a six-hue arc (red/yellow/green/cyan/blue/magenta) sweeps clockwise around the panel edge in 2x2 blocks, reading as a rotating color wheel. A wait/working spinner; auto-joins the random 'wait' pool via its wait- name. Channel-distinct hues so it stays legible at low brightness.",
+  "frames": [
+    [
+      "RRYYGGCC",
+      "RRYYGGCC",
+      "......BB",
+      "......BB",
+      "......MM",
+      "......MM",
+      "........",
+      "........"
+    ],
+    [
+      "..RRYYGG",
+      "..RRYYGG",
+      "......CC",
+      "......CC",
+      "......BB",
+      "......BB",
+      "......MM",
+      "......MM"
+    ],
+    [
+      "....RRYY",
+      "....RRYY",
+      "......GG",
+      "......GG",
+      "......CC",
+      "......CC",
+      "....MMBB",
+      "....MMBB"
+    ],
+    [
+      "......RR",
+      "......RR",
+      "......YY",
+      "......YY",
+      "......GG",
+      "......GG",
+      "..MMBBCC",
+      "..MMBBCC"
+    ],
+    [
+      "........",
+      "........",
+      "......RR",
+      "......RR",
+      "......YY",
+      "......YY",
+      "MMBBCCGG",
+      "MMBBCCGG"
+    ],
+    [
+      "........",
+      "........",
+      "........",
+      "........",
+      "MM....RR",
+      "MM....RR",
+      "BBCCGGYY",
+      "BBCCGGYY"
+    ],
+    [
+      "........",
+      "........",
+      "MM......",
+      "MM......",
+      "BB......",
+      "BB......",
+      "CCGGYYRR",
+      "CCGGYYRR"
+    ],
+    [
+      "MM......",
+      "MM......",
+      "BB......",
+      "BB......",
+      "CC......",
+      "CC......",
+      "GGYYRR..",
+      "GGYYRR.."
+    ],
+    [
+      "BBMM....",
+      "BBMM....",
+      "CC......",
+      "CC......",
+      "GG......",
+      "GG......",
+      "YYRR....",
+      "YYRR...."
+    ],
+    [
+      "CCBBMM..",
+      "CCBBMM..",
+      "GG......",
+      "GG......",
+      "YY......",
+      "YY......",
+      "RR......",
+      "RR......"
+    ],
+    [
+      "GGCCBBMM",
+      "GGCCBBMM",
+      "YY......",
+      "YY......",
+      "RR......",
+      "RR......",
+      "........",
+      "........"
+    ],
+    [
+      "YYGGCCBB",
+      "YYGGCCBB",
+      "RR....MM",
+      "RR....MM",
+      "........",
+      "........",
+      "........",
+      "........"
+    ]
+  ],
+  "colors": {
+    "R": "#ff0000",
+    "Y": "#ffff00",
+    "G": "#00ff00",
+    "C": "#00ffff",
+    "B": "#0040ff",
+    "M": "#ff00ff"
+  },
+  "frame_ms": 80,
+  "loop": 0
+}
