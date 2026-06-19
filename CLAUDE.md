@@ -169,7 +169,10 @@ code, zero rebuild, zero reconnect**. Force a specific one by its name (`working
 `wait-rainbow`, …). Current pool: `working` (snake) + `wait-rainbow` (old-Mac
 pinwheel, `expressions/wait-rainbow.json`, regenerate via `scripts/gen-wait-rainbow.py`)
 + `wait-orbit` (six-hue color arc sweeping the panel perimeter,
-`expressions/wait-orbit.json`).
+`expressions/wait-orbit.json`) + `wait-claude` (the orange Claude-mascot alien bobbing
+with an eye-blink, `expressions/wait-claude.json` — the user's favorite). (Sibling
+`claude-idle` is the same mascot for idle/bored, but has NO `wait-` prefix so it stays
+out of the pool.)
 
 **Also fired by the prompt hook:** the Claude Code `UserPromptSubmit` hook
 (`claude-hooks/matrix_signal.py wait`) plays a wait spinner on every prompt, so the
@@ -179,14 +182,14 @@ indicator varies turn-to-turn. The hook reads the same pool + weights as the MCP
 **Weighted preference:** the random pick is weighted by `mcp_server/wait-weights.json`
 (relative weights; unlisted = 1; 0 disables). It's pure weighted random — exact odds,
 repeats allowed (no anti-repeat, which would fight a preference). Read at RUNTIME, so
-retuning the odds needs no rebuild/reconnect. Ships at `wait-rainbow:50, wait-orbit:30,
-working:20` (the three sum to 100, so they read as percentages). To honor a request like
+retuning the odds needs no rebuild/reconnect. Ships at `wait-claude:40, wait-rainbow:30,
+wait-orbit:20, working:10` (the four sum to 100, so they read as percentages). To honor a request like
 "show the rainbow 80% of the time," just edit this file (and recompute shares if the
 pool has grown). All three callers — `matrix_express("wait")`,
 `presence_set(intent:"working")`, and the prompt hook — use this picker.
 
 `matrix_idle` (MCP) puts a random PRE-APPROVED app on the board (fire / dance floor /
-fireworks / clock / frostbite / matrix rain) at ambient brightness 5 — use it unprompted when
+fireworks / clock / frostbite / matrix rain / snow) at ambient brightness 5 — use it unprompted when
 idle/bored to show something cool. Lineup is a fixed const in `mcp_server/idle.ts` (edit + `npx
 tsc` + reconnect to change). Spec: `docs/superpowers/specs/2026-06-17-matrix-idle-design.md`.
 
