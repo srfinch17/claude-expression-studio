@@ -1,0 +1,50 @@
+{
+  "description": "The Claude mascot (orange Space-Invader alien) bobbing up and down with an eye-blink at the top of each bounce. A 'busy/working' wait indicator. Joins the wait pool via the wait- prefix.",
+  "frames": [
+    [
+      "........",
+      "..RRRR..",
+      ".RRRRRR.",
+      ".R.RR.R.",
+      "RRRRRRRR",
+      ".RRRRRR.",
+      ".RR..RR.",
+      "........"
+    ],
+    [
+      "..RRRR..",
+      ".RRRRRR.",
+      ".R.RR.R.",
+      "RRRRRRRR",
+      ".RRRRRR.",
+      ".RR..RR.",
+      "........",
+      "........"
+    ],
+    [
+      "..RRRR..",
+      ".RRRRRR.",
+      ".RRRRRR.",
+      "RRRRRRRR",
+      ".RRRRRR.",
+      ".RR..RR.",
+      "........",
+      "........"
+    ],
+    [
+      "........",
+      "..RRRR..",
+      ".RRRRRR.",
+      ".R.RR.R.",
+      "RRRRRRRR",
+      ".RRRRRR.",
+      ".RR..RR.",
+      "........"
+    ]
+  ],
+  "colors": {
+    "R": "#ff6a14"
+  },
+  "frame_ms": 200,
+  "loop": 0
+}

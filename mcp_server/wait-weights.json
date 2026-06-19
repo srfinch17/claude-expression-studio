@@ -1,8 +1,9 @@
 {
-  "_comment": "Relative likelihoods for the random wait pool played by matrix_express(\"wait\"), presence_set(intent:\"working\"), and the Claude Code UserPromptSubmit hook (matrix_signal.py wait). Higher = more likely; any variant not listed defaults to 1; 0 disables it. The three below sum to 100, so they read as percentages: wait-rainbow (old-Mac pinwheel) 50%, wait-orbit (perimeter color arc) 30%, working (default snake) 20%. Read at RUNTIME, so edits take effect on the next wait with no rebuild and no reconnect. Adjust freely.",
+  "_comment": "Relative likelihoods for the random wait pool played by matrix_express(\"wait\"), presence_set(intent:\"working\"), and the Claude Code UserPromptSubmit hook (matrix_signal.py wait). Higher = more likely; any variant not listed defaults to 1; 0 disables it. The four below sum to 100, so they read as percentages: wait-claude (orange mascot bob+blink — user favorite) 40%, wait-rainbow (old-Mac pinwheel) 30%, wait-orbit (perimeter color arc) 20%, working (default snake) 10%. Read at RUNTIME, so edits take effect on the next wait with no rebuild and no reconnect. Adjust freely.",
   "weights": {
-    "wait-rainbow": 50,
-    "wait-orbit": 30,
-    "working": 20
+    "wait-claude": 40,
+    "wait-rainbow": 30,
+    "wait-orbit": 20,
+    "working": 10
   }
 }
