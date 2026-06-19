@@ -14,6 +14,21 @@ Entry template:
 
 ---
 
+## 2026-06-18 — A function that takes a `struct` by reference won't compile (`'<Struct>' was not declared in this scope`)
+**Symptom:** A new `anim_*.ino` defines `struct SnowFlake { ... };` then a helper
+`void spawnSnowFlake(SnowFlake& f, bool stagger)`. Compile fails with `variable or field
+'spawnSnowFlake' declared void` + `'SnowFlake' was not declared in this scope` — pointing at the
+function's own definition line, even though the struct is defined right above it in the same file.
+**Cause:** The Arduino IDE auto-hoists a *prototype* of every `.ino` function to the very TOP of the
+concatenated sketch — above your `struct` definition. The hoisted `void spawnSnowFlake(SnowFlake&, bool);`
+references `SnowFlake` before it exists. (Same family as the macro-concat-order trap below, but here it's
+the auto-prototype, not the preprocessor.) This is why none of the existing `anim_*.ino` helpers take
+their struct as a parameter — e.g. `anim_matrix.ino`'s `initMatrixDrops()` operates on the global array
+and only ever uses the struct as a *local* (`MatrixDrop& d = matrixDrops[col];`), which is fine.
+**Fix / rule:** Don't pass an `.ino`-defined struct as a function parameter. Pass an **index** (or other
+primitive) and dereference the global array inside: `void spawnSnowFlake(int i, bool stagger) { SnowFlake& f = snowFlakes[i]; ... }`.
+(Or move the struct into a real `.h` the file `#include`s.) Mirror the existing anim files' shape and this never bites.
+
 ## 2026-06-17 — A `#define` macro from another `.ino` isn't visible (depends on alphabetical concat order)
 **Symptom:** `error: 'FONT_CHAR_W' was not declared in this scope ... the macro 'FONT_CHAR_W' had not yet
 been defined ... it was later defined here (fonts.ino)`. The macro plainly exists in another `.ino`,

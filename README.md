@@ -17,6 +17,7 @@ You talk to Claude in plain English — *"show a purple matrix rain animation"* 
 |---|---|
 | `fire` | Heat-rise simulation with configurable palette, intensity, tendrils, and sparks |
 | `matrix_rain` | Digital rain / falling character screensaver (classic, blue, red, purple) |
+| `snow` | Endless ambient snowfall over a fixed snow bank — no accumulation; single random hue per launch or per-flake confetti |
 | `liquid` | Tilt-reactive fluid simulation using the onboard IMU — tilt the board to slosh it |
 | `imu` | Live 3-axis accelerometer bar graph |
 | `rainbow` / `wave` / `breathe` / `solid` | Classic LED effects |

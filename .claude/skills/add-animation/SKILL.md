@@ -10,6 +10,9 @@ Adding an animation touches **6 places**. Skipping any one is the usual cause of
 six. Names below assume a mode called `<name>` (e.g. `comet`, `weather2`).
 
 ## Before you start
+- This skill is the **firmware wiring**. For the *look* — making it legible at 64px,
+  brightness-5 color choice, silhouette/motion craft — use the **`emoting-on-8x8`** skill
+  alongside it. (That skill's "expression vs firmware" router is what sends you here.)
 - Read `CLAUDE.md` (hardware facts) and `docs/PITFALLS.md` (traps).
 - Remember: **`COLOR_ORDER` is RGB** — `CRGB(r,g,b)` maps straight through.
 - Draw only via `setPixel(x, y, CRGB)` — it's bounds-checked. `XY(x,y)=y*8+x`,

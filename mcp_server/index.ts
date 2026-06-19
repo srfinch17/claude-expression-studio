@@ -456,6 +456,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 - timer_text: countdown timer shown as MM:SS digits. params: duration (seconds), color1 (minutes color), color2 (seconds color), color3 (colon color, default white)
 - clock: live 12-hour clock synced via NTP. params: tz (POSIX TZ string, DST-aware — PREFERRED) or timezone (fixed UTC offset integer), color1 (hours color), color2 (minutes color), color3 (colon color)
 - matrix_rain: digital rain / matrix screensaver with falling character drops. Also called "matrix screensaver" or "digital rain". params: theme (classic/blue/red/purple), speed (1-5)
+- snow: endless ambient snowfall over a fixed snow bank — keeps snowing with NO accumulation (unlike timer_snow, which fills up). Each launch seeds one random color; confetti makes every flake its own color. params: confetti (bool, default false), speed (1-5, gentler = more snow-like)
 - dancefloor: 16 independent 2×2 disco tiles cycling through a 4-color palette. params: palette (0-63, see palette list in firmware), hold (4-40 frames per color, 4=fast/stroby, 40=slow/chill, default 12)
 - spiral: gradient snake flowing along a clockwise inward spiral — all 64 LEDs lit at all times. params: color1 (gradient start), color2 (gradient end)
 - starfield: stars radiate from center or fall inward toward center. params: color1 (birth color), color2 (death color), density (1-16, default 8), inward (bool, default false)
@@ -479,7 +480,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
               "fire", "rainbow", "breathe", "wave", "solid",
               "liquid", "imu", "chiptemp", "weather",
               "timer_fill", "timer_snow", "timer_text",
-              "clock", "matrix_rain",
+              "clock", "matrix_rain", "snow",
               "dancefloor",
               "spiral", "starfield", "fireworks", "fireworks2", "comet", "sun",
               "frostbite",
@@ -506,6 +507,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
           timezone:    { type: "number",  description: "Fixed UTC offset in hours, e.g. -7 for Arizona (no DST). Prefer tz for zones that observe DST." },
           tz:          { type: "string",  description: "POSIX TZ string — DST-aware, preferred over timezone. e.g. MST7 (Phoenix), MST7MDT,M3.2.0,M11.1.0 (Denver), EST5EDT,M3.2.0,M11.1.0 (New York), GMT0BST,M3.5.0/1,M10.5.0 (London)." },
           theme:       { type: "string",  description: "Matrix rain color theme: classic, blue, red, or purple." },
+          confetti:    { type: "boolean", description: "Snow: false (default) = one random hue per launch; true = each flake its own random color." },
           color4:      { type: "string",  description: "Quaternary color hex. Used by sun animation for orbit dot 3." },
           color5:      { type: "string",  description: "Quinary color hex. Used by sun animation for orbit dot 4 (darkest)." },
           density:     { type: "number",  description: "Starfield star density 1-16. 4=sparse, 8=medium, 14=dense." },
