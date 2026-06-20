@@ -52,7 +52,7 @@
 
 **Interfaces:**
 - Consumes: `setPixel(int,int,CRGB)`, `leds`, `NUM_LEDS`, `fill_solid`, FastLED `nscale8`/`scale8`, `random()`, `animationName`, `animationSpeed`.
-- Produces: globals `CRGB sweepColor; ` (in main ino); functions `void runClaudeSweepFrame();` and `void stepClaudeSweepFrame();` (the loop calls the `step*` variant — see dispatch).
+- Produces: global `CRGB sweepColor;` (in main ino); functions `void stepClaudeSweepFrame();` (called by the loop dispatch) and `void resetClaudeSweep();` (called by `handleAnimation` to re-seed). There is NO `runClaudeSweepFrame()` — only the `step*` variant.
 
 - [ ] **Step 1: Add the sweep color global to the main ino**
 
@@ -89,9 +89,11 @@ static uint8_t  sweepBri[28];
 static uint8_t  sweepHead   = 0;       // current head index into SWEEP_PERIM
 static bool     sweepInit   = false;
 
-// Baseline floor: the ring never dims below this. Tuned so amber's GREEN channel
-// still survives FastLED's global brightness 5 (see plan Global Constraints).
-static const uint8_t SWEEP_FLOOR = 64;
+// Baseline floor: the ring never dims below this. The HARD minimum for amber's
+// green channel to survive FastLED global brightness 5 is 63 (verified math); we
+// default to 76 for real margin (any hue with a weaker green, or a bri-4 corner,
+// still reads). Costs nothing visually at bri 5. Tune live if needed.
+static const uint8_t SWEEP_FLOOR = 76;
 // Per-frame decay multiplier for the tail (scale8: 200/256 ~= 0.78 -> a ~4-5px tail).
 static const uint8_t SWEEP_DECAY = 200;
 
@@ -240,7 +242,7 @@ Replace it so a `transient:true` body ALSO skips persistence:
   }
 ```
 
-> If `applyAnimationBody` already holds a parsed `JsonDocument doc` in scope at this point, read `doc["transient"] | false` directly instead of re-parsing — check the function and prefer the existing doc. (Re-parse shown as the safe default since `applyAnimationBody` takes a `String body`.)
+> The re-parse here is REQUIRED, not optional: this persistence block lives in `handleAnimation()`, which only has the raw `String body` in scope — the `doc` parsed inside `applyAnimationBody()` was a local there and is already out of scope. So do NOT go looking for an existing `doc` to reuse in `handleAnimation`; the small re-parse in a local block (parsed-and-freed) is correct and cheap (ArduinoJson v7 elastic `JsonDocument`).
 
 - [ ] **Step 2: Hardware verification (USER FLASHES)**
 
@@ -285,9 +287,11 @@ In `mcp_server/idle.ts` `IDLE_APPS`, add an entry (matching the existing shape):
   { type: "claudesweep", label: "🟠 claude sweep", params: {} },
 ```
 
-- [ ] **Step 3: Hardware verification (USER)**
+> Two distinct idle paths, for clarity: (1) the **board-side screensaver** (`idle_engine.ino` `idleLaunch`) bypasses NVS auto-resume — fine. (2) the **MCP `matrix_idle` tool** POSTs `/api/display/animation` WITHOUT `transient`, so it persists the pick — exactly like every existing idle app (fire/snow/etc.), so `claudesweep` is consistent here, NOT a regression. Do not add `transient` to `matrix_idle` in this plan (it would change behavior for all apps — out of scope).
 
-- The firmware default change needs a flash to take effect on a fresh NVS; on an existing board, set it via the settings page (the `claudesweep` checkbox appears once Task 4's web list includes it — see Task 4 note). To verify the rotation includes it now: on the settings page enable only `claudesweep` + one other, set short `idle_after`/`idle_rotate`, arm (`POST /api/idle/arm`), and confirm the screensaver rotates into `claudesweep` (check `GET /api/status`). Restore settings after.
+- [ ] **Step 3: Hardware verification (USER) — DEFERRED until after Task 4's LittleFS upload**
+
+CROSS-TASK DEPENDENCY: an existing board keeps its stored `idle_apps` (no `claudesweep`) — the new firmware default only applies to a fresh NVS. The only way to add it on an existing board is the settings page, whose `claudesweep` checkbox doesn't exist until **Task 4 Step 4** ships `data/settings.html`. So **do this verification after Task 4's LittleFS upload, not now.** Then: on the settings page enable only `claudesweep` + one other, set short `idle_after`/`idle_rotate`, arm (`POST /api/idle/arm`), and confirm `GET /api/status` shows the rotation reaching `claudesweep`. Restore settings after. (At Task 3 commit time, just confirm the firmware compiles/flashes and `claudesweep` is launchable directly — the idle-rotation check waits for Task 4.)
 
 - [ ] **Step 4: Commit**
 
@@ -333,16 +337,20 @@ Model on an existing single-animation control page (open `data/fire.html` or `da
 <button id="go">Launch ▶</button><span id="status"></span>
 <script>
 const $=id=>document.getElementById(id);
+// The firmware `speed` field is MS-PER-FRAME (clamped [10,10000]). Posting a raw
+// 1-5 would become e.g. 2ms→clamped to 10ms ≈ 100fps (a blur — this exact bug has
+// bitten the project). Map the 1-5 slider to ms here, matching the MCP's msMap.
+const MS={1:150,2:100,3:66,4:40,5:20};
 const so=$("spd_o"); const sync=()=>so.value=$("speed").value; $("speed").addEventListener("input",sync); sync();
 $("go").addEventListener("click",async()=>{
   await fetch("/api/display/animation",{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({type:"claudesweep",color:$("color").value,speed:+$("speed").value})});
+    body:JSON.stringify({type:"claudesweep",color:$("color").value,speed:MS[+$("speed").value]})});
   $("status").textContent="Launched ✓"; setTimeout(()=>$("status").textContent="",1500);
 });
 </script></body></html>
 ```
 
-> The firmware `speed` is ms/frame; this page posts the raw 1–5. Confirm how `data/snow.html` posts speed — if other pages post raw 1–5 and the firmware clamps `doc["speed"] | 66` to `[10,10000]`, a raw `2` would be 2ms→clamped to 10ms (too fast). To match the MCP's 1–5→ms mapping, have this page map before POST: `const MS={1:150,2:100,3:66,4:40,5:20}; ... speed: MS[+$("speed").value]`. Use that mapping in the POST body.
+> Speed is mapped to ms IN the page above (the `MS` table) — do not post the raw 1–5. (`data/snow.html` does the equivalent; confirm its approach but the `MS` map here is correct and self-contained.)
 
 - [ ] **Step 2: Add the index card**
 
@@ -392,10 +400,13 @@ In `data/sketch.html`, add the mascot orange to `KEY` (the char map, ~line 224-2
 ```js
       'a': '#ff6a14',
 ```
-Then add a starter to the `STARTERS` array (~line 239), using the 8×8 mascot silhouette from `expressions/wait-claude.json`:
+Then add a starter to the `STARTERS` array (~line 239), using the EXACT 8×8 mascot
+silhouette from `expressions/wait-claude.json` frame 0 (top blank row, mascot rows 1-6,
+remapping its `R` → the new `a` key):
 ```js
-      { name: 'Claude', rows: ["..aaaa..", ".aaaaaa.", ".a.aa.a.", "aaaaaaaa", ".aaaaaa.", ".aa..aa.", "........", "........"] },
+      { name: 'Claude', rows: ["........", "..aaaa..", ".aaaaaa.", ".a.aa.a.", "aaaaaaaa", ".aaaaaa.", ".aa..aa.", "........"] },
 ```
+(Verify against `expressions/wait-claude.json` frame 0 — do not freehand it.)
 
 - [ ] **Step 2: Hardware verification (USER UPLOADS LittleFS)**
 
@@ -488,15 +499,55 @@ In `mcp_server/index.ts` `matrix_express` "wait" handling, after `exprName = awa
 ```
 Add `isWaitAnimation` to the existing `./wait.js` import.
 
-> Confirm `resolveWait()` builds its pool via `buildWaitPool` (so `claudesweep` is now a candidate). If `resolveWait` builds the pool another way, ensure it routes through `buildWaitPool` so the firmware-anim entries are included.
+> Confirm `resolveWait()` builds its pool via `buildWaitPool` (it does — `index.ts:82`), so `claudesweep` is now a candidate.
 
-- [ ] **Step 6: Weight it in `wait-weights.json`**
+- [ ] **Step 5b: Fire the animation in the `presence_set` working path too (REQUIRED — else blank panel)**
 
-Add a `claudesweep` weight to `mcp_server/wait-weights.json` (e.g. a moderate share like the others — match the existing scale; if the four current entries sum to ~100, give claudesweep ~25 and leave the rest, or set per the user's preference). Use:
-```json
-{ "weights": { "wait-claude": 30, "wait-rainbow": 25, "wait-orbit": 15, "working": 10, "claudesweep": 20 } }
+`resolveWait()` is ALSO called by the `presence_set` working branch (`index.ts:806`), which then does `CANNED[canned] ?? loadSavedExpression(canned)` — for `claudesweep` BOTH miss, so `expr` is undefined and the panel shows nothing (`ledNote = no 8x8 glyph for "claudesweep"`). Patch that branch. Current code (~lines 806-813):
+```ts
+          const canned = msg.intent === "working" ? await resolveWait() : cannedFor(msg.intent);
+          const expr = CANNED[canned] ?? (await loadSavedExpression(canned));
+          if (expr) {
+            const lr = await post("/api/display/frames", expressionToWire(expr));
+            ledNote = lr.ok ? `8x8 → ${canned}` : `8x8 error ${lr.status}`;
+          } else {
+            ledNote = `no 8x8 glyph for "${canned}"`;
+          }
 ```
-(Read at runtime — retune freely later.)
+Replace with a firmware-anim guard first:
+```ts
+          const canned = msg.intent === "working" ? await resolveWait() : cannedFor(msg.intent);
+          if (isWaitAnimation(canned)) {
+            const lr = await post("/api/display/animation", { type: canned, transient: true });
+            ledNote = lr.ok ? `8x8 → ${canned} (transient anim)` : `8x8 anim error ${lr.status}`;
+          } else {
+            const expr = CANNED[canned] ?? (await loadSavedExpression(canned));
+            if (expr) {
+              const lr = await post("/api/display/frames", expressionToWire(expr));
+              ledNote = lr.ok ? `8x8 → ${canned}` : `8x8 error ${lr.status}`;
+            } else {
+              ledNote = `no 8x8 glyph for "${canned}"`;
+            }
+          }
+```
+(Both `matrix_express("wait")` AND `presence_set(intent:"working")` share `resolveWait`, so BOTH must handle a firmware-anim pick.)
+
+- [ ] **Step 6: Weight it in `wait-weights.json` (PRESERVE the existing entries + comment)**
+
+The live file has a `_comment` and the user's tuned weights (`wait-claude:40` is the user's favorite). Do NOT rewrite/erode them. ONLY **add** a `claudesweep` entry and **update the `_comment`** to reflect the new pool. The result:
+```json
+{
+  "_comment": "Relative likelihoods for the random wait pool played by matrix_express(\"wait\"), presence_set(intent:\"working\"), and the Claude Code UserPromptSubmit hook (matrix_signal.py wait). Higher = more likely; any variant not listed defaults to 1; 0 disables it. Weights are RELATIVE (no longer sum to 100 now that claudesweep is added): wait-claude (orange mascot bob+blink — user favorite) 40, wait-rainbow 30, wait-orbit 20, claudesweep (CRT/radar sweep + resident Claude) 20, working (default snake) 10 — claudesweep ≈ 17% of picks. Read at RUNTIME, so edits take effect on the next wait with no rebuild and no reconnect. Adjust freely.",
+  "weights": {
+    "wait-claude": 40,
+    "wait-rainbow": 30,
+    "wait-orbit": 20,
+    "claudesweep": 20,
+    "working": 10
+  }
+}
+```
+(Keep the existing four weights unchanged; only `claudesweep:20` is new. Retune at runtime later if desired.)
 
 - [ ] **Step 7: Mirror in `matrix_signal.py` (+ installed copy)**
 
@@ -592,3 +643,14 @@ git commit -m "docs: claudesweep animation + transient flag + type-aware wait po
 - **Type consistency:** `claudesweep` is the type string everywhere (firmware dispatch, known-anims, idle CSV, idle.ts, MCP enum, WAIT_ANIMATIONS, settings APPS, wait-weights). `transient` is the body flag in firmware (Task 2) and both wait launchers (Task 6).
 - **Build order / checkpoints:** Tasks 1–2 (+3 firmware half) flash together = firmware checkpoint A (verify the look at bri 5 + transient). Tasks 4–5 = LittleFS checkpoint B (control page, index, sketch). Tasks 3-TS + 6 + 7 = MCP/hook checkpoint C (reconnect + hook sync). Tasks 1 and 2 must land before 6 (wait launch needs both the animation and the transient flag).
 - **Known deferral (unrelated):** the v0.6 `MCP_DIR` hardcoded-path cleanup lives in `matrix_signal.py` (touched here) but stays out of scope — do not change it.
+
+## Review-Round Fixes (applied after two-critic review)
+- **CRITICAL — `presence_set("working")` blank panel:** `resolveWait()` is shared by `matrix_express("wait")` AND `presence_set`; a `claudesweep` pick had no firmware-anim branch on the presence path → blank. Added **Task 6 Step 5b** patching `index.ts:806`.
+- **CRITICAL — control-page speed units:** the draft posted raw 1–5; firmware `speed` is ms/frame clamped [10,10000] → `2`→10ms blizzard. The Task 4 HTML now maps 1–5→ms in-page (`MS` table).
+- **`wait-weights.json`:** no longer clobbers the `_comment` or erodes `wait-claude:40` (user favorite) — only **adds** `claudesweep:20` and updates the comment.
+- **Brightness floor:** default raised 64→**76** (hard min is 63; 76 gives margin).
+- **Task 3 verification** explicitly deferred until after Task 4's LittleFS upload (settings checkbox dependency).
+- **Sketch stamp** uses the exact 8×8 `wait-claude.json` frame-0 silhouette, not an approximation.
+- **Task 2 transient re-parse** clarified as REQUIRED (no `doc` in `handleAnimation` scope).
+- Removed the phantom `runClaudeSweepFrame()` from interfaces; clarified the two idle paths (board screensaver bypasses persist; MCP `matrix_idle` persists like all apps).
+- **Dismissed (false alarm):** a reviewer flagged the version bump as 0.6.0→0.7.0 "off by one" — `VERSION` is already `0.6.0` (post-PR#12), so `bump:minor`→`0.7.0` is correct.
