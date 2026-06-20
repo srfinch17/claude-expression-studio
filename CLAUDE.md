@@ -144,6 +144,9 @@ POST /api/display/animation { type, ...mode-specific }   # clock/calendar accept
 POST /api/display/matrix    { matrix: [[8×8 hex]] }
 POST /api/display/frames    { frames: ["384-hex RRGGBB×64", …≤24], frame_ms, loop }  # expression channel; loop 0=forever, N=passes then hold last
 POST /api/weather/mode      { mode: temp|humidity|uv|pressure|cycle }
+GET  /api/settings          # all current board settings (NVS-backed)
+POST /api/settings          { partial keys }  # merge-update — only sent keys change; see Settings section
+POST /api/idle/arm          # arm the idle screensaver countdown (fired by the UserPromptStop hook)
 ```
 
 ## ⭐ The matrix is Claude's expression window (use it ambiently)
@@ -238,3 +241,61 @@ whatever it was showing. `handleAnimation` is split into `applyAnimationBody(bod
 display (`/api/display/clear`) makes it boot blank. Text/sketch are transient
 (not auto-resumed). If you're puzzled why the board "starts showing something" on
 power-up — that's this.
+
+## Settings (NVS-backed, survives flashes)
+
+Persistent board configuration lives in NVS (`Preferences`, namespace `matrix`,
+a separate key from animation state) and is loaded at boot before any display
+logic runs. Settings are written via `POST /api/settings` (partial updates — only
+the keys you send are changed; everything else is preserved). `GET /api/settings`
+reads the current values. The web control page is `data/settings.html` (linked
+from the index). Two MCP tools mirror the same endpoint: `matrix_get_settings`
+(read) and `matrix_set_settings` (write). **The board is the single source of
+truth** — the web page and MCP tools both talk to `/api/settings`, never to each
+other.
+
+**Settings keys:**
+
+| Key | Type | Default | Meaning |
+|---|---|---|---|
+| `idle_enabled` | bool | true | Enable the idle screensaver |
+| `idle_apps` | string (CSV) | `fire,matrix_rain,clock,fireworks,frostbite,snow,dancefloor` | Apps in the screensaver rotation |
+| `idle_after_secs` | int | 120 | Seconds of host inactivity before screensaver starts |
+| `idle_rotate_secs` | int | 60 | How long each screensaver app runs before rotating |
+| `idle_brightness` | int | 5 | Brightness used while the screensaver is running |
+| `default_brightness` | int | 40 | Default + boot brightness (unified with auto-resume brightness) |
+| `boot_animation` | string | `""` | If non-empty, overrides auto-resume on boot with this animation type |
+| `timezone` | string | `""` | POSIX TZ string applied to the clock live on POST |
+
+**Merge-on-boot:** `loadSettings()` merges stored keys over firmware defaults, so
+a new firmware build that adds a new setting key boots with a sane default even
+when the stored blob predates that key — no factory-reset required on upgrade.
+
+## Idle screensaver
+
+When the board is armed (via `POST /api/idle/arm`, fired by the Claude Code
+`UserPromptStop` hook), it starts a countdown timer. If no real display command
+arrives within `idle_after_secs`, the board enters screensaver mode: it picks a
+random app from `idle_apps` (calling `idleParamsFor` to build the same params
+`matrix_idle` would use), runs it at `idle_brightness`, and rotates to the next
+app every `idle_rotate_secs`. Any real display command disarms the screensaver
+and restores the pre-screensaver brightness.
+
+**End-to-end flow with host hooks:**
+1. Claude finishes a turn → `UserPromptStop` hook fires `POST /api/idle/arm`.
+2. User is idle → board counts down → screensaver starts rotating apps.
+3. User sends a new prompt → `UserPromptSubmit` hook fires a wait-spinner expression
+   (disarms the screensaver automatically as a side-effect of the display command).
+
+The screensaver survives the laptop sleeping (the arm fires before sleep; the
+board keeps running independently). `idle_apps` and timing are tunable at runtime
+via settings — no reflash needed.
+
+## Board discovery
+
+The board's HTTP address is configured in **one place**: the `ESP32_URL`
+environment variable. Both the MCP server (`mcp_server/index.ts` `BOARD_URL`)
+and the Python hooks (`claude-hooks/matrix_signal.py` `BOARD_URL`) read it, with
+the same default `http://esp32matrix.local`. For a fresh install, set `ESP32_URL`
+once (e.g. to an IP address if mDNS is unreliable) and everything picks it up —
+no per-file edits required.
