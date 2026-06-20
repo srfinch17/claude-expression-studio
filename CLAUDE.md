@@ -261,7 +261,7 @@ other.
 | `idle_enabled` | bool | true | Enable the idle screensaver |
 | `idle_apps` | string (CSV) | `fire,matrix_rain,clock,fireworks,frostbite,snow,dancefloor` | Apps in the screensaver rotation |
 | `idle_after_secs` | int | 120 | Seconds of host inactivity before screensaver starts |
-| `idle_rotate_secs` | int | 60 | How long each screensaver app runs before rotating |
+| `idle_rotate_secs` | int | 240 | How long each screensaver app runs before rotating |
 | `idle_brightness` | int | 5 | Brightness used while the screensaver is running |
 | `default_brightness` | int | 40 | Default + boot brightness (unified with auto-resume brightness) |
 | `boot_animation` | string | `""` | If non-empty, overrides auto-resume on boot with this animation type |
