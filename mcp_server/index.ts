@@ -30,6 +30,7 @@ import { CANNED, MAX_FRAMES, artToFrameHex, expressionToWire, type Expression } 
 import { buildWaitPool, pickWait } from "./wait.js";
 import { normalizePresence, cannedFor } from "./presence.js";
 import { IDLE_APPS, IDLE_BRIGHTNESS, pickIdleApp } from "./idle.js";
+import { normalizeSettingsPatch } from "./settings.js";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -659,6 +660,30 @@ Use a duration of 2–4 seconds per emoji. Default is 3.`,
         required: ["emojis"],
       },
     },
+    {
+      name: "matrix_get_settings",
+      description:
+        "Read the board's current persistent settings — idle screensaver behavior (enabled, which apps rotate, how long before it starts, how often it re-picks, idle brightness), default brightness, default boot animation, and clock timezone. Use this to answer questions like 'what's my idle timeout?' or before changing a setting.",
+      inputSchema: { type: "object", properties: {} },
+    },
+    {
+      name: "matrix_set_settings",
+      description:
+        "Change one or more board settings (persisted on the board, survives reflash). Only the fields you provide change. Fields: idle_enabled (bool), idle_apps (comma-separated app names from: fire, matrix_rain, clock, fireworks, frostbite, snow, dancefloor), idle_after_secs (seconds of quiet before the screensaver starts), idle_rotate_secs (seconds between screensaver changes), idle_brightness (1-255, screensaver dimness), default_brightness (0-255 on boot), boot_animation (animation type to show on power-up, or empty to resume last), timezone (POSIX TZ string for the clock). Example: 'start the screensaver after 5 minutes' -> { idle_after_secs: 300 }.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          idle_enabled: { type: "boolean" },
+          idle_apps: { type: "string", description: "Comma-separated enabled screensaver apps." },
+          idle_after_secs: { type: "number" },
+          idle_rotate_secs: { type: "number" },
+          idle_brightness: { type: "number" },
+          default_brightness: { type: "number" },
+          boot_animation: { type: "string" },
+          timezone: { type: "string" },
+        },
+      },
+    },
   ],
 }));
 
@@ -878,6 +903,20 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             : `Showed sequence: ${emojis.join(" → ")}. ${emojis[emojis.length - 1]} is still on screen.`;
 
         return { content: [{ type: "text", text: summary }] };
+      }
+
+      case "matrix_get_settings": {
+        const r = await get("/api/settings");
+        return { content: [{ type: "text", text: r.ok ? r.body : `Error ${r.status}: ${r.body}` }] };
+      }
+
+      case "matrix_set_settings": {
+        const patch = normalizeSettingsPatch(args as Record<string, unknown>);
+        if (Object.keys(patch).length === 0) {
+          return { content: [{ type: "text", text: "No recognized settings to change." }] };
+        }
+        const r = await post("/api/settings", patch);
+        return { content: [{ type: "text", text: r.ok ? `Settings updated: ${r.body}` : `Error ${r.status}: ${r.body}` }] };
       }
 
       default:
