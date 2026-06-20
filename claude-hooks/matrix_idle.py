@@ -103,7 +103,9 @@ def load_pool():
 
 def play(entry):
     frames_art, colors, frame_ms, loop = entry
-    ms.post_frames([ms.art_to_hex(f, colors) for f in frames_art], frame_ms, loop)
+    # idle=True: goof/Zz pushes keep the board's dead-man's-switch armed so the
+    # screensaver can fire after the animation cycle, rather than disarming it.
+    ms.post_frames([ms.art_to_hex(f, colors) for f in frames_art], frame_ms, loop, idle=True)
 
 
 def current_token():
