@@ -1,0 +1,98 @@
+{
+  "description": "Animated board logo \u2014 a bright highlight chases clockwise around the four corners while the cyan center pulses, reading as 'computing'. A wait spinner; auto-joins the random 'wait' pool via its wait- name.",
+  "frames": [
+    [
+      "AA....BB",
+      "AA....BB",
+      "........",
+      "...CC...",
+      "...CC...",
+      "........",
+      "BB....DD",
+      "BB....DD"
+    ],
+    [
+      "AA....BB",
+      "AA....BB",
+      "........",
+      "...EE...",
+      "...EE...",
+      "........",
+      "BB....DD",
+      "BB....DD"
+    ],
+    [
+      "DD....FF",
+      "DD....FF",
+      "........",
+      "...GG...",
+      "...GG...",
+      "........",
+      "BB....DD",
+      "BB....DD"
+    ],
+    [
+      "DD....FF",
+      "DD....FF",
+      "........",
+      "...HH...",
+      "...HH...",
+      "........",
+      "BB....DD",
+      "BB....DD"
+    ],
+    [
+      "DD....BB",
+      "DD....BB",
+      "........",
+      "...II...",
+      "...II...",
+      "........",
+      "BB....AA",
+      "BB....AA"
+    ],
+    [
+      "DD....BB",
+      "DD....BB",
+      "........",
+      "...HH...",
+      "...HH...",
+      "........",
+      "BB....AA",
+      "BB....AA"
+    ],
+    [
+      "DD....BB",
+      "DD....BB",
+      "........",
+      "...GG...",
+      "...GG...",
+      "........",
+      "FF....DD",
+      "FF....DD"
+    ],
+    [
+      "DD....BB",
+      "DD....BB",
+      "........",
+      "...EE...",
+      "...EE...",
+      "........",
+      "FF....DD",
+      "FF....DD"
+    ]
+  ],
+  "colors": {
+    "A": "#00ff88",
+    "B": "#805800",
+    "C": "#227780",
+    "D": "#008044",
+    "E": "#278892",
+    "F": "#ffb000",
+    "G": "#33b2bf",
+    "H": "#3fddec",
+    "I": "#44eeff"
+  },
+  "frame_ms": 120,
+  "loop": 0
+}

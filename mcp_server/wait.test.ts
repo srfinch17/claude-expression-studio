@@ -1,5 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { WAIT_BUILTINS, WAIT_PREFIX, WAIT_ANIMATIONS, buildWaitPool, pickWait, isWaitAnimation } from "./wait.ts";
 
 test("buildWaitPool keeps built-ins, firmware-anims, and saved wait- names, de-duped", () => {
@@ -77,4 +80,20 @@ test("isWaitAnimation distinguishes firmware anims from expressions", () => {
 
 test("WAIT_ANIMATIONS contains claudesweep", () => {
   assert.ok(WAIT_ANIMATIONS.includes("claudesweep"));
+});
+
+test("shipped wait-weights.json keeps wait-claude dominant over the logo family, variants at 8", () => {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const raw = JSON.parse(readFileSync(join(here, "wait-weights.json"), "utf8")) as { weights: Record<string, number> };
+  const weights = raw.weights;
+  assert.ok(weights && typeof weights === "object", "wait-weights.json must have a nested 'weights' object");
+  const family = ["wait-logo-breathe", "wait-logo-chase", "wait-logo-boot", "wait-logo-ripple"];
+  for (const name of family) {
+    assert.equal(weights[name], 8, `${name} should be weighted 8`);
+  }
+  // wait-claude is the single largest entry AND outweighs the whole logo family.
+  const max = Math.max(...Object.values(weights));
+  assert.equal(weights["wait-claude"], max);
+  const familyTotal = family.reduce((s, n) => s + weights[n], 0);
+  assert.ok(weights["wait-claude"] >= familyTotal, "wait-claude (40) must stay >= the logo family total (32)");
 });

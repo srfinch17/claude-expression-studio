@@ -1,10 +1,14 @@
 {
-  "_comment": "Relative likelihoods for the random wait pool played by matrix_express(\"wait\"), presence_set(intent:\"working\"), and the Claude Code UserPromptSubmit hook (matrix_signal.py wait). Higher = more likely; any variant not listed defaults to 1; 0 disables it. Weights are RELATIVE (no longer sum to 100 now that claudesweep is added): wait-claude (orange mascot bob+blink — user favorite) 40, wait-rainbow 30, wait-orbit 20, claudesweep (CRT/radar sweep + resident Claude) 20, working (default snake) 10 — claudesweep ≈ 17% of picks. Read at RUNTIME, so edits take effect on the next wait with no rebuild and no reconnect. Adjust freely.",
+  "_comment": "Relative likelihoods for the random wait pool played by matrix_express(\"wait\"), presence_set(intent:\"working\"), and the Claude Code UserPromptSubmit hook (matrix_signal.py wait). Higher = more likely; any variant not listed defaults to 1; 0 disables it. Weights are RELATIVE (do not sum to 100): wait-claude (orange mascot bob+blink — user favorite) 40, wait-rainbow 30, wait-orbit 20, claudesweep (CRT/radar sweep + resident Claude) 20, working (default snake) 10, and the four animated-logo variants (wait-logo-breathe/chase/boot/ripple) 8 each — so wait-claude (40) outweighs the whole logo family (32) and stays the single dominant favorite. Read at RUNTIME, so edits take effect on the next wait with no rebuild and no reconnect. Adjust freely.",
   "weights": {
     "wait-claude": 40,
     "wait-rainbow": 30,
     "wait-orbit": 20,
     "claudesweep": 20,
-    "working": 10
+    "working": 10,
+    "wait-logo-breathe": 8,
+    "wait-logo-chase": 8,
+    "wait-logo-boot": 8,
+    "wait-logo-ripple": 8
   }
 }
