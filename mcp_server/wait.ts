@@ -19,11 +19,21 @@ export const WAIT_BUILTINS: string[] = ["working"];
 // Saved expressions whose name starts with this prefix auto-join the wait pool.
 export const WAIT_PREFIX = "wait-";
 
-// Build the full pool from the built-ins plus any saved expression names that match
-// the wait- convention. De-duped, preserving built-ins first.
+// Firmware animations that join the wait pool. Unlike frame-expressions, when one
+// of these is picked the caller fires POST /api/display/animation (transient) rather
+// than pushing frames. Keep aligned with the firmware animation types.
+export const WAIT_ANIMATIONS: string[] = ["claudesweep"];
+
+export function isWaitAnimation(name: string): boolean {
+  return WAIT_ANIMATIONS.includes(name);
+}
+
+// Build the full pool from the built-ins plus firmware-animation entries plus any
+// saved expression names that match the wait- convention. De-duped, preserving
+// built-ins first.
 export function buildWaitPool(savedNames: string[]): string[] {
   const matched = savedNames.filter((n) => n.startsWith(WAIT_PREFIX));
-  return [...new Set([...WAIT_BUILTINS, ...matched])];
+  return [...new Set([...WAIT_BUILTINS, ...WAIT_ANIMATIONS, ...matched])];
 }
 
 // Relative likelihoods for the wait pool: variant name -> weight (>= 0). Higher =

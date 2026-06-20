@@ -27,7 +27,7 @@ import { createCanvas } from "@napi-rs/canvas";
 // Claude's expression channel: canned glyph library + text-art → wire conversion.
 import { CANNED, MAX_FRAMES, artToFrameHex, expressionToWire, type Expression } from "./expressions.js";
 // Wait-animation library: the random "wait" pool (snake + saved wait-* expressions).
-import { buildWaitPool, pickWait } from "./wait.js";
+import { buildWaitPool, pickWait, isWaitAnimation } from "./wait.js";
 import { normalizePresence, cannedFor } from "./presence.js";
 import { IDLE_APPS, IDLE_BRIGHTNESS, pickIdleApp } from "./idle.js";
 import { normalizeSettingsPatch } from "./settings.js";
@@ -770,8 +770,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "matrix_express": {
         let exprName = String(args.name ?? "");
         // "wait" is a GROUP, not a single expression: pick a weighted-random wait
-        // animation (snake built-in + saved wait-*), avoiding an immediate repeat.
+        // animation (snake built-in + saved wait-* + firmware anims like claudesweep).
         if (exprName === "wait") exprName = await resolveWait();
+        // Firmware-animation pick: fire POST /api/display/animation (transient) and return.
+        if (isWaitAnimation(exprName)) {
+          const r = await post("/api/display/animation", { type: exprName, transient: true });
+          return { content: [{ type: "text", text: r.ok ? `Busy indicator: ${exprName} (transient animation).` : `Error ${r.status}: ${r.body}` }] };
+        }
         const expr = CANNED[exprName] ?? (await loadSavedExpression(exprName));
         if (!expr) {
           const saved = await listSavedExpressions();
@@ -806,12 +811,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           // No data → render the intent's canned glyph via the frame path (v0 behavior).
           // "working" routes through the weighted wait pool so presence varies too.
           const canned = msg.intent === "working" ? await resolveWait() : cannedFor(msg.intent);
-          const expr = CANNED[canned] ?? (await loadSavedExpression(canned));
-          if (expr) {
-            const lr = await post("/api/display/frames", expressionToWire(expr));
-            ledNote = lr.ok ? `8x8 → ${canned}` : `8x8 error ${lr.status}`;
+          if (isWaitAnimation(canned)) {
+            // Firmware-animation pick: fire POST /api/display/animation (transient).
+            const lr = await post("/api/display/animation", { type: canned, transient: true });
+            ledNote = lr.ok ? `8x8 → ${canned} (transient anim)` : `8x8 anim error ${lr.status}`;
           } else {
-            ledNote = `no 8x8 glyph for "${canned}"`;
+            const expr = CANNED[canned] ?? (await loadSavedExpression(canned));
+            if (expr) {
+              const lr = await post("/api/display/frames", expressionToWire(expr));
+              ledNote = lr.ok ? `8x8 → ${canned}` : `8x8 error ${lr.status}`;
+            } else {
+              ledNote = `no 8x8 glyph for "${canned}"`;
+            }
           }
         }
 

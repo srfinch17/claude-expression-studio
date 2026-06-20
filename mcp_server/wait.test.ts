@@ -1,14 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { WAIT_BUILTINS, WAIT_PREFIX, buildWaitPool, pickWait } from "./wait.ts";
+import { WAIT_BUILTINS, WAIT_PREFIX, WAIT_ANIMATIONS, buildWaitPool, pickWait, isWaitAnimation } from "./wait.ts";
 
-test("buildWaitPool keeps built-ins and adds saved wait- names, de-duped", () => {
+test("buildWaitPool keeps built-ins, firmware-anims, and saved wait- names, de-duped", () => {
   const pool = buildWaitPool(["wait-rainbow", "smiley", "wait-pulse", "wait-rainbow"]);
-  assert.deepEqual(pool, ["working", "wait-rainbow", "wait-pulse"]);
+  assert.deepEqual(pool, ["working", "claudesweep", "wait-rainbow", "wait-pulse"]);
 });
 
 test("buildWaitPool ignores saved names that don't match the prefix", () => {
-  assert.deepEqual(buildWaitPool(["dizzy", "pacman"]), [...WAIT_BUILTINS]);
+  assert.deepEqual(buildWaitPool(["dizzy", "pacman"]), [...WAIT_BUILTINS, ...WAIT_ANIMATIONS]);
 });
 
 test("WAIT_PREFIX is the documented convention", () => {
@@ -29,7 +29,8 @@ test("pickWait falls back to the first built-in on an empty pool", () => {
 });
 
 test("pickWait honors weights ~80/20 across sequential picks (no forced alternation)", () => {
-  const pool = buildWaitPool(["wait-rainbow"]); // ["working","wait-rainbow"]
+  // Use a hand-crafted pool that doesn't include claudesweep, so the weights are clean.
+  const pool = ["working", "wait-rainbow"];
   const weights = { "wait-rainbow": 4, working: 1 };
   let rainbow = 0;
   const N = 1000;
@@ -41,7 +42,8 @@ test("pickWait honors weights ~80/20 across sequential picks (no forced alternat
 });
 
 test("pickWait allows back-to-back repeats (a heavy weight isn't forced to alternate)", () => {
-  const pool = buildWaitPool(["wait-rainbow"]);
+  // Use a hand-crafted pool so weight distribution is predictable.
+  const pool = ["working", "wait-rainbow"];
   const weights = { "wait-rainbow": 4, working: 1 };
   // rng=0 always selects the first entry's slice → working ("working" is index 0),
   // so use a value inside the rainbow slice and confirm it repeats.
@@ -50,7 +52,8 @@ test("pickWait allows back-to-back repeats (a heavy weight isn't forced to alter
 });
 
 test("pickWait weight 0 disables a variant", () => {
-  const pool = buildWaitPool(["wait-rainbow"]);
+  // Use a hand-crafted pool that doesn't include claudesweep to keep this deterministic.
+  const pool = ["working", "wait-rainbow"];
   for (let i = 0; i < 50; i++) {
     assert.equal(pickWait(pool, { working: 0 }, Math.random), "wait-rainbow");
   }
@@ -59,4 +62,19 @@ test("pickWait weight 0 disables a variant", () => {
 test("pickWait falls back to uniform if weights zero out every candidate", () => {
   const pool = ["working", "wait-rainbow"];
   assert.ok(pool.includes(pickWait(pool, { working: 0, "wait-rainbow": 0 }, () => 0)));
+});
+
+test("buildWaitPool includes firmware-animation entries", () => {
+  const pool = buildWaitPool([]);
+  assert.ok(pool.includes("claudesweep"), "claudesweep should be in the pool");
+});
+
+test("isWaitAnimation distinguishes firmware anims from expressions", () => {
+  assert.equal(isWaitAnimation("claudesweep"), true);
+  assert.equal(isWaitAnimation("working"), false);
+  assert.equal(isWaitAnimation("wait-rainbow"), false);
+});
+
+test("WAIT_ANIMATIONS contains claudesweep", () => {
+  assert.ok(WAIT_ANIMATIONS.includes("claudesweep"));
 });
