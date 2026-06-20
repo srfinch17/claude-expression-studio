@@ -152,8 +152,9 @@ def send_named(name):
 # matrix_express("wait") in the MCP plays a WEIGHTED-RANDOM pick from the wait
 # pool: the canned "working" snake plus any saved expression named "wait-*".
 # This lets the UserPromptSubmit hook do the SAME pick, so the automatic busy
-# indicator matches the MCP (default 50% wait-rainbow / 30% wait-orbit / 20%
-# working snake — set in mcp_server/wait-weights.json, read at RUNTIME). Reads
+# indicator matches the MCP (relative weights wait-claude:40 / wait-rainbow:30 /
+# wait-orbit:20 / claudesweep:20 / working:10 — set in mcp_server/wait-weights.json,
+# read at RUNTIME; claudesweep is a firmware animation launched transiently). Reads
 # the repo's JSON directly; no MCP call. Fails silently back to "working" if
 # anything is missing, so a turn is never blocked.
 MCP_DIR = os.environ.get(
@@ -164,11 +165,24 @@ EXPR_DIR = os.path.join(MCP_DIR, "expressions")
 WAIT_WEIGHTS_FILE = os.path.join(MCP_DIR, "wait-weights.json")
 WAIT_BUILTINS = ["working"]   # canned wait animations (drawn from EXPR above)
 WAIT_PREFIX = "wait-"
+WAIT_ANIMATIONS = ["claudesweep"]   # firmware anims in the wait pool (not frame expressions)
+
+
+def post_animation(anim_type, transient=True):
+    """Best-effort POST /api/display/animation for a firmware-animation wait pick."""
+    try:
+        body = json.dumps({"type": anim_type, "transient": transient}).encode()
+        req = urllib.request.Request(BOARD_URL + "/api/display/animation", data=body,
+                                     headers={"Content-Type": "application/json"}, method="POST")
+        urllib.request.urlopen(req, timeout=3).read()
+        return True
+    except Exception:
+        return False
 
 
 def build_wait_pool():
-    """Built-ins + any saved wait-*.json in the expressions dir (de-duped)."""
-    pool = list(WAIT_BUILTINS)
+    """Built-ins + firmware-animation entries + any saved wait-*.json (de-duped)."""
+    pool = list(WAIT_BUILTINS) + list(WAIT_ANIMATIONS)
     try:
         for fn in os.listdir(EXPR_DIR):
             if fn.startswith(WAIT_PREFIX) and fn.endswith(".json"):
@@ -220,9 +234,12 @@ def send_saved(name):
 
 
 def send_wait():
-    """Pick one wait animation by weight and play it (snake or a saved wait-*)."""
+    """Pick one wait animation by weight and play it (snake, firmware anim, or a saved wait-*)."""
     name = pick_wait(build_wait_pool(), load_wait_weights())
-    if name in EXPR:
+    if name in WAIT_ANIMATIONS:
+        if not post_animation(name):
+            send_named("working")  # never leave the board blank
+    elif name in EXPR:
         send_named(name)
     elif not send_saved(name):
         send_named("working")  # never leave the board blank

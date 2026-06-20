@@ -14,6 +14,21 @@ Entry template:
 
 ---
 
+## 2026-06-20 — `speed` is milliseconds-per-frame, not a 1–5 scale — raw 1–5 = blizzard
+**Symptom:** An animation launched via raw `POST /api/display/animation {"type":"snow","speed":2}`
+(or a control page that posts the slider value directly) runs absurdly fast — a "blizzard" /
+strobing blur — even though the same animation via the MCP `matrix_set_animation` tool at `speed:2`
+looks gentle and correct.
+**Cause:** The firmware `speed` field is **milliseconds-per-frame**, clamped `constrain(doc["speed"] | 66, 10, 10000)`.
+A raw `2` is read as 2ms/frame → clamped to **10ms ≈ 100fps**. The MCP tool looks right because it
+TRANSLATES the human 1–5 scale to ms first (`msMap = {1:150, 2:100, 3:66, 4:40, 5:20}`) before
+POSTing — the raw HTTP path and any hand-written control page do NOT get that translation for free.
+(Bitten twice: once restoring snow via curl, once caught in plan-review for a new animation's control page.)
+**Fix / rule:** Anything that POSTs `/api/display/animation` with a human 1–5 speed MUST map to ms
+first — copy the `MS={1:150,2:100,3:66,4:40,5:20}` table into the control page JS and send
+`speed: MS[sliderValue]`, never the raw 1–5. If you genuinely want raw ms, fine — but a 1–5 slider
+posting raw values is the trap. Idle-app params (`idle.ts`) already use ms directly (e.g. `speed:110`).
+
 ## 2026-06-19 — A global *variable* defined in a later `.ino` is invisible to earlier code (`'<var>' was not declared in this scope`)
 **Symptom:** `setup()` in the main sketch calls `loadSettings()` fine (a function in `settings.ino`), but the
 next line `if (settings.bootAnim.length())` fails with `'settings' was not declared in this scope`. The global

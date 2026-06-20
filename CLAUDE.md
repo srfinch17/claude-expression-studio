@@ -89,7 +89,7 @@ setup. Reachable at `http://esp32matrix.local` once joined.
 |---|---|
 | `esp32_matrix_webserver.ino` | globals, `setup()`, `loop()`, `XY`/`setPixel`, dispatch |
 | `api_handlers.ino` | all HTTP route handlers |
-| `anim_*.ino` | one animation each (fire, liquid, matrix, comet, gradient, …) |
+| `anim_*.ino` | one animation each (fire, liquid, matrix, comet, gradient, claudesweep, …) |
 | `scroll_text.ino` | 5×7/3×5/3×3 scrolling text |
 | `fonts.ino` | 3×3 and 3×5 pixel fonts |
 | `weather.ino` | weather fetch + icon draw + chip temp |
@@ -140,7 +140,7 @@ GET  /api/display/framebuffer  # live 8×8 leds[] as 64 "RRGGBB" (row-major) —
 POST /api/display/clear
 POST /api/brightness        { level: 0-255 }
 POST /api/display/text      { text, color, color2, gradient, small, tiny, scroll_speed }
-POST /api/display/animation { type, ...mode-specific }   # clock/calendar accept tz (POSIX TZ, DST) or timezone (int offset)
+POST /api/display/animation { type, transient?, ...mode-specific }   # transient:true skips NVS auto-resume (used by the wait role); clock/calendar accept tz (POSIX TZ, DST) or timezone (int offset)
 POST /api/display/matrix    { matrix: [[8×8 hex]] }
 POST /api/display/frames    { frames: ["384-hex RRGGBB×64", …≤24], frame_ms, loop }  # expression channel; loop 0=forever, N=passes then hold last
 POST /api/weather/mode      { mode: temp|humidity|uv|pressure|cycle }
@@ -164,18 +164,23 @@ likes/dislikes in auto-memory. Spec:
 `docs/superpowers/specs/2026-06-11-claude-expression-display.md`.
 
 **Wait-animation library:** `matrix_express("wait")` plays a RANDOM wait spinner
-(no immediate repeat) so the busy indicator varies. The pool = the canned `working`
+(no immediate repeat) so the busy indicator varies. The pool is **type-aware**: it
+contains both **frame-expressions** (saved `wait-*` JSON played via `/api/display/frames`)
+and **firmware animations** (launched transiently via `/api/display/animation {transient:true}`
+so they don't clobber NVS auto-resume). The frame-expression tier = the canned `working`
 snake (the "Default") **+ any saved expression named `wait-*`** (convention-based,
-see `mcp_server/wait.ts`). To ADD a wait animation: design it live with
+see `mcp_server/wait.ts`). To ADD a frame-expression wait: design it live with
 `matrix_animate`, then `save_as: "wait-<name>"` — it auto-joins the pool with **zero
 code, zero rebuild, zero reconnect**. Force a specific one by its name (`working`,
 `wait-rainbow`, …). Current pool: `working` (snake) + `wait-rainbow` (old-Mac
 pinwheel, `expressions/wait-rainbow.json`, regenerate via `scripts/gen-wait-rainbow.py`)
 + `wait-orbit` (six-hue color arc sweeping the panel perimeter,
 `expressions/wait-orbit.json`) + `wait-claude` (the orange Claude-mascot alien bobbing
-with an eye-blink, `expressions/wait-claude.json` — the user's favorite). (Sibling
-`claude-idle` is the same mascot for idle/bored, but has NO `wait-` prefix so it stays
-out of the pool.)
+with an eye-blink, `expressions/wait-claude.json` — the user's favorite)
++ `claudesweep` (firmware animation — CRT/radar border sweep with a resident orange
+Claude mascot, default amber `#ffb000`; launched via animation API with `transient:true`).
+(Sibling `claude-idle` is the same mascot for idle/bored, but has NO `wait-` prefix so
+it stays out of the pool.)
 
 **Also fired by the prompt hook:** the Claude Code `UserPromptSubmit` hook
 (`claude-hooks/matrix_signal.py wait`) plays a wait spinner on every prompt, so the
@@ -186,13 +191,14 @@ indicator varies turn-to-turn. The hook reads the same pool + weights as the MCP
 (relative weights; unlisted = 1; 0 disables). It's pure weighted random — exact odds,
 repeats allowed (no anti-repeat, which would fight a preference). Read at RUNTIME, so
 retuning the odds needs no rebuild/reconnect. Ships at `wait-claude:40, wait-rainbow:30,
-wait-orbit:20, working:10` (the four sum to 100, so they read as percentages). To honor a request like
+wait-orbit:20, working:10, claudesweep:20` (sum = 120; weights are relative, not
+percentages — recompute if you want exact odds). To honor a request like
 "show the rainbow 80% of the time," just edit this file (and recompute shares if the
 pool has grown). All three callers — `matrix_express("wait")`,
 `presence_set(intent:"working")`, and the prompt hook — use this picker.
 
 `matrix_idle` (MCP) puts a random PRE-APPROVED app on the board (fire / dance floor /
-fireworks / clock / frostbite / matrix rain / snow) at ambient brightness 5 — use it unprompted when
+fireworks / clock / frostbite / matrix rain / snow / claudesweep) at ambient brightness 5 — use it unprompted when
 idle/bored to show something cool. Lineup is a fixed const in `mcp_server/idle.ts` (edit + `npx
 tsc` + reconnect to change). Spec: `docs/superpowers/specs/2026-06-17-matrix-idle-design.md`.
 
@@ -239,8 +245,10 @@ namespace `matrix`) and restores them on boot — so it powers back up into
 whatever it was showing. `handleAnimation` is split into `applyAnimationBody(body)`
 (shared by the HTTP handler and the boot-time restore in `setup()`). Clearing the
 display (`/api/display/clear`) makes it boot blank. Text/sketch are transient
-(not auto-resumed). If you're puzzled why the board "starts showing something" on
-power-up — that's this.
+(not auto-resumed). **Pass `transient: true`** in a `POST /api/display/animation`
+body to launch an animation without writing to NVS — useful for the wait role so a
+busy-spinner doesn't replace the user's actual last animation on the next boot.
+If you're puzzled why the board "starts showing something" on power-up — that's this.
 
 ## Settings (NVS-backed, survives flashes)
 
@@ -259,7 +267,7 @@ other.
 | Key | Type | Default | Meaning |
 |---|---|---|---|
 | `idle_enabled` | bool | true | Enable the idle screensaver |
-| `idle_apps` | string (CSV) | `fire,matrix_rain,clock,fireworks,frostbite,snow,dancefloor` | Apps in the screensaver rotation |
+| `idle_apps` | string (CSV) | `fire,matrix_rain,clock,fireworks,frostbite,snow,dancefloor,claudesweep` | Apps in the screensaver rotation |
 | `idle_after_secs` | int | 120 | Seconds of host inactivity before screensaver starts |
 | `idle_rotate_secs` | int | 240 | How long each screensaver app runs before rotating |
 | `idle_brightness` | int | 5 | Brightness used while the screensaver is running |

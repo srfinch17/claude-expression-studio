@@ -27,7 +27,7 @@ import { createCanvas } from "@napi-rs/canvas";
 // Claude's expression channel: canned glyph library + text-art → wire conversion.
 import { CANNED, MAX_FRAMES, artToFrameHex, expressionToWire, type Expression } from "./expressions.js";
 // Wait-animation library: the random "wait" pool (snake + saved wait-* expressions).
-import { buildWaitPool, pickWait } from "./wait.js";
+import { buildWaitPool, pickWait, isWaitAnimation } from "./wait.js";
 import { normalizePresence, cannedFor } from "./presence.js";
 import { IDLE_APPS, IDLE_BRIGHTNESS, pickIdleApp } from "./idle.js";
 import { normalizeSettingsPatch } from "./settings.js";
@@ -468,6 +468,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 - sun: glowing disc with 4 colored dots orbiting around it. Dots are evenly spaced and each keeps its own color as they revolve. params: color1 (disc/sun color), color2 (orbit dot 1, lightest), color3 (orbit dot 2), color4 (orbit dot 3), color5 (orbit dot 4, darkest), discBri (0-100, sun disc brightness, default 78), ringBri (0-100, orbit dot brightness, default 78)
 - calendar: today's date from NTP. params: style (scroll = "Tue Jun 9" scrolls; bignum = big day-of-month number; grid = mini month grid with today highlighted; clock = month over day in the clock layout; square = desk-calendar square, 2-letter weekday over big day number), color1 (primary: day/today/scroll text), color2 (secondary: month/other days, weekday in square style), color3 (accent: weekday letter in clock style, weekend columns in grid style), tz (POSIX TZ string, DST-aware — PREFERRED) or timezone (fixed UTC offset integer). Until the first NTP sync the display shows an animated hourglass.
 - sound: vibration-reactive VU bar. NOTE: there is no microphone — it reacts to low-frequency vibration (bass) felt through a surface via the IMU, best with the board on/near a speaker. params: color1 (bar bottom), color2 (bar top), sensitivity (0-10, default 5)
+- claudesweep: a CRT/radar sweep around the border with the Claude mascot inside. params: color (hex, default amber #ffb000), speed (1-5)
 
 Scale guidance for 0-10 and 1-10 params: 2-3 = low, 5 = medium, 8-9 = high, 10 = max.
 Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
@@ -486,6 +487,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
               "spiral", "starfield", "fireworks", "fireworks2", "comet", "sun",
               "frostbite",
               "calendar", "sound",
+              "claudesweep",
             ],
             description: "The animation type to start.",
           },
@@ -768,8 +770,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "matrix_express": {
         let exprName = String(args.name ?? "");
         // "wait" is a GROUP, not a single expression: pick a weighted-random wait
-        // animation (snake built-in + saved wait-*), avoiding an immediate repeat.
+        // animation (snake built-in + saved wait-* + firmware anims like claudesweep).
         if (exprName === "wait") exprName = await resolveWait();
+        // Firmware-animation pick: fire POST /api/display/animation (transient) and return.
+        if (isWaitAnimation(exprName)) {
+          const r = await post("/api/display/animation", { type: exprName, transient: true });
+          return { content: [{ type: "text", text: r.ok ? `Busy indicator: ${exprName} (transient animation).` : `Error ${r.status}: ${r.body}` }] };
+        }
         const expr = CANNED[exprName] ?? (await loadSavedExpression(exprName));
         if (!expr) {
           const saved = await listSavedExpressions();
@@ -804,12 +811,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           // No data → render the intent's canned glyph via the frame path (v0 behavior).
           // "working" routes through the weighted wait pool so presence varies too.
           const canned = msg.intent === "working" ? await resolveWait() : cannedFor(msg.intent);
-          const expr = CANNED[canned] ?? (await loadSavedExpression(canned));
-          if (expr) {
-            const lr = await post("/api/display/frames", expressionToWire(expr));
-            ledNote = lr.ok ? `8x8 → ${canned}` : `8x8 error ${lr.status}`;
+          if (isWaitAnimation(canned)) {
+            // Firmware-animation pick: fire POST /api/display/animation (transient).
+            const lr = await post("/api/display/animation", { type: canned, transient: true });
+            ledNote = lr.ok ? `8x8 → ${canned} (transient anim)` : `8x8 anim error ${lr.status}`;
           } else {
-            ledNote = `no 8x8 glyph for "${canned}"`;
+            const expr = CANNED[canned] ?? (await loadSavedExpression(canned));
+            if (expr) {
+              const lr = await post("/api/display/frames", expressionToWire(expr));
+              ledNote = lr.ok ? `8x8 → ${canned}` : `8x8 error ${lr.status}`;
+            } else {
+              ledNote = `no 8x8 glyph for "${canned}"`;
+            }
           }
         }
 
