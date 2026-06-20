@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { IDLE_APPS, IDLE_BRIGHTNESS, pickIdleApp, type IdleApp } from "./idle.ts";
 
-const KNOWN_TYPES = ["fire", "dancefloor", "fireworks", "clock", "frostbite", "matrix_rain", "snow"];
+const KNOWN_TYPES = ["fire", "dancefloor", "fireworks", "clock", "frostbite", "matrix_rain", "snow", "claudesweep"];
 
 test("IDLE_APPS is non-empty and well-formed", () => {
   assert.ok(IDLE_APPS.length > 0);

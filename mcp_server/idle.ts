@@ -22,6 +22,7 @@ export const IDLE_APPS: IdleApp[] = [
   { type: "frostbite",   label: "❄️ frostbite",   params: { color: "#66ccff", sparkle: 5, mist: 4 } },
   { type: "matrix_rain", label: "🟩 matrix",      params: { theme: "classic", speed: 60 } },
   { type: "snow",        label: "❄️ snow",        params: { speed: 110 } },
+  { type: "claudesweep", label: "🟠 claude sweep", params: {} },
 ];
 
 // Pick a random app, avoiding an immediate repeat of lastType when there are
