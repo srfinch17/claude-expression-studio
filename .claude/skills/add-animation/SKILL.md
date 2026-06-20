@@ -76,13 +76,25 @@ Claude can't launch it." Names below assume a mode called `<name>` (e.g. `comet`
    internal state to reseed) call your `reset<Name>()` function. `animationName`/
    `animationSpeed` are set by the shared path.
 
-6. **Control page `data/<name>.html`** — clone an existing page (e.g. `snow.html`).
-   Include the shared brightness widget + palette/picker if it has colors. **Map the 1–5
-   speed slider to ms (trap 2).** Live preview at FULL brightness (the board slider only
-   POSTs — never dims the canvas). Launch button POSTs `{ "type":"<name>", ... }`.
+6. **Control page `data/<name>.html`** — clone an existing page (e.g. `snow.html`) to get
+   the shared chrome (`.wrap` → `← Home` `.back` → colored `h1` → `.layout`). Include the
+   shared brightness widget (`<script src="bright.js" data-auto></script>` + a
+   `<div id="brightnessSlot"></div>`) + palette/picker if it has colors. **Speed = fps
+   slider → ms** (`Math.round(1000/fps)`), never raw (trap 2). Live preview at FULL
+   brightness — never dim the canvas / no `ledsim.js` for animation previews (the board
+   slider only POSTs). Launch button POSTs `{ "type":"<name>", ... }`.
 
-7. **Index card** in `data/index.html` — add a card linking `<name>.html`, matching the
-   EXACT sibling card markup (`<a href=... class="card">` + `.icon`/`.name`/`.desc`).
+7. **Hub card — in `data/animations.html`, NOT the index.** The UI is hub-based: the index
+   is a flat grid where "Animations" is a hub card. A new animation's card goes in
+   `animations.html`'s `.anim-grid` as a **link-out card**, exactly like fire/liquid/snow:
+   ```html
+   <a href="/<name>.html" class="anim-card-link">
+     <div class="anim-card"><span class="icon">…</span>
+       <div class="name">…</div><div class="desc">…</div></div>
+   </a>
+   ```
+   Do NOT add it to `index.html` (cards placed there get moved — see web-ui-structure).
+   (System/config pages go in `system.html` instead.)
 
 8. **MCP enum** in `mcp_server/index.ts` — add `<name>` to the `matrix_set_animation`
    `type` enum array AND a one-line description (params + meaning). Without this, Claude
