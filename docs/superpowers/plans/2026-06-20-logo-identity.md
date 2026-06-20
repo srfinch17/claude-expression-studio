@@ -16,7 +16,7 @@
 - **`header.js` mirrors the `bright.js` pattern**: IIFE, `data-auto` self-mount, injects its own `<style>` once, idempotent (never injects a second card).
 - **Excluded from the header:** `data/presence-card.html` (separate desktop surface) and the favicon itself (unchanged).
 - **Wait variants are saved frame-expressions** named `wait-logo-breathe|chase|boot|ripple` — zero firmware, zero rebuild, zero reconnect; they auto-join the pool via the `wait-` prefix (`mcp_server/wait.ts` `WAIT_PREFIX`).
-- **`wait-claude` stays the dominant single favorite** — each logo variant gets weight **10** in `mcp_server/wait-weights.json` (additive; existing weights untouched; `wait-claude` stays 40).
+- **`wait-claude` stays the dominant single favorite** — each logo variant gets weight **8** in `mcp_server/wait-weights.json` (additive; existing weights untouched; `wait-claude` stays 40, clearly above the 4-logo family's combined 32). The file is **nested** `{"_comment":…, "weights":{…}}` — the four keys go inside `weights` (the runtime reads `raw.weights`).
 - **8×8 conventions:** `XY(x,y)=y*8+x`, row-major, origin top-left; `COLOR_ORDER` is RGB. Wait/idle indicators render at the **brightness-5 ambient floor** — dim baselines must keep their weakest channel above the visibility threshold or they vanish at bri 5.
 - **Version:** bump **minor 0.7.0 → 0.8.0** at the end (`npm run bump:minor`). Web + MCP redeploy; firmware not reflashed (its `fw_version` goes live next flash — expected drift, don't chase).
 - **No unit-test harness exists for `data/*.html|*.js`** (neither do `bright.js`/`ledsim.js`) — those assets are verified by `node --check` (syntax) + HTTP-serve + the user's eyes, consistent with the codebase. Only the MCP/config logic is `node:test`-tested.
@@ -31,9 +31,9 @@
 | `esp32_matrix_webserver/data/header.js` | The shared logo header-card component (inline logo SVG + injected CSS + `data-auto` injector) | **New** |
 | `esp32_matrix_webserver/data/index.html` | Drop old green `<header>` block; add `header.js` script tag | Modified |
 | `esp32_matrix_webserver/data/<20 sub-pages>.html` | Add `header.js` script tag (one line each) | Modified |
-| `mcp_server/wait-weights.json` | Add four `wait-logo-*` entries at weight 10 | Modified |
+| `mcp_server/wait-weights.json` | Add four `wait-logo-*` entries at weight 8 (inside the nested `weights` object) | Modified |
 | `mcp_server/wait.test.ts` | Add a guard test for the shipped weights file | Modified |
-| `expressions/wait-logo-{breathe,chase,boot,ripple}.json` | The four animated-logo wait expressions | **New** (via `save_as`) |
+| `mcp_server/expressions/wait-logo-{breathe,chase,boot,ripple}.json` | The four animated-logo wait expressions | **New** (via `save_as`) |
 | `VERSION`, `data/version.json`, `mcp_server/package.json`, `version.h` | Version stamp 0.8.0 | Modified (by `npm run bump:minor`) |
 
 ---
@@ -71,11 +71,14 @@ Create `esp32_matrix_webserver/data/header.js` with exactly this content:
   var LOGO_SVG =
     "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44' width='44' height='44'>" +
       "<rect width='44' height='44' rx='9' fill='#0d0d0d'/>" +
-      // faint unlit panel grid (4x4) behind the lit dots
+      // faint unlit panel texture: 4x4 grid of tiny dots, offset from the lit
+      // quincunx positions (8/18/28/38, not 12/22/32) so it reads as panel
+      // backing rather than tracing the logo.
       "<g fill='#ffffff' opacity='0.05'>" +
-        "<circle cx='12' cy='12' r='2'/><circle cx='22' cy='12' r='2'/><circle cx='32' cy='12' r='2'/>" +
-        "<circle cx='12' cy='22' r='2'/><circle cx='22' cy='22' r='2'/><circle cx='32' cy='22' r='2'/>" +
-        "<circle cx='12' cy='32' r='2'/><circle cx='22' cy='32' r='2'/><circle cx='32' cy='32' r='2'/>" +
+        "<circle cx='8' cy='8' r='1.4'/><circle cx='18' cy='8' r='1.4'/><circle cx='28' cy='8' r='1.4'/><circle cx='38' cy='8' r='1.4'/>" +
+        "<circle cx='8' cy='18' r='1.4'/><circle cx='18' cy='18' r='1.4'/><circle cx='28' cy='18' r='1.4'/><circle cx='38' cy='18' r='1.4'/>" +
+        "<circle cx='8' cy='28' r='1.4'/><circle cx='18' cy='28' r='1.4'/><circle cx='28' cy='28' r='1.4'/><circle cx='38' cy='28' r='1.4'/>" +
+        "<circle cx='8' cy='38' r='1.4'/><circle cx='18' cy='38' r='1.4'/><circle cx='28' cy='38' r='1.4'/><circle cx='38' cy='38' r='1.4'/>" +
       "</g>" +
       // 5 lit quincunx dots
       "<circle cx='12' cy='12' r='4' fill='#00ff88'/>" +
@@ -179,7 +182,8 @@ In `esp32_matrix_webserver/data/index.html`, immediately before `</body>` (after
 - [ ] **Step 3: Verify the edit**
 
 Run: `grep -c 'header.js' esp32_matrix_webserver/data/index.html` → Expected: `1`
-Run: `grep -c '<header>' esp32_matrix_webserver/data/index.html` → Expected: `0`
+Run: `grep -c 'served directly from the board' esp32_matrix_webserver/data/index.html` → Expected: `0`
+(That phrase is unique to the removed subtitle — a reliable "old title is gone" check, unlike grepping `<header>` which also hits the `header{…}` CSS rule.)
 
 - [ ] **Step 4: Commit**
 
@@ -263,23 +267,31 @@ git commit -m "feat(web): include logo header card on all 20 sub-pages"
 
 - [ ] **Step 1: Write the failing guard test**
 
-Append to `mcp_server/wait.test.ts`:
+First, **add these three imports at the TOP of `mcp_server/wait.test.ts`**, immediately after the existing `import { test }` / `import assert` lines (ES `import`s must be at module top level — do NOT place them lower in the file). Do **not** re-import `test` or `assert` (already imported):
 
 ```ts
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+```
 
-test("shipped wait-weights.json keeps wait-claude dominant and weights the four logo variants at 10", () => {
+Then **append this test at the END** of `mcp_server/wait.test.ts`. Note the file is **nested** — parse `.weights` (matching `loadWaitWeights` in `index.ts`, which reads `raw.weights`); reading the top-level object would make every key `undefined`:
+
+```ts
+test("shipped wait-weights.json keeps wait-claude dominant over the logo family, variants at 8", () => {
   const here = dirname(fileURLToPath(import.meta.url));
-  const weights = JSON.parse(readFileSync(join(here, "wait-weights.json"), "utf8")) as Record<string, number>;
-  for (const name of ["wait-logo-breathe", "wait-logo-chase", "wait-logo-boot", "wait-logo-ripple"]) {
-    assert.equal(weights[name], 10, `${name} should be weighted 10`);
+  const raw = JSON.parse(readFileSync(join(here, "wait-weights.json"), "utf8")) as { weights: Record<string, number> };
+  const weights = raw.weights;
+  assert.ok(weights && typeof weights === "object", "wait-weights.json must have a nested 'weights' object");
+  const family = ["wait-logo-breathe", "wait-logo-chase", "wait-logo-boot", "wait-logo-ripple"];
+  for (const name of family) {
+    assert.equal(weights[name], 8, `${name} should be weighted 8`);
   }
-  // wait-claude stays the single dominant favorite.
+  // wait-claude is the single largest entry AND outweighs the whole logo family.
   const max = Math.max(...Object.values(weights));
   assert.equal(weights["wait-claude"], max);
-  assert.ok(weights["wait-claude"] > 10);
+  const familyTotal = family.reduce((s, n) => s + weights[n], 0);
+  assert.ok(weights["wait-claude"] >= familyTotal, "wait-claude (40) must stay >= the logo family total (32)");
 });
 ```
 
@@ -290,23 +302,23 @@ Expected: FAIL — the four `wait-logo-*` keys are absent (`undefined !== 10`).
 
 - [ ] **Step 3: Add the four entries to `wait-weights.json`**
 
-Edit `mcp_server/wait-weights.json` so it reads (keep existing entries, add the four — exact values):
+The file is **nested**: `{ "_comment": "...", "weights": { ... } }`. **Keep the existing `_comment` string and all five existing weights**, and add the four `wait-logo-*` keys **inside the `weights` object** at weight **8**. The resulting `weights` object reads:
 
 ```json
-{
-  "wait-claude": 40,
-  "wait-rainbow": 30,
-  "wait-orbit": 20,
-  "claudesweep": 20,
-  "working": 10,
-  "wait-logo-breathe": 10,
-  "wait-logo-chase": 10,
-  "wait-logo-boot": 10,
-  "wait-logo-ripple": 10
-}
+  "weights": {
+    "wait-claude": 40,
+    "wait-rainbow": 30,
+    "wait-orbit": 20,
+    "claudesweep": 20,
+    "working": 10,
+    "wait-logo-breathe": 8,
+    "wait-logo-chase": 8,
+    "wait-logo-boot": 8,
+    "wait-logo-ripple": 8
+  }
 ```
 
-(If the current file differs from the five entries shown, preserve whatever is there and only ADD the four `wait-logo-*` keys — do not erode existing weights.)
+Do NOT flatten the file (drop the `_comment`/`weights` envelope) — `loadWaitWeights()` reads `raw.weights`, so a flattened file silently disables ALL weighting (every entry falls back to 1). Append a short note to `_comment` that the four logo variants are 8 each.
 
 - [ ] **Step 4: Run the test to verify it PASSES**
 
@@ -330,7 +342,7 @@ git commit -m "feat(mcp): weight the four wait-logo variants at 10 (wait-claude 
 > reproducible spec for the live authoring.
 
 **Files:**
-- Create (via `matrix_animate` `save_as`): `expressions/wait-logo-breathe.json`, `expressions/wait-logo-chase.json`, `expressions/wait-logo-boot.json`, `expressions/wait-logo-ripple.json`.
+- Create (via `matrix_animate` `save_as`): `mcp_server/expressions/wait-logo-breathe.json`, `mcp_server/expressions/wait-logo-chase.json`, `mcp_server/expressions/wait-logo-boot.json`, `mcp_server/expressions/wait-logo-ripple.json`. (`save_as` writes to `EXPR_DIR = mcp_server/expressions/` — alongside `wait-claude.json` — NOT a repo-root `expressions/`.)
 
 **Canonical 8×8 geometry (shared by all four)** — five 2×2 blocks:
 
@@ -341,6 +353,17 @@ git commit -m "feat(mcp): weight the four wait-logo variants at 10 (wait-claude 
 | center | (3,3)(4,3)(3,4)(4,4) | cyan `#22ddff` |
 | BL | (0,6)(1,6)(0,7)(1,7) | amber `#ffb000` |
 | BR | (6,6)(7,6)(6,7)(7,7) | green `#00ff88` |
+
+> **Brightness-floor warning (author for it, don't be surprised by it).** At low
+> global brightness the FastLED scale `(channel×(bri+1))>>8` kills weak channels, so
+> full-sat logo colors shift hue: at bri 5, amber `#ffb000` → ~pure red (its green
+> 176 scales to 4), green `#00ff88` → pure green (blue 136→3), cyan `#22ddff` → loses
+> red (34→0), reading green-blue. Wait expressions play at the board's CURRENT
+> brightness (often higher than 5), but to stay legible at the low end: (a) keep any
+> in-frame "dim" phase no lower than ~50% so secondary channels survive; (b) if the
+> cyan center reads wrong at low bri, nudge it brighter (e.g. `#44eeff`). Verify each
+> at the brightness the board is actually set to, not just on the framebuffer (which
+> is pre-global-scaling and will look fine while the panel reads dark).
 
 - [ ] **Step 1: Author `wait-logo-breathe`** — all 5 blocks fade dim→full→dim in unison, ~14–18 frames, looping. Keep the dim baseline's weakest channel above the bri-5 visibility floor. Design live with `matrix_animate`; verify with `GET /api/display/framebuffer`; `save_as: "wait-logo-breathe"`.
 
@@ -355,7 +378,7 @@ git commit -m "feat(mcp): weight the four wait-logo variants at 10 (wait-claude 
 - [ ] **Step 6: Commit the expression files**
 
 ```bash
-git add expressions/wait-logo-breathe.json expressions/wait-logo-chase.json expressions/wait-logo-boot.json expressions/wait-logo-ripple.json
+git add mcp_server/expressions/wait-logo-breathe.json mcp_server/expressions/wait-logo-chase.json mcp_server/expressions/wait-logo-boot.json mcp_server/expressions/wait-logo-ripple.json
 git commit -m "feat(express): four animated-logo wait variants (breathe/chase/boot/ripple)"
 ```
 
@@ -399,7 +422,7 @@ Expected: repo `VERSION` is `0.8.0`; web + MCP report `0.8.0`. Firmware may show
 - Index drops green title + gains tag → Task 2. ✓
 - 20 sub-pages gain tag; `presence-card.html` + favicon excluded → Task 3, constraints. ✓
 - Four `wait-logo-*` saved expressions, geometry + behaviors → Task 5. ✓
-- Weights 10 each, `wait-claude` dominant → Task 4. ✓
+- Weights 8 each (nested `weights` object), `wait-claude` dominant over the family → Task 4. ✓
 - Version 0.8.0 (web+MCP; firmware drift expected) → Task 6. ✓
 - Deploy = LittleFS only; hardware verification → Task 7. ✓
 

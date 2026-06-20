@@ -175,18 +175,20 @@ clearly the logo):
 
 ### B5. Weighting (`mcp_server/wait-weights.json`)
 
-The pool grows from 5 → 9 entries. Keep **`wait-claude` the dominant single
-favorite**: give each logo variant a **modest weight of 10**, leaving the favorite
-clearly on top.
+The pool grows from 5 → 9 entries. Keep **`wait-claude` the dominant favorite**:
+give each logo variant a **modest weight of 8**, so `wait-claude` (40) outweighs not
+just every other single entry but the whole 4-logo family combined (32).
 
-Current: `{ wait-claude:40, wait-rainbow:30, wait-orbit:20, claudesweep:20,
-working:10 }`.
-After (additive — existing weights untouched):
-`{ wait-claude:40, wait-rainbow:30, wait-orbit:20, claudesweep:20, working:10,
-wait-logo-breathe:10, wait-logo-chase:10, wait-logo-boot:10, wait-logo-ripple:10 }`.
+The file is **nested** — `{ "_comment": "...", "weights": { ... } }` — and the
+runtime reads `raw.weights`; the four keys go **inside** `weights` (flattening the
+file silently disables all weighting). After (additive — existing untouched):
+`weights = { wait-claude:40, wait-rainbow:30, wait-orbit:20, claudesweep:20,
+working:10, wait-logo-breathe:8, wait-logo-chase:8, wait-logo-boot:8,
+wait-logo-ripple:8 }`.
 
-This keeps `wait-claude` (40) the single largest entry; the four logo variants are
-10 each (≈6% apiece). Pure runtime-read file — retune anytime with no rebuild.
+This keeps `wait-claude` the single largest entry (40/152 ≈ 26%); the four logo
+variants are 8 each (≈5% apiece, family ≈21%). Pure runtime-read file — retune
+anytime with no rebuild.
 
 ### B6. Deploy (workstream B)
 
@@ -232,11 +234,11 @@ this so `matrix_version` drift is understood, not chased). Redeploy the web bund
 - **Not touched:** `presence-card.html`.
 
 **Workstream B (expression data + weights):**
-- `expressions/wait-logo-breathe.json` — **new** (via `save_as`).
-- `expressions/wait-logo-chase.json` — **new** (via `save_as`).
-- `expressions/wait-logo-boot.json` — **new** (via `save_as`).
-- `expressions/wait-logo-ripple.json` — **new** (via `save_as`).
-- `mcp_server/wait-weights.json` — add the four entries at weight 10.
+- `mcp_server/expressions/wait-logo-breathe.json` — **new** (via `save_as`).
+- `mcp_server/expressions/wait-logo-chase.json` — **new** (via `save_as`).
+- `mcp_server/expressions/wait-logo-boot.json` — **new** (via `save_as`).
+- `mcp_server/expressions/wait-logo-ripple.json` — **new** (via `save_as`).
+- `mcp_server/wait-weights.json` — add the four entries at weight 8 (inside the nested `weights` object).
 
 **Versioning:**
 - `VERSION`, `data/version.json`, `mcp_server/package.json`, `version.h` — stamped by
