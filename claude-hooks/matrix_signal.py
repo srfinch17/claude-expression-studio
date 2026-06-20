@@ -152,8 +152,9 @@ def send_named(name):
 # matrix_express("wait") in the MCP plays a WEIGHTED-RANDOM pick from the wait
 # pool: the canned "working" snake plus any saved expression named "wait-*".
 # This lets the UserPromptSubmit hook do the SAME pick, so the automatic busy
-# indicator matches the MCP (default 50% wait-rainbow / 30% wait-orbit / 20%
-# working snake — set in mcp_server/wait-weights.json, read at RUNTIME). Reads
+# indicator matches the MCP (relative weights wait-claude:40 / wait-rainbow:30 /
+# wait-orbit:20 / claudesweep:20 / working:10 — set in mcp_server/wait-weights.json,
+# read at RUNTIME; claudesweep is a firmware animation launched transiently). Reads
 # the repo's JSON directly; no MCP call. Fails silently back to "working" if
 # anything is missing, so a turn is never blocked.
 MCP_DIR = os.environ.get(
