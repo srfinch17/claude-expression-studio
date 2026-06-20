@@ -146,7 +146,7 @@ POST /api/display/frames    { frames: ["384-hex RRGGBB×64", …≤24], frame_ms
 POST /api/weather/mode      { mode: temp|humidity|uv|pressure|cycle }
 GET  /api/settings          # all current board settings (NVS-backed)
 POST /api/settings          { partial keys }  # merge-update — only sent keys change; see Settings section
-POST /api/idle/arm          # arm the idle screensaver countdown (fired by the UserPromptStop hook)
+POST /api/idle/arm          # arm the idle screensaver countdown (fired by the Stop hook — matrix_signal.py on the `done` signal)
 ```
 
 ## ⭐ The matrix is Claude's expression window (use it ambiently)
@@ -274,7 +274,7 @@ when the stored blob predates that key — no factory-reset required on upgrade.
 ## Idle screensaver
 
 When the board is armed (via `POST /api/idle/arm`, fired by the Claude Code
-`UserPromptStop` hook), it starts a countdown timer. If no real display command
+`Stop` hook — `matrix_signal.py` on the `done` signal), it starts a countdown timer. If no real display command
 arrives within `idle_after_secs`, the board enters screensaver mode: it picks a
 random app from `idle_apps` (calling `idleParamsFor` to build the same params
 `matrix_idle` would use), runs it at `idle_brightness`, and rotates to the next
@@ -282,7 +282,7 @@ app every `idle_rotate_secs`. Any real display command disarms the screensaver
 and restores the pre-screensaver brightness.
 
 **End-to-end flow with host hooks:**
-1. Claude finishes a turn → `UserPromptStop` hook fires `POST /api/idle/arm`.
+1. Claude finishes a turn → `Stop` hook (`done`) fires `POST /api/idle/arm`.
 2. User is idle → board counts down → screensaver starts rotating apps.
 3. User sends a new prompt → `UserPromptSubmit` hook fires a wait-spinner expression
    (disarms the screensaver automatically as a side-effect of the display command).
