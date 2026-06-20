@@ -81,8 +81,11 @@ Rebuild on the `snow.html` template, preserving the launch behavior (POST
   (`<script src="bright.js" data-auto></script>`); `.actions` Apply/Stop; `.status`.
 - **Live preview `<canvas>`** that re-implements the firmware animation faithfully:
   the 28-pixel **perimeter sweep** (head at full, per-frame decay toward a baseline
-  **floor**, never off) + the **mini-Claude sprite** (6×5, 1px bob + eye-blink), dimmed to
-  board brightness via `ledsim.js`. **Mirror the firmware constants** from
+  **floor**, never off) + the **mini-Claude sprite** (6×5, 1px bob + eye-blink).
+  **CORRECTION (supersedes any "dimmed via ledsim" wording in this spec):** the preview
+  renders at **FULL brightness** — do NOT dim the canvas to board brightness and do NOT
+  include `ledsim.js` (animation previews render full-brightness per the project
+  convention; `bright.js` sets the BOARD only). **Mirror the firmware constants** from
   `anim_claudesweep.ino` so the preview matches the board: `SWEEP_FLOOR` (76), the decay
   factor, the clockwise perimeter order, the sprite rows INCLUDING the corrected feet
   `.#..#.`, and the amber-by-default sweep color recolored live from the picker while
