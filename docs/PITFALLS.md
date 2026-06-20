@@ -14,6 +14,22 @@ Entry template:
 
 ---
 
+## 2026-06-19 — A global *variable* defined in a later `.ino` is invisible to earlier code (`'<var>' was not declared in this scope`)
+**Symptom:** `setup()` in the main sketch calls `loadSettings()` fine (a function in `settings.ino`), but the
+next line `if (settings.bootAnim.length())` fails with `'settings' was not declared in this scope`. The global
+`Settings settings;` plainly exists in `settings.ino`.
+**Cause:** Arduino auto-hoists *function* prototypes to the top of the concatenated sketch (so cross-file
+**function** calls resolve regardless of order) — but it does **NOT** emit `extern` declarations for global
+**variables**. So a variable defined in a file that concatenates *later* (main sketch first, then the rest
+alphabetically) is invisible to any earlier code that references it directly. That's why `loadSettings()`
+resolved but the `settings` global did not. (Third member of the same single-TU-ordering family as the two
+entries below — function-prototype hoisting and `#define` ordering.)
+**Fix / rule:** **Define shared globals in the main sketch `.ino`** (it concatenates first, so its globals are
+visible everywhere). Keep only the *logic* in the feature `.ino`. This is exactly why this codebase already
+keeps `brightness`, `animationName`, `prefs`, etc. in the main ino. A feature file may own its own statics it
+alone uses, but anything `setup()`/handlers/other files touch belongs in the main ino. (Alt: an `extern` decl in
+a `.h` included early — but match the codebase and just put it in the main ino.)
+
 ## 2026-06-18 — A function that takes a `struct` by reference won't compile (`'<Struct>' was not declared in this scope`)
 **Symptom:** A new `anim_*.ino` defines `struct SnowFlake { ... };` then a helper
 `void spawnSnowFlake(SnowFlake& f, bool stagger)`. Compile fails with `variable or field
