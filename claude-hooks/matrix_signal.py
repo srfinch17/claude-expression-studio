@@ -111,9 +111,24 @@ def art_to_hex(rows, colors):
     return "".join(out)
 
 
-def post_frames(frames_hex, frame_ms, loop):
-    """POST a pre-rendered animation to the board. Fails silently if unreachable."""
-    body = {"frames": frames_hex, "frame_ms": frame_ms, "loop": loop}
+def arm_board_idle():
+    """Tell the board to arm its dead-man's-switch screensaver (best-effort)."""
+    try:
+        req = urllib.request.Request(
+            BOARD_URL + "/api/idle/arm", data=b"{}",
+            headers={"Content-Type": "application/json"}, method="POST")
+        urllib.request.urlopen(req, timeout=3).read()
+    except Exception:
+        pass  # never break the turn
+
+
+def post_frames(frames_hex, frame_ms, loop, idle=False):
+    """POST a pre-rendered animation to the board. Fails silently if unreachable.
+
+    idle=True marks the payload as idle content (keeps the board's dead-man's-switch
+    armed). Default False so all normal expressions (wait/working/done) disarm as usual.
+    """
+    body = {"frames": frames_hex, "frame_ms": frame_ms, "loop": loop, "idle": idle}
     data = json.dumps(body).encode("utf-8")
     req = urllib.request.Request(
         f"{BOARD_URL}/api/display/frames", data=data,
@@ -262,6 +277,8 @@ def main():
         send_named(name)  # a specific expression by name (working forces the snake)
     # The checkmark arms boredom: if the user doesn't come back, the watcher goofs off.
     if name == "done" and token is not None:
+        # send_named("done") above posted with idle=False (disarms); re-arm AFTER it.
+        arm_board_idle()
         spawn_idle_watcher(token)
     return 0
 

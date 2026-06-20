@@ -30,6 +30,9 @@ You talk to Claude in plain English — *"show a purple matrix rain animation"* 
 | `timer_text` | Countdown as MM:SS digits |
 | `sound` | Vibration-reactive VU bar — lights dance to the bass (uses the IMU; no microphone) |
 
+### Settings & Idle Screensaver
+NVS-backed board configuration (`GET`/`POST /api/settings`) with a web control page and two MCP tools (`matrix_get_settings` / `matrix_set_settings`). Includes an idle screensaver that auto-starts after a configurable period of inactivity and rotates through ambient apps (fire, matrix rain, clock, etc.) at low brightness. Armed automatically by Claude Code hooks; any real command disarms it.
+
 ### Sketch & Emoji
 Paint pixel-by-pixel on an 8×8 grid (Sketch) or render any emoji down to 8×8 with a vibrance control (Emoji), then push to the board.
 
