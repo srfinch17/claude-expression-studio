@@ -1,10 +1,40 @@
 {
-  "_comment": "Merge this 'hooks' block into your ~/.claude/settings.json. Fix the absolute path to wherever you put the scripts, and use 'python' or 'python3' to match your system. Hooks load at session start, so restart Claude Code after editing. UserPromptSubmit fires 'wait' = a weighted-random spinner from the wait pool (set odds in mcp_server/wait-weights.json); use 'working' instead to force the default snake.",
+  "_comment": "Merge this 'hooks' block into your ~/.claude/settings.json. Fix the absolute path to wherever you put the scripts, and use 'python' or 'python3' to match your system. Hooks load at session start, so restart Claude Code after editing. Mapping: UserPromptSubmit->wait (weighted-random spinner from the wait pool, set odds in mcp_server/wait-weights.json; use 'working' to force the snake); Stop->done (turn finished, arms idle). Awaiting-input (v0.9.0, verified via hook_probe.py): PreToolUse(AskUserQuestion)->ask-question, PreToolUse(ExitPlanMode)->ask-confirm, Notification(permission_prompt)->ask-attention, PostToolUse(AskUserQuestion|ExitPlanMode)->wait (flips busy the moment you answer; probe showed PostToolUse fires on the ANSWER, not on display, and Stop does NOT fire while a question/plan is pending so 'done' can't clobber the animation). NOTE: the probe also showed Notification(permission_prompt) can fire ~6s into a question/plan wait (not only for real permission requests) - if the bell visibly clobbers the ?/check during a plain question, drop the Notification block; questions/plans still work. idle_prompt is intentionally NOT wired (turn-end bell-spam risk).",
   "hooks": {
     "UserPromptSubmit": [
       {
         "hooks": [
           { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" wait" }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "AskUserQuestion",
+        "hooks": [
+          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" ask-question" }
+        ]
+      },
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" ask-confirm" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "AskUserQuestion|ExitPlanMode",
+        "hooks": [
+          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" wait" }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "permission_prompt",
+        "hooks": [
+          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" ask-attention" }
         ]
       }
     ],
