@@ -9,6 +9,30 @@ Status: 🔵 planned · 🟡 spec'd · 🟠 in progress · ✅ done
 
 ---
 
+## 🎯 v1.0.0 milestone — "calibrated everywhere" (defined 2026-06-21)
+
+**v1.0.0 = ALL lessons learned from the LED calibration battery implemented across
+the ENTIRE suite of board apps.** Not just measured and recorded — actually applied:
+the per-channel floors, white balance, gamma, and verified palette become the active
+correction layer + the new defaults for every animation, expression, and app the
+board renders. When the board "looks as good as the hardware allows, everywhere," we
+`npm run bump:major` to **1.0.0**.
+
+This is the deliberate stopping point **before** the next thrust (building out the
+broader docs/specs and the RAG corpus this repo will feed). Sequence:
+1. 🟡 **Calibration Lab harness** (Phase 1) — spec'd + planned, not built. Plan:
+   `docs/superpowers/plans/2026-06-21-calibration-lab-phase1.md`.
+2. 🔵 Run the eyeball battery → produce `data/calibration.json` (Phase 2).
+3. 🔵 Active correction layer — firmware + ledsim + MCP (Phase 3).
+4. 🔵 Re-review + apply lessons across the **entire app suite** (Phase 4) → **v1.0.0**.
+
+Full design: `docs/superpowers/specs/2026-06-21-led-calibration-battery-design.md`.
+
+> ⚠️ The "Where we are" section below is stale (2026-06-15, pre-v0.x). The current
+> shipped state is master @ v0.9.0 — see git history / auto-memory `project-status`.
+
+---
+
 ## ▶ Where we are (updated 2026-06-15 — read this first after a restart)
 
 **✅ 2026-06-15: FULL HARDWARE VERIFICATION COMPLETE.** Every 🟠 "built, pending

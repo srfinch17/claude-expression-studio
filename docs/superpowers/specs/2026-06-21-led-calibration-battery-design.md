@@ -187,11 +187,30 @@ animations already apply `nscale8` before FastLED's global scale. The correction
 layer is a *third* stage — verify it composes correctly (a corrected, self-scaled,
 globally-scaled pixel must still clear its floor). Confirm on hardware at bri 5.
 
-### Phase 4 — re-review pass
-With correction on, walk every animation/expression (source of truth: `KNOWN_ANIMS`
-in `api_handlers.ino` + cards in `data/animations.html` + `expressions.ts`). Confirm
-each still reads well; re-tune any that regressed; delete now-redundant hand-tuned
-floors that the correction layer subsumes (e.g. claudesweep's manual amber floor).
+### Phase 4 — re-review pass across the ENTIRE board-app suite
+With correction on, walk **every app the board renders** — not just animations.
+Because the correction layer is global + always-on, it changes the look of
+*everything*, so the review scope is the full suite: the `anim_*` animations
+(`KNOWN_ANIMS` in `api_handlers.ino` + cards in `data/animations.html`), the
+expressions (`expressions.ts` + saved `expressions/*.json`, including the `wait-*`,
+`ask-*`, idle, and Claude-mascot sets), presence rendering (`anim_presence.ino`),
+the clock/calendar/weather/sound/sketch/emoji apps, the idle screensaver lineup, and
+the grid/calibration patterns themselves. Confirm each still reads well; re-tune any
+that regressed; delete now-redundant hand-tuned floors the correction layer subsumes
+(e.g. claudesweep's manual amber floor). Apply the lessons learned (the verified
+palette, per-channel floors, gamma) as the new defaults everywhere.
+
+**This completes the project and marks v1.0.0** — see the milestone note below.
+
+## Milestone: this is v1.0.0
+
+Per the user (2026-06-21): finishing this calibration end-to-end — measured,
+lessons learned, and the correction implemented/re-reviewed across the **entire
+suite of board apps** — is the intended **v1.0.0** stopping point. It is the natural
+"the board looks as good as the hardware allows, everywhere" line to reach **before**
+the next thrust (building out the broader docs/specs and the RAG corpus this repo
+will feed). So: Phases 1-4 of this spec, fully shipped and hardware-verified, →
+`npm run bump:major` to 1.0.0.
 
 ## Files touched (by phase)
 
