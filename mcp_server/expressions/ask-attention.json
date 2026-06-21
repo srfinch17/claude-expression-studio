@@ -1,0 +1,91 @@
+{
+  "description": "Awaiting input \u2014 an amber bell ringing (clapper swings, side ticks flash). Fired when Claude needs the user's permission. Holds (loop 0) until replaced.",
+  "frames": [
+    [
+      "...A....",
+      "..AAA...",
+      "..AAA...",
+      ".AAAAA..",
+      ".AAAAA..",
+      "AAAAAAA.",
+      "...A....",
+      "........"
+    ],
+    [
+      "...A....",
+      "..AAA...",
+      "..AAA...",
+      ".AAAAAB.",
+      ".AAAAA..",
+      "AAAAAAA.",
+      "....A...",
+      "........"
+    ],
+    [
+      "...A....",
+      "..AAA...",
+      "..AAA...",
+      ".AAAAA..",
+      ".AAAAA..",
+      "AAAAAAA.",
+      "...A....",
+      "........"
+    ],
+    [
+      "...A....",
+      "..AAA...",
+      "..AAA...",
+      "BAAAAA..",
+      ".AAAAA..",
+      "AAAAAAA.",
+      "..A.....",
+      "........"
+    ],
+    [
+      "...A....",
+      "..AAA...",
+      "..AAA...",
+      ".AAAAA..",
+      ".AAAAA..",
+      "AAAAAAA.",
+      "...A....",
+      "........"
+    ],
+    [
+      "...A....",
+      "..AAA...",
+      "..AAA...",
+      ".AAAAAB.",
+      ".AAAAA..",
+      "AAAAAAA.",
+      "....A...",
+      "........"
+    ],
+    [
+      "...A....",
+      "..AAA...",
+      "..AAA...",
+      ".AAAAA..",
+      ".AAAAA..",
+      "AAAAAAA.",
+      "...A....",
+      "........"
+    ],
+    [
+      "...A....",
+      "..AAA...",
+      "..AAA...",
+      "BAAAAA..",
+      ".AAAAA..",
+      "AAAAAAA.",
+      "..A.....",
+      "........"
+    ]
+  ],
+  "colors": {
+    "A": "#ffb000",
+    "B": "#ffffff"
+  },
+  "frame_ms": 95,
+  "loop": 0
+}
