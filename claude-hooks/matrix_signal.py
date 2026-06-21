@@ -221,7 +221,8 @@ def pick_wait(pool, weights):
 
 
 def send_saved(name):
-    """Load a saved wait-*.json {colors,frames,frame_ms,loop} and POST it."""
+    """Load ANY saved expression JSON {colors,frames,frame_ms,loop} by name and POST
+    it (wait-*, ask-*, idle, …). Best-effort: returns False on miss / board offline."""
     try:
         with open(os.path.join(EXPR_DIR, name + ".json"), "r", encoding="utf-8") as f:
             e = json.load(f)
@@ -290,8 +291,12 @@ def main():
     token = write_activity_token() if name in ("wait", "working", "done") else None
     if name == "wait":
         send_wait()       # weighted-random pick from the wait pool (the hook path)
+    elif name in EXPR:
+        send_named(name)  # a specific CANNED expression by name (working forces the snake)
     else:
-        send_named(name)  # a specific expression by name (working forces the snake)
+        send_saved(name)  # any SAVED expression by name (ask-question/ask-confirm/
+                          # ask-attention, or any other saved JSON). Best-effort: no-op
+                          # if the file is missing or the board is offline — never blocks.
     # The checkmark arms boredom: if the user doesn't come back, the watcher goofs off.
     if name == "done" and token is not None:
         # send_named("done") above posted with idle=False (disarms); re-arm AFTER it.
