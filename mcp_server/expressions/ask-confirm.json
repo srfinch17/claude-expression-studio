@@ -1,0 +1,92 @@
+{
+  "description": "Awaiting input \u2014 an empty box with a green checkmark drawing itself in, then holding. Fired when Claude presents a plan for the user's approval. Holds (loop 0) until replaced.",
+  "frames": [
+    [
+      "........",
+      ".AAAAAA.",
+      ".A....A.",
+      ".A....A.",
+      ".A....A.",
+      ".A....A.",
+      ".AAAAAA.",
+      "........"
+    ],
+    [
+      "........",
+      ".AAAAAA.",
+      ".A....A.",
+      ".A....A.",
+      ".AB...A.",
+      ".A....A.",
+      ".AAAAAA.",
+      "........"
+    ],
+    [
+      "........",
+      ".AAAAAA.",
+      ".A....A.",
+      ".A....A.",
+      ".AB...A.",
+      ".A.B..A.",
+      ".AAAAAA.",
+      "........"
+    ],
+    [
+      "........",
+      ".AAAAAA.",
+      ".A....A.",
+      ".A....A.",
+      ".AB.B.A.",
+      ".A.B..A.",
+      ".AAAAAA.",
+      "........"
+    ],
+    [
+      "........",
+      ".AAAAAA.",
+      ".A....A.",
+      ".A...BA.",
+      ".AB.B.A.",
+      ".A.B..A.",
+      ".AAAAAA.",
+      "........"
+    ],
+    [
+      "........",
+      ".AAAAAA.",
+      ".A....B.",
+      ".A...BA.",
+      ".AB.B.A.",
+      ".A.B..A.",
+      ".AAAAAA.",
+      "........"
+    ],
+    [
+      "........",
+      ".AAAAAA.",
+      ".A....B.",
+      ".A...BA.",
+      ".AB.B.A.",
+      ".A.B..A.",
+      ".AAAAAA.",
+      "........"
+    ],
+    [
+      "........",
+      ".AAAAAA.",
+      ".A....C.",
+      ".A...CA.",
+      ".AC.C.A.",
+      ".A.C..A.",
+      ".AAAAAA.",
+      "........"
+    ]
+  ],
+  "colors": {
+    "A": "#b8b8b8",
+    "B": "#00ff88",
+    "C": "#00b25f"
+  },
+  "frame_ms": 120,
+  "loop": 0
+}
