@@ -1,0 +1,20 @@
+{
+  "_comment": "TEMPORARY measurement probe for the awaiting-input feature. Merge this 'hooks' block into ~/.claude/settings.json (fix the YOU path; use python/python3 to match your system), restart Claude Code, reproduce: (a) Claude asks a question, (b) Claude presents a plan, (c) a permission prompt — then answer each. Send ~/.claude/hook_probe.log, then REMOVE this block and restart. It only writes a log; it never touches the board, and it runs alongside your existing matrix hooks (multiple hooks per event are allowed). Goal: learn whether PreToolUse fires for AskUserQuestion/ExitPlanMode, when PostToolUse fires for them, whether Stop fires while a question is pending, and whether Notification fires permission_prompt.",
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [ { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\hook_probe.py\" UserPromptSubmit" } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": ".*", "hooks": [ { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\hook_probe.py\" PreToolUse" } ] }
+    ],
+    "PostToolUse": [
+      { "matcher": ".*", "hooks": [ { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\hook_probe.py\" PostToolUse" } ] }
+    ],
+    "Notification": [
+      { "matcher": ".*", "hooks": [ { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\hook_probe.py\" Notification" } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\hook_probe.py\" Stop" } ] }
+    ]
+  }
+}
