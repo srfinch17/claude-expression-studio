@@ -8,6 +8,46 @@
 
 **Tech Stack:** Python hook (`matrix_signal.py`) + JSON hook config; FastLED 8×8 frame-expressions (JSON via `/api/display/frames`); `npm run bump:minor`.
 
+---
+
+## ⚠ Revision 2 — post 2-critic gate (2026-06-21)
+
+The adversarial review (both critics, convergent) found the plan **built on unverified
+Claude Code hook event-ordering**. Restructured to **gate-first**:
+
+**The unknowns the probe must resolve (BLOCKING the hook wiring):**
+1. Does `PreToolUse` fire for the built-ins `AskUserQuestion` / `ExitPlanMode`?
+2. When does `PostToolUse` fire for them — when the prompt is *shown*, or when the user
+   *answers*? (The "flip to `wait`" only works if it's on answer.)
+3. **Does `Stop` fire while a question/plan is pending?** If yes, `Stop → done → arm-idle`
+   would clobber the ask animation — a feature-killer. Needs a mitigation (e.g. a flag
+   file written on `PreToolUse(ask)` that the `Stop` hook checks and skips `done`).
+4. After a permission grant, what restores `wait`? (Else the bell holds while Claude works.)
+
+→ **Run `claude-hooks/hook_probe.py` (Task 0) FIRST.** It logs every event + tool + timing.
+The log answers all four; the hook wiring + clear-logic are designed from real data.
+
+**Build status on branch `feat/awaiting-input`:**
+- ✅ **Task 1 DONE** — `matrix_signal.py` routes any saved name → `send_saved` (twin synced).
+- ✅ **Task 2 DONE** — the three `ask-*` animations (generated, validated, played live at bri 5).
+- ✅ **Task 0 DONE** — the probe (`hook_probe.py` + `settings.probe.snippet.json`) is built.
+- ⛔ **BLOCKED on probe data:** Task 3 (hook wiring), the clear-on-answer logic, the
+  `Stop`-collision mitigation, Task 4 (version bump), and the PR. Do NOT wire until the
+  probe confirms the ordering.
+
+**Fixes folded in from the review:**
+- `idle_prompt` is NOT a fallback (it may fire every turn-end → bell spam). The probe,
+  not a guess, decides the question-trigger path.
+- `ask-confirm` box bumped to `#b8b8b8` so it survives the bri-5 floor (a dim gray vanished).
+- `ask-attention` amber bell green-channel is near the bri-5 floor → reads orange/red; the
+  bell SHAPE carries it; flagged for the user's eyes.
+- Capture brightness + animation BEFORE board testing, restore after (done in Task 2).
+- Snippet install note: if the user already has `PreToolUse`/`PostToolUse` arrays, APPEND
+  to them — don't replace.
+- `send_saved` docstring/comment generalized (no longer "wait-only").
+
+---
+
 ## Global Constraints
 
 - **Privacy:** never use the maintainer's real name anywhere — "the user". (distributable repo)
