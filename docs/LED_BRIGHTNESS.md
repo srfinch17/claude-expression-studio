@@ -80,15 +80,16 @@ where color fidelity matters (emoji, sketch, calibration) or as an inspector
 Usage: `LedSim.onChange(render)` then inside `render` use
 `LedSim.previewColor(hex, LedSim.bri())`.
 
-## Empirical observations (TO FILL IN)
+## Empirical observations → `data/calibration.json`
 
-The formula above is theoretical. The actual board may differ (LED binning,
-supply voltage, viewing angle). Record real `grid_test` results here as
-`(brightness → first channel value actually visible on the board)` so we have
-ground truth, not just math:
+The formula above is theoretical; the real board differs (LED binning, supply
+voltage, per-channel die response, viewing angle). Measured ground truth now lives
+in the machine-readable **`data/calibration.json`**, produced by the **Calibration
+Lab** (`/calibrate.html`, formerly Grid Test) and consumed by the firmware
+correction layer, `ledsim.js`, and the MCP — so the numbers are *applied*, not just
+recorded. Keys: per-channel `floors`, `white_balance` gains, `gamma`, a verified
+`palette`, `steps`, optional `pixel_trim`.
 
-| Brightness | First visible channel (observed) | Date | Notes |
-|---:|---:|---|---|
-| _e.g. 40_ | _?_ | | |
-
-_(empty — run grid_test on the board and we'll fill this in)_
+To update: re-run the Lab on the board and re-commit `data/calibration.json` — do
+not transcribe the numbers here (one source of truth). Full design:
+`docs/superpowers/specs/2026-06-21-led-calibration-battery-design.md`.
