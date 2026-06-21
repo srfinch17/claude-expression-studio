@@ -9,6 +9,34 @@ I (Claude) cannot compile, flash, or see the LEDs — the user does that and
 reports back. My job here is to tell them exactly which step to run and to triage
 what comes back. (See the `esp32-dev-loop` memory.)
 
+## 0. Before you ask for ANY upload — minimize & de-risk the round-trip
+Every Sketch→Upload and LittleFS upload is manual effort the USER pays. Treat
+round-trips as the scarce resource:
+- **Batch by artifact, not by task.** If several pending changes touch the same
+  artifact (all firmware, or all `data/`), make them ALL first and ask for ONE
+  upload. Pull forward params/superset changes so a single flash covers later work
+  (e.g. add optional JSON fields now so the next task is web-only). Consolidating a
+  6-task plan to **1 flash + 1 upload** is a real win — announce it and why.
+- **Self-review the artifact before deploying** — proactively, not just when asked.
+  Verify API assumptions against the actual firmware (e.g. `hexToColor` strips an
+  optional `#` and needs 6 chars; check the real endpoint/param names) instead of
+  deploying on assumed signatures. Watch for page-load side effects (init that POSTs
+  to the board) and values that mean something dangerous downstream.
+- **Self-verify what you can WITHOUT the user's eyes**, then reserve their eyes for
+  true perception calls (does this read as cyan; is it blinding):
+  - `curl` the endpoints (board reachable at `esp32matrix.local`).
+  - `GET /api/display/framebuffer` → raw `leds[]` hex, so pattern geometry/color
+    placement is provable (see `feedback-framebuffer-debugging`).
+  - **Playwright MCP** for web pages: `browser_navigate` to
+    `http://esp32matrix.local/<page>.html`, check console for errors, and
+    `browser_evaluate` to call the page's own functions and confirm they drive the
+    board (cross-check the framebuffer). Catches JS errors and dead controls before
+    the user ever looks.
+- **Defer version bumps** that rewrite `data/version.json` until a deploy is already
+  happening — otherwise the stamp change forces an extra LittleFS upload.
+- When done driving the panel hard (calibration runs hit 255), **restore a
+  comfortable brightness** via `POST /api/brightness` (persists to NVS).
+
 ## 1. Which upload does this change need?
 - **Firmware (`.ino`) changed** → Arduino IDE **Sketch → Upload**.
 - **Web UI (`data/*.html`) changed** → IDE 2.x: **Ctrl+Shift+P → "Upload

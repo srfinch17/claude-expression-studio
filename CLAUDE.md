@@ -147,6 +147,9 @@ POST /api/weather/mode      { mode: temp|humidity|uv|pressure|cycle }
 GET  /api/settings          # all current board settings (NVS-backed)
 POST /api/settings          { partial keys }  # merge-update — only sent keys change; see Settings section
 POST /api/idle/arm          # arm the idle screensaver countdown (fired by the Stop hook — matrix_signal.py on the `done` signal)
+GET  /api/calibration       # the measured LED calibration profile (calibration.json) or identity defaults if unmeasured
+POST /api/calibration       # overwrite calibration.json on LittleFS (validates JSON first) — the Calibration Lab saves here
+POST /api/grid-test/set     { mode, brightness, ... }  # Calibration Lab patterns: ramp_r/g/b, sweep_r/g/b, patch_rgb(+pr/pg/pb), gamma, pixel(+index)
 ```
 
 ## ⭐ The matrix is Claude's expression window (use it ambiently)
@@ -313,6 +316,29 @@ and restores the pre-screensaver brightness.
 The screensaver survives the laptop sleeping (the arm fires before sleep; the
 board keeps running independently). `idle_apps` and timing are tunable at runtime
 via settings — no reflash needed.
+
+## LED calibration (the path to v1.0.0)
+
+The board's real color/brightness behavior diverges from theory (per-channel
+visibility floors, white balance, gamma). The **Calibration Lab** (`data/calibrate.html`,
+the former Grid Test) measures it with human eyes into a single **`data/calibration.json`**
+(version.json pattern: `GET`/`POST /api/calibration`, identity-default fallback if
+unmeasured). Schema: per-channel `floors` (min effective value that lights),
+`white_balance` gains (dimmest channel = 1.0, others attenuated), `gamma`, verified
+`palette`, `steps`, optional `pixel_trim`. Lab patterns render via `/api/grid-test/set`
+(ramp/sweep/patch/gamma/pixel). Full design:
+`docs/superpowers/specs/2026-06-21-led-calibration-battery-design.md`.
+
+**⭐ v1.0.0 = ALL calibration lessons IMPLEMENTED across the ENTIRE board-app suite** —
+not just measured, but applied as an always-on correction layer (firmware + `ledsim.js`
++ MCP) and the new defaults for every animation/expression/app. This is the deliberate
+stopping point BEFORE the docs/RAG buildout (the user wants all of v1 in the RAG corpus).
+**Phases:** (1) ✅ Lab harness built — DONE. (2) run the eyeball battery → produce
+`calibration.json`. (3) correction layer (the flash that also clears the deferred version
+bump). (4) apply/verify across all apps → `npm run bump:major` to 1.0.0. Plan:
+`docs/superpowers/plans/2026-06-21-calibration-lab-phase1.md`. Status lives in auto-memory
+`color-threshold-calibration`. Calibration drives the panel to 255 — restore a comfortable
+brightness when done (it persists to NVS).
 
 ## Board discovery
 
