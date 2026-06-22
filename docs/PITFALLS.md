@@ -130,14 +130,22 @@ connection (Chrome opens speculative parallel sockets that send nothing) pins
 the server for up to `HTTP_MAX_DATA_WAIT` (5s, core #define). (2) Each page
 load made ~5-6 requests because the shared .js files were re-served with no
 caching — more sockets, more chances to get pinned behind an idle one.
-**Fix / rule:** Static assets (.js/.css/.png/.ico) are served with
-`Cache-Control: max-age=86400`, so the browser fetches them once; HTML stays
-uncached so LittleFS uploads appear on plain reload. `server.enableDelay(false)`
-removes the idle 1ms sleep. **⚠ Dev-loop consequence: after re-uploading a
-CHANGED .js file, do ONE hard refresh (Ctrl+F5)** — a plain reload serves the
-day-old cached copy and your change "mysteriously" won't appear. Also: browsing
+**Fix / rule:** `server.enableDelay(false)` removes the idle 1ms sleep. Browsing
 via IP beats `esp32matrix.local` (mDNS adds per-connection lookups), and the
 phone-hotspot path is inherently slower than the home LAN — judge speed there.
+**UPDATE 2026-06-22 — static assets changed from `max-age=86400` to `no-cache`.**
+The 24h cache made every UI change require a manual Ctrl+F5, and a **stale cached
+`app.css` silently broke the UI revamp** (the new `.df-pal-grid`/`.df-swatch` rules
+weren't in the cached sheet → palette swatches collapsed to 0-height → "the palettes
+don't show up anywhere," while the board was serving the correct file). Now
+`.js/.css/.png/.ico` are served `Cache-Control: no-cache` so the browser revalidates
+every load and re-uploaded assets appear on a plain reload. The board emits no 304s,
+so this re-fetches each small file per page load — cheap on a LAN single-client board.
+**Verification lesson:** when checking a re-uploaded page via Playwright, assert the
+RENDERED size/visibility (e.g. swatch `offsetHeight`) and inspect the LOADED stylesheet
+(`document.styleSheets[].cssRules`), not just element counts or the on-disk file — the
+board file can be correct while the browser shows a cached old one. If serving load ever
+matters, switch to version-query cache-busting (`app.css?v=<web_version>`).
 
 ## 2026-06-11 — USB-CDC Serial prints FREEZE the whole board when no monitor is attached
 **Symptom:** Every animation hitches/catches on a regular interval and the web

@@ -32,13 +32,26 @@ round-trips as the scarce resource:
     `browser_evaluate` to call the page's own functions and confirm they drive the
     board (cross-check the framebuffer). Catches JS errors and dead controls before
     the user ever looks.
-    - ⚠️ **Stale-cache trap:** after a LittleFS upload, the browser may still run the
-      OLD cached `.js` while a plain `fetch('/file.js')` returns the NEW one — so the
-      file "looks deployed" but the page behaves old. Verify the **LOADED** code, not
-      just the on-disk file: `window.X.fn.toString().includes('newToken')`. To force
-      the fresh module, inject `<script src="/file.js?cb="+Date.now()>` and re-test
-      (an IIFE that assigns `window.X=…` will overwrite itself). Cost us a false
-      "correction isn't working" before we spotted the cache.
+    - ⚠️ **Stale-cache trap (bites .js AND .css):** after a LittleFS upload, the browser
+      may still use the OLD cached asset while `curl`/`fetch` returns the NEW one — so the
+      file "looks deployed" but the page behaves/renders old. **(Mostly FIXED 2026-06-22:**
+      firmware now serves `.js/.css/.png/.ico` with `Cache-Control: no-cache` instead of
+      `max-age=86400`, so a plain reload revalidates — but only after that firmware is
+      flashed, and old browser sessions can still hold a cached copy.) Verify the **LOADED**
+      asset, not the on-disk/curl'd file:
+      - JS: `window.X.fn.toString().includes('newToken')`; force-fresh via
+        `<script src="/file.js?cb="+Date.now()>` (an IIFE assigning `window.X=…` overwrites itself).
+      - CSS: **assert RENDERED size/visibility, not just element count** —
+        `el.offsetHeight`/`getComputedStyle(el).display`, and inspect the LOADED sheet via
+        `[...document.styleSheets].find(s=>s.href?.includes('app.css')).cssRules` (count rules /
+        check a selector is present). Cache-bust to prove: `link.href='app.css?v='+Date.now()`.
+      - **Real incident (2026-06-22):** the user saw "the predefined palettes don't show up
+        anywhere" — a stale cached `app.css` lacked the new `.df-pal-grid`/`.df-swatch` rules →
+        swatches collapsed to 0-height. The board served the CORRECT file; the browser didn't.
+        My pre-upload check had counted "64 swatches built" but never asserted their HEIGHT.
+    - **Pre-upload web verification (no LittleFS upload needed):** serve `data/` locally and point
+      Playwright at it to verify layout/markup/JS BEFORE spending the user's upload —
+      `python -c "from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler; ThreadingHTTPServer(('127.0.0.1',PORT),SimpleHTTPRequestHandler).serve_forever()"` (run in BACKGROUND; **never pipe to `head`** — BrokenPipe kills the server's request logging → ERR_EMPTY_RESPONSE on sub-resources; use a THREADED server so concurrent asset loads don't choke). `/api/*` 404s gracefully. Catches CSS/markup/JS bugs cheaply; then do the live-apply/framebuffer checks against the REAL board post-upload.
 - **Live-reload data files to skip a reflash.** Some endpoints re-read their data file
   on POST (e.g. `POST /api/calibration` calls `loadCalibration()`; settings live-apply).
   Exploit this to retune values (gains, gamma, profiles) with ZERO round-trips while
