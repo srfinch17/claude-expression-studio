@@ -148,7 +148,7 @@ GET  /api/settings          # all current board settings (NVS-backed)
 POST /api/settings          { partial keys }  # merge-update — only sent keys change; see Settings section
 POST /api/idle/arm          # arm the idle screensaver countdown (fired by the Stop hook — matrix_signal.py on the `done` signal)
 GET  /api/calibration       # the measured LED calibration profile (calibration.json) or identity defaults if unmeasured
-POST /api/calibration       # overwrite calibration.json on LittleFS (validates JSON first) — the Calibration Lab saves here
+POST /api/calibration       # overwrite calibration.json (validates JSON) AND live-reloads the correction (no reflash) — Lab saves here; exploit for retuning
 POST /api/grid-test/set     { mode, brightness, ... }  # Calibration Lab patterns: ramp_r/g/b, sweep_r/g/b, patch_rgb(+pr/pg/pb), gamma, pixel(+index)
 ```
 
@@ -292,6 +292,7 @@ other.
 | `default_brightness` | int | 40 | Default + boot brightness (unified with auto-resume brightness) |
 | `boot_animation` | string | `""` | If non-empty, overrides auto-resume on boot with this animation type |
 | `timezone` | string | `""` | POSIX TZ string applied to the clock live on POST |
+| `calibration_correction` | bool | true | Apply the measured LED correction (`matrixShow()` chokepoint). Off = raw output, for A/B |
 
 **Merge-on-boot:** `loadSettings()` merges stored keys over firmware defaults, so
 a new firmware build that adds a new setting key boots with a sane default even
@@ -319,26 +320,44 @@ via settings — no reflash needed.
 
 ## LED calibration (the path to v1.0.0)
 
-The board's real color/brightness behavior diverges from theory (per-channel
-visibility floors, white balance, gamma). The **Calibration Lab** (`data/calibrate.html`,
-the former Grid Test) measures it with human eyes into a single **`data/calibration.json`**
-(version.json pattern: `GET`/`POST /api/calibration`, identity-default fallback if
-unmeasured). Schema: per-channel `floors` (min effective value that lights),
-`white_balance` gains (dimmest channel = 1.0, others attenuated), `gamma`, verified
-`palette`, `steps`, optional `pixel_trim`. Lab patterns render via `/api/grid-test/set`
-(ramp/sweep/patch/gamma/pixel). Full design:
+The board's real color/brightness behavior diverges from theory. The **Calibration Lab**
+(`data/calibrate.html`, the former Grid Test) measures it with human eyes into a single
+**`data/calibration.json`** (version.json pattern: `GET`/`POST /api/calibration`,
+identity-default fallback if unmeasured). Schema: per-channel `floors`, `white_balance`
+gains (dimmest channel = 1.0, others attenuated), `gamma` (+ `gamma_measured`/`notes`),
+verified `palette`, `steps`, optional `pixel_trim`. Lab patterns render via
+`/api/grid-test/set` (ramp/sweep/patch/gamma/pixel). Design:
 `docs/superpowers/specs/2026-06-21-led-calibration-battery-design.md`.
 
-**⭐ v1.0.0 = ALL calibration lessons IMPLEMENTED across the ENTIRE board-app suite** —
-not just measured, but applied as an always-on correction layer (firmware + `ledsim.js`
-+ MCP) and the new defaults for every animation/expression/app. This is the deliberate
-stopping point BEFORE the docs/RAG buildout (the user wants all of v1 in the RAG corpus).
-**Phases:** (1) ✅ Lab harness built — DONE. (2) run the eyeball battery → produce
-`calibration.json`. (3) correction layer (the flash that also clears the deferred version
-bump). (4) apply/verify across all apps → `npm run bump:major` to 1.0.0. Plan:
-`docs/superpowers/plans/2026-06-21-calibration-lab-phase1.md`. Status lives in auto-memory
-`color-threshold-calibration`. Calibration drives the panel to 255 — restore a comfortable
-brightness when done (it persists to NVS).
+**The active correction layer (Phase 3, SHIPPED + hardware-verified 2026-06-21).**
+`loadCalibration()` reads `calibration.json` at boot into the `calib` struct (identity
+fallback). `applyCalibration()` runs at the **`matrixShow()` chokepoint** — which does
+**save → correct-in-place → restore** on `leds[]` (NOT a second FastLED buffer), so
+animations never see the correction compound AND any `FastLED.show()` left un-converted
+(boot status colors, `handleClear`, **the grid-test/Lab patterns**) stays RAW automatically
+— the Lab keeps measuring the real panel for free. Gated by the `calibration_correction`
+setting (default on, A/B toggle), mirrored in `ledsim.js` previews + the MCP. A
+`POST /api/calibration` **live-reloads** the profile (no reflash) — exploit this to retune.
+Plan: `docs/superpowers/plans/2026-06-21-calibration-phase3-correction-layer.md`.
+
+> **⚠️ Measured values & the gamma lesson:** `floors` are all 1 (the floor hypothesis
+> didn't pan out); `white_balance` green gain = **0.863** — and note this is the
+> *white-validated* value, NOT the isolated-band-match 0.471 (band-matching ≠ white-point;
+> the band gain tints white magenta — always validate gains on white). **Gamma is NOT
+> applied as a global stage**: value-domain gamma 2.0 before brightness scaling CRUSHES dim
+> content (frostbite went full-glitter → 4-6 dots at bri 5 — the double-scaling trap). So
+> applied `gamma=1.0`, measured ~2.0 kept in `gamma_measured` for future gradient-generation
+> code. **White-balance (pure attenuation) is the active correction** — it never crushes.
+
+**⭐ v1.0.0 = Phase 4: apply the correction lessons across the ENTIRE board-app suite** —
+re-review every animation/expression/app with correction on, apply the verified `palette`
+as new defaults, delete now-redundant hand-tuned floors (e.g. claudesweep's manual amber),
+then `npm run bump:major` to 1.0.0 (the version bump was DEFERRED here — Phase 4 re-flashes
+anyway; repo+artifacts read 0.9.0, no drift). This is the deliberate stop BEFORE the
+docs/RAG buildout. **Phases:** (1) ✅ Lab built (2) ✅ battery run (3) ✅ correction layer
+(4) ▶ full-suite re-review → 1.0.0. Status + measured values in auto-memory
+`color-threshold-calibration`. Calibration can drive the panel to 255 — restore a
+comfortable brightness when done (persists to NVS).
 
 ## Board discovery
 
