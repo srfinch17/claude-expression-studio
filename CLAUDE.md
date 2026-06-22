@@ -132,7 +132,7 @@ spawned procs).
 ## API surface
 
 ```
-GET  /api/status            # + fw_version, fw_built (__DATE__ __TIME__), web_version — see Versioning
+GET  /api/status            # + fw_version, fw_built (__DATE__ __TIME__), web_version — see Versioning; + heap telemetry free_heap/largest_block/min_free_heap/free_psram (watch alloc pressure over HTTP, no Serial)
 GET  /api/presence          # current PresenceMessage (semantic status for any renderer)
 POST /api/presence          { intent, headline?, detail?, data?, urgency? }  # board stamps ts
 GET  /api/sensors/{temperature,accelerometer,weather}
