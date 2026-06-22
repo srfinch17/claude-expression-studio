@@ -671,7 +671,7 @@ Use a duration of 2–4 seconds per emoji. Default is 3.`,
     {
       name: "matrix_set_settings",
       description:
-        "Change one or more board settings (persisted on the board, survives reflash). Only the fields you provide change. Fields: idle_enabled (bool), idle_apps (comma-separated app names from: fire, matrix_rain, clock, fireworks, frostbite, snow, dancefloor), idle_after_secs (seconds of quiet before the screensaver starts), idle_rotate_secs (seconds between screensaver changes), idle_brightness (1-255, screensaver dimness), default_brightness (0-255 on boot), boot_animation (animation type to show on power-up, or empty to resume last), timezone (POSIX TZ string for the clock). Example: 'start the screensaver after 5 minutes' -> { idle_after_secs: 300 }.",
+        "Change one or more board settings (persisted on the board, survives reflash). Only the fields you provide change. Fields: idle_enabled (bool), idle_apps (comma-separated app names from: fire, matrix_rain, clock, fireworks, frostbite, snow, dancefloor), idle_after_secs (seconds of quiet before the screensaver starts), idle_rotate_secs (seconds between screensaver changes), idle_brightness (1-255, screensaver dimness), default_brightness (0-255 on boot), boot_animation (animation type to show on power-up, or empty to resume last), timezone (POSIX TZ string for the clock), calibration_correction (bool — apply the measured LED color/brightness correction; turn off to A/B compare). Example: 'start the screensaver after 5 minutes' -> { idle_after_secs: 300 }.",
       inputSchema: {
         type: "object",
         properties: {
@@ -683,6 +683,7 @@ Use a duration of 2–4 seconds per emoji. Default is 3.`,
           default_brightness: { type: "number" },
           boot_animation: { type: "string" },
           timezone: { type: "string" },
+          calibration_correction: { type: "boolean" },
         },
       },
     },

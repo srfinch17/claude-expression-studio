@@ -5,10 +5,11 @@
 export const KNOWN_SETTING_KEYS = [
   "idle_enabled", "idle_apps", "idle_after_secs", "idle_rotate_secs",
   "idle_brightness", "default_brightness", "boot_animation", "timezone",
+  "calibration_correction",
 ] as const;
 
 const NUMERIC = new Set(["idle_after_secs", "idle_rotate_secs", "idle_brightness", "default_brightness"]);
-const BOOLEAN = new Set(["idle_enabled"]);
+const BOOLEAN = new Set(["idle_enabled", "calibration_correction"]);
 
 export function parseIdleApps(csv: string): string[] {
   return csv.split(",").map((s) => s.trim()).filter(Boolean);

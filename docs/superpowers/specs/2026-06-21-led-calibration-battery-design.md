@@ -168,6 +168,19 @@ fold in the batched hardware-eye tests memory already queued alongside this
 silhouette checks) since the user is already at the board.
 
 ### Phase 3 — the correction layer (consumes `calibration.json`)
+
+> **✅ IMPLEMENTED + hardware-verified 2026-06-21** (plan:
+> `docs/superpowers/plans/2026-06-21-calibration-phase3-correction-layer.md`).
+> Firmware `applyCalibration()` runs at a `matrixShow()` chokepoint (save/correct-in-place/
+> restore on `leds[]`, so the grid-test Lab + boot indicators stay raw automatically); gated
+> by the `calibration_correction` NVS setting (default on), plumbed into `settings.html` + MCP;
+> `ledsim.js` mirrors it. **Key deviation from the design below:** the bri-5 hardware test
+> proved value-domain **gamma crushes dim content** (the double-scaling trap) — frostbite went
+> full-glitter → 4-6 dots. So **gamma is NOT applied as a global stage**: applied `gamma=1.0`,
+> the measured ~2.0 preserved in `calibration.json` `gamma_measured` for future gradient-
+> generation use. **White-balance (g=0.863) is the active correction** (pure attenuation, never
+> crushes). The "floor-lift → white-balance → gamma" order below stands; the gamma term is just
+> identity on this board.
 - **Firmware:** load `calibration.json` at boot into a struct (identity fallback on
   absence). Add a final **`applyCalibration(leds)`** stage immediately before each
   `FastLED.show()` (or a single chokepoint show wrapper) doing, in order:

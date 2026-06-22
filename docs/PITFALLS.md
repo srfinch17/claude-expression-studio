@@ -14,6 +14,29 @@ Entry template:
 
 ---
 
+## 2026-06-21 — Full-panel POSTs froze/rebooted the board: internal-DRAM heap pressure (PSRAM doesn't help)
+**Symptom:** `POST /api/display/matrix` (a single 8×8 hex grid) **hard-froze** the board — panel
+stuck, HTTP dead, watchdog couldn't recover, **power cycle required**. Separately, ~15 rapid
+`POST /api/display/animation {type:"solid"}` **rebooted** it. A 64-POST `grid-test/set` burst,
+by contrast, was 100% stable. All on a PSRAM-*enabled* build (so NOT the old frames-heap bug).
+**Cause:** Per-request **internal DMA-capable DRAM** allocation pressure — the scarce pool WiFi +
+WebServer + ArduinoJson fight over. PSRAM (2 MB free) can't back those allocations, so it doesn't
+help, and `ESP.getFreeHeap()` only measures that internal pool. The render path was exonerated by
+the grid-test control (same full-panel `FastLED.show()`, tiny *flat* JSON → stable). The crashing
+paths differed only in **allocation weight**: `handleMatrix` parsed a 64-element **nested array**
++ 64 transient `String`s with **no heap guard** (the heaviest spike → froze a pressured heap),
+and `handleAnimation` parsed the body **twice** (once to apply, once just to read `transient`),
+draining heap across rapid calls until the loop's own `<14000` low-heap `ESP.restart()` fired.
+**Fix / rule:** Every heavy-allocation handler needs a **pressure-relief valve** — copy the
+`if (ESP.getFreeHeap() < 30000) { sendJson(503, ...); return; }` guard + **zero-copy parse**
+(`deserializeJson(doc, (char*)body.c_str(), body.length())`) that `handleFrames` already uses, so
+low heap degrades to a graceful 503 instead of a freeze. Never parse a body twice — surface what
+you need from the single parse. `/api/status` now reports `free_heap`/`largest_block`/`min_free_heap`/
+`free_psram` so you can watch this pressure over HTTP (no Serial needed): a big `free_heap` with a
+small `largest_block` = fragmentation; a falling `min_free_heap` that doesn't recover = a real leak.
+Verified fixed: 16 matrix POSTs (min-free dip ~3.4 KB, recovered, zero fragmentation) + 25 solid
+POSTs (dip 72 B) all returned 200 with flat heap.
+
 ## 2026-06-20 — `speed` is milliseconds-per-frame, not a 1–5 scale — raw 1–5 = blizzard
 **Symptom:** An animation launched via raw `POST /api/display/animation {"type":"snow","speed":2}`
 (or a control page that posts the slider value directly) runs absurdly fast — a "blizzard" /

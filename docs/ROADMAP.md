@@ -33,6 +33,27 @@ Full design: `docs/superpowers/specs/2026-06-21-led-calibration-battery-design.m
 
 ---
 
+## 🔭 v2 — Presence Fabric: multi-board addressing & consent (vision'd 2026-06-21)
+
+**Parked until v1.0.0 ships.** 🟡 Single hardcoded board → a registry of *named*,
+*consented* display appliances + an addressing layer, so one Claude session drives specific
+boards (the office one) and leaves others alone (the kitchen one showing weather). Extends
+the presence north star — "one message, many renderers" — to many *physical* renderers.
+
+Model: **two-key consent** = board-side policy (`llm_drivable`, owner-set ceiling, lives on
+the board) ∩ client-side enlistment (each Claude install's own opt-in list). Hands-off is
+the default. **Name-based addressing** (board self-advertises; IP floats behind a cache).
+Architecture = incremental evolution of the HTTP API, shaped as a small identity/consent/
+capability **descriptor** (protocol, not bolted-on settings); no hub.
+
+Decomposes into ordered sub-specs (each spec'd just-in-time): (1) 🔵 board identity & consent
+[firmware] → (2) 🔵 client enlistment & name addressing [MCP+hooks] — **(1)+(2) = MVP** → (3)
+🔵 consent handshake → (4) 🔵 multi-board control UX [web+conversational] → (5) 🔵 generalize
+to other display types. Full vision:
+`docs/superpowers/specs/2026-06-21-presence-fabric-multi-board-design.md`.
+
+---
+
 ## ▶ Where we are (updated 2026-06-15 — read this first after a restart)
 
 **✅ 2026-06-15: FULL HARDWARE VERIFICATION COMPLETE.** Every 🟠 "built, pending

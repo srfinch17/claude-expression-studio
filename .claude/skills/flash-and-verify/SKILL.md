@@ -9,6 +9,47 @@ I (Claude) cannot compile, flash, or see the LEDs — the user does that and
 reports back. My job here is to tell them exactly which step to run and to triage
 what comes back. (See the `esp32-dev-loop` memory.)
 
+## 0. Before you ask for ANY upload — minimize & de-risk the round-trip
+Every Sketch→Upload and LittleFS upload is manual effort the USER pays. Treat
+round-trips as the scarce resource:
+- **Batch by artifact, not by task.** If several pending changes touch the same
+  artifact (all firmware, or all `data/`), make them ALL first and ask for ONE
+  upload. Pull forward params/superset changes so a single flash covers later work
+  (e.g. add optional JSON fields now so the next task is web-only). Consolidating a
+  6-task plan to **1 flash + 1 upload** is a real win — announce it and why.
+- **Self-review the artifact before deploying** — proactively, not just when asked.
+  Verify API assumptions against the actual firmware (e.g. `hexToColor` strips an
+  optional `#` and needs 6 chars; check the real endpoint/param names) instead of
+  deploying on assumed signatures. Watch for page-load side effects (init that POSTs
+  to the board) and values that mean something dangerous downstream.
+- **Self-verify what you can WITHOUT the user's eyes**, then reserve their eyes for
+  true perception calls (does this read as cyan; is it blinding):
+  - `curl` the endpoints (board reachable at `esp32matrix.local`).
+  - `GET /api/display/framebuffer` → raw `leds[]` hex, so pattern geometry/color
+    placement is provable (see `feedback-framebuffer-debugging`).
+  - **Playwright MCP** for web pages: `browser_navigate` to
+    `http://esp32matrix.local/<page>.html`, check console for errors, and
+    `browser_evaluate` to call the page's own functions and confirm they drive the
+    board (cross-check the framebuffer). Catches JS errors and dead controls before
+    the user ever looks.
+    - ⚠️ **Stale-cache trap:** after a LittleFS upload, the browser may still run the
+      OLD cached `.js` while a plain `fetch('/file.js')` returns the NEW one — so the
+      file "looks deployed" but the page behaves old. Verify the **LOADED** code, not
+      just the on-disk file: `window.X.fn.toString().includes('newToken')`. To force
+      the fresh module, inject `<script src="/file.js?cb="+Date.now()>` and re-test
+      (an IIFE that assigns `window.X=…` will overwrite itself). Cost us a false
+      "correction isn't working" before we spotted the cache.
+- **Live-reload data files to skip a reflash.** Some endpoints re-read their data file
+  on POST (e.g. `POST /api/calibration` calls `loadCalibration()`; settings live-apply).
+  Exploit this to retune values (gains, gamma, profiles) with ZERO round-trips while
+  iterating, then commit the final file. Turned a multi-flash gamma hunt into live POSTs.
+- **Defer version bumps** that rewrite `data/version.json` until a deploy is already
+  happening — otherwise the stamp change forces an extra LittleFS upload. (Deferring a
+  feature's bump to the NEXT flash that's happening anyway is fine — no drift if repo +
+  all artifacts still agree; `npm run check` to confirm.)
+- When done driving the panel hard (calibration runs hit 255), **restore a
+  comfortable brightness** via `POST /api/brightness` (persists to NVS).
+
 ## 1. Which upload does this change need?
 - **Firmware (`.ino`) changed** → Arduino IDE **Sketch → Upload**.
 - **Web UI (`data/*.html`) changed** → IDE 2.x: **Ctrl+Shift+P → "Upload
@@ -28,7 +69,8 @@ Upload speed 921600. (Board is 4MB — verified via esptool.)
 |---|---|---|
 | `'X.h' No such file` / undefined ref to a lib | library not installed | Install via Manage Libraries (FastLED, ArduinoJson, PNGdec, **WiFiManager by tzapu**) |
 | `Sketch too big` / won't link | wrong partition scheme | Set partition to `8MB with spiffs (3MB APP, 5MB SPIFFS)` |
-| Web page is stale / 404 after editing `data/` | forgot LittleFS data upload | Run **ESP32 LittleFS Data Upload** |
+| Web page is stale / 404 after editing `data/` | forgot LittleFS data upload | Run **ESP32 LittleFS Data Upload** (and beware the browser stale-cache trap above — verify the LOADED code) |
+| Board freezes/reboots while Claude HTTP-drives it (NOT under bright patterns) | `/api/display/matrix` full-fill can FREEZE; repeated `/api/display/animation` can REBOOT — even with PSRAM on. 64-burst grid-test is stable | While driving for tests, prefer grid-test endpoints + `solid` sparingly; AVOID `/api/display/matrix`. See `bug-render-crash-matrix-solid` memory |
 | Upload fails / port busy | Serial Monitor holding the port, or no boot mode | Close Serial Monitor; retry; if stuck, hold BOOT during connect |
 | Board reboots under bright patterns | power brownout (full-white ~3-4 A) | Lower brightness / better USB supply (see PITFALLS) |
 | Red/green look swapped on a new effect | code assumed GRB | This firmware is **RGB** — don't swap channels, fix the source assumption |

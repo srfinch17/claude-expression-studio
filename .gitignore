@@ -27,3 +27,6 @@ mcp_server/.env
 
 # Windows
 Thumbs.db
+
+# Playwright MCP scratch output (browser snapshots/console logs)
+.playwright-mcp/
