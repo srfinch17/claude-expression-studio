@@ -52,14 +52,28 @@ round-trips as the scarce resource:
     - **Pre-upload web verification (no LittleFS upload needed):** serve `data/` locally and point
       Playwright at it to verify layout/markup/JS BEFORE spending the user's upload —
       `python -c "from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler; ThreadingHTTPServer(('127.0.0.1',PORT),SimpleHTTPRequestHandler).serve_forever()"` (run in BACKGROUND; **never pipe to `head`** — BrokenPipe kills the server's request logging → ERR_EMPTY_RESPONSE on sub-resources; use a THREADED server so concurrent asset loads don't choke). `/api/*` 404s gracefully. Catches CSS/markup/JS bugs cheaply; then do the live-apply/framebuffer checks against the REAL board post-upload.
+      - **Audit ALL pages in ONE call (iframe-sweep):** to check every page for the same invariants
+        (no 390px horizontal overflow, `app.css` loaded, breadcrumb present + correct parent, hub links
+        resolve) without 30+ navigations, load each same-origin page into a hidden 390px-wide `<iframe>`
+        inside one `browser_evaluate` and measure `contentDocument.documentElement.scrollWidth -
+        clientWidth` etc. Use `?cb=Date.now()` + an `onload`-then-~200ms settle so `app.css`/scripts
+        mount before you measure. Collapsed ~30 navigations into one call in the v1.1.0 audit. Same
+        "assert RENDERED size, not the on-disk file" discipline as the stale-cache trap above.
 - **Live-reload data files to skip a reflash.** Some endpoints re-read their data file
   on POST (e.g. `POST /api/calibration` calls `loadCalibration()`; settings live-apply).
   Exploit this to retune values (gains, gamma, profiles) with ZERO round-trips while
   iterating, then commit the final file. Turned a multi-flash gamma hunt into live POSTs.
-- **Defer version bumps** that rewrite `data/version.json` until a deploy is already
-  happening — otherwise the stamp change forces an extra LittleFS upload. (Deferring a
-  feature's bump to the NEXT flash that's happening anyway is fine — no drift if repo +
-  all artifacts still agree; `npm run check` to confirm.)
+- **Time the version bump to the deploy that's already happening.** The bump stamps
+  `version.h` (firmware), `data/version.json` (web), AND `package.json` (MCP) — each stamp
+  only goes live when its artifact redeploys. So:
+  - **If the batch is web-only (no flash forced):** defer the bump or accept it stamps
+    `version.h` un-flashed → expected COSMETIC firmware drift (`npm run check` flags it; clear
+    it on the next flash that happens anyway). Don't force a flash just to move the stamp.
+  - **If a firmware fix is in the SAME batch (a flash is required regardless):** bump NOW,
+    *before* that flash — the `version.h` stamp piggybacks the already-required Sketch→Upload,
+    so all three artifacts deploy at the new version with **ZERO drift**. (v1.1.0: a chip-temp
+    firmware fix turned the web-only revamp into a firmware+web release → bump-now beat
+    bump-after, no extra round-trip, no drift.) Confirm with `npm run check`.
 - When done driving the panel hard (calibration runs hit 255), **restore a
   comfortable brightness** via `POST /api/brightness` (persists to NVS).
 

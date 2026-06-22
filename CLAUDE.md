@@ -95,13 +95,17 @@ setup. Reachable at `http://esp32matrix.local` once joined.
 | `weather.ino` | weather fetch + icon draw + chip temp |
 | `clock_timer.ino` | NTP clock + 3 timer modes |
 | `data/*.html` | per-mode web control pages (served from LittleFS) |
+| `data/{app.css,backnav.js,header.js,bright.js,previews.js,palettes.js}` | shared web design system (v1.1.0 revamp): `app.css` tokens+chrome; `backnav.js` breadcrumb (`data-parent`/`data-label`); `header.js` logo card; `bright.js` brightness widget; `previews.js` canvas preview engine; `palettes.js` `DF_PAL`+presets. All are `data-auto` self-injecting drop-ins. |
 
 ### Adding a new animation touches these files (the recurring recipe)
 1. New `anim_<name>.ino` — state globals + `run<Name>Frame()` / `step<Name>Frame()`
 2. Dispatch branch in `esp32_matrix_webserver.ino` loop: `else if (animationName == "<name>") run<Name>Frame();`
 3. `api_handlers.ino` `handleAnimation()` — parse params, set globals, set `animationName`
-4. `data/<name>.html` — control page (palette, color pickers, live preview canvas, launch POST)
-5. `data/index.html` — add a card linking the new page
+4. `data/<name>.html` — its OWN control page on the shared design system (clone `rainbow.html`):
+   `app.css` + `.panel`/`.subcard`/`.subhead`/`.chips`/`.preview-frame`; breadcrumb via `backnav.js`
+   (`data-parent="/animations.html"`); `header.js`/`bright.js`; `previews.js`+`palettes.js` for the
+   full-strength canvas preview + palette grid. Live-apply default-on, debounced ~180ms.
+5. `data/animations.html` — add a `.card` link-out to the new page (the Animations HUB, **NOT** `index.html`)
 6. README features table (optional)
 
 ---
