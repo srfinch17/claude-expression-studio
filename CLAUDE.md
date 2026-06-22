@@ -367,3 +367,7 @@ and the Python hooks (`claude-hooks/matrix_signal.py` `BOARD_URL`) read it, with
 the same default `http://esp32matrix.local`. For a fresh install, set `ESP32_URL`
 once (e.g. to an IP address if mDNS is unreliable) and everything picks it up —
 no per-file edits required.
+
+> **v2 (parked until v1.0.0):** this single-board `ESP32_URL` evolves into a registry of
+> *named, consented* boards (Claude drives only boards you've enlisted; never touches the
+> rest). Vision: `docs/superpowers/specs/2026-06-21-presence-fabric-multi-board-design.md`.
