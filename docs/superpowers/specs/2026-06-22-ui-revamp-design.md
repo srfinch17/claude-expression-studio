@@ -59,7 +59,11 @@ Pages keep only page-specific tweaks inline (minimal), everything shared comes f
 ### 4. Information-architecture changes
 
 - **Weather sub-hub:** main-hub `Weather` card → `weather.html` becomes a sub-hub with two cards. The two existing control pages are preserved as the leaves (exact filenames decided in the plan; "Icon + Temp" = today's `weather.html` behavior, "Dual Display" = today's `weather2.html`). Single shared ZIP/units where it makes sense is a plan detail.
-- **Rainbow page:** new `rainbow.html` control page (POSTs `type:rainbow` to the existing animation endpoint). Remove the inline Rainbow block from `animations.html`; `animations.html` becomes a pure sub-hub.
+- **Animations = one page per animation (decided 2026-06-22 during planning).** Today `animations.html` is a 1,254-line page that handles **12 animations inline** (via `?type=`, with a shared JS preview engine + a 64-entry palette table) while **5 have standalone pages** (`fire`, `liquid`, `matrix_rain`, `snow`, `claudesweep`) — and each standalone page carries its *own* duplicated preview engine. That split is the real root of the "Rainbow has no page" complaint. **Target:** every animation gets its own shell page (17 total), `animations.html` becomes a **pure grid hub**, and the scattered preview engines + palette table are **extracted into shared modules**:
+  - **`previews.js`** — the canvas preview engine (per-animation `step*` functions + driver), mountable per page.
+  - **`palettes.js`** — the shared 64-entry `DF_PAL` table (+ the fireworks/frostbite/sun preset lists) as `window`-scoped data.
+  - **`rainbow.html`** is then simply one of the 12 new pages.
+- **Live-apply** follows the existing `fire.html` pattern (an "apply on every change" path) but **on by default** with a clear indicator, plus Apply/Stop for explicit control.
 - **Uniform cards** across all hubs.
 - **`presence-card.html`** stays a distinct desktop card (excluded from the board chrome, per [[web-ui-structure]]) — aligned to the tokens but not forced into the control-page shell.
 
