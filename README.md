@@ -104,19 +104,19 @@ mcp_server/                 # Node.js MCP server
 
 If you have a board and want to get it running — no Arduino IDE or Node.js required.
 
-**Requirements:** A Waveshare ESP32-S3-Matrix, a USB cable, and Google Chrome or Microsoft Edge (for the browser flasher). Your computer and the board must be on the **same local network** after setup; the board is reachable at `http://esp32matrix.local`.
+**Requirements:** A Waveshare ESP32-S3-Matrix and a USB cable. Your computer and the board must be on the **same local network** after setup; the board is reachable at `http://esp32matrix.local`.
 
 ### 1. Flash the firmware
 
-**Browser (Chrome or Edge):**
-Open `install/index.html` from the release package, plug the board into USB, and follow the on-screen prompt. ESP Web Tools handles the flash in one click.
-
-**Offline (any browser / OS):**
+**Offline scripts (working now — recommended):**
 Download the release zip, plug in the board, and run the script for your OS:
 - Windows: double-click `install/flash.bat`
 - macOS / Linux: run `install/flash.sh` in a terminal
 
 Both scripts flash the pre-merged binary (`release/esp32matrix-<version>-merged.bin`) — firmware and web UI together, no separate LittleFS upload step.
+
+**Browser one-click flasher (coming once GitHub Pages is enabled):**
+ESP Web Tools requires a secure `https://` origin — opening `install/index.html` as a local `file://` will not work (Web Serial is blocked). Once the `install/` page is hosted on GitHub Pages, Chrome or Edge users will be able to flash in one click from that URL.
 
 ### 2. First-time WiFi setup
 
