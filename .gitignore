@@ -30,3 +30,6 @@ Thumbs.db
 
 # Playwright MCP scratch output (browser snapshots/console logs)
 .playwright-mcp/
+
+# Release build output (merged firmware, manifest, .mcpb) — produced by scripts/build-release.mjs
+release/

@@ -10,6 +10,7 @@
     "bump:major": "node scripts/version-bump.js major",
     "stamp": "node scripts/version-stamp.js",
     "check": "node scripts/version-check.js",
-    "test": "node --test \"scripts/**/*.test.js\" \"mcp_server/**/*.test.ts\""
+    "test": "node --test \"scripts/**/*.test.js\" \"mcp_server/**/*.test.ts\"",
+    "build:mcpb": "cd mcp_server && npx tsc --project tsconfig.json && cd .. && node -e \"require('fs').mkdirSync('release',{recursive:true})\" && npx @anthropic-ai/mcpb pack mcp_server release/esp32-matrix.mcpb"
   }
 }
