@@ -6,7 +6,7 @@
 // core toolchain, builds a LittleFS image from data/, merges everything into
 // release/esp32matrix-<version>-merged.bin, and writes the ESP Web Tools
 // manifest. Offsets come from huge_app.csv, never hardcoded.
-import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, copyFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
@@ -16,6 +16,7 @@ import os from "node:os";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const DATA_DIR = path.join(REPO_ROOT, "esp32_matrix_webserver", "data");
+const INSTALL_DIR = path.join(REPO_ROOT, "install");
 const BUILD_DIR = path.join(REPO_ROOT, "esp32_matrix_webserver", "build");
 const RELEASE_DIR = path.join(REPO_ROOT, "release");
 const PKG_ESP32 = path.join(os.homedir(), "AppData", "Local", "Arduino15", "packages", "esp32");
@@ -72,8 +73,8 @@ async function main() {
   // 4. Merge into one factory image.
   const merged = path.join(RELEASE_DIR, `esp32matrix-${version}-merged.bin`);
   execFileSync(esptool, [
-    "--chip", "esp32s3", "merge_bin", "-o", merged,
-    "--flash_mode", "dio", "--flash_freq", "80m", "--flash_size", "4MB",
+    "--chip", "esp32s3", "merge-bin", "-o", merged,
+    "--flash-mode", "dio", "--flash-freq", "80m", "--flash-size", "4MB",
     "0x0", bootloader, "0x8000", partitions, "0xe000", bootApp0,
     "0x10000", app, fsOffset, fsBin,
   ], { stdio: "inherit" });
@@ -86,11 +87,20 @@ async function main() {
     builds: [{ chipFamily: "ESP32-S3", parts: [{ path: path.basename(merged), offset: 0 }] }],
   }, null, 2) + "\n", "utf8");
 
-  // 6. Copy the .mcpb if build:mcpb already produced it.
+  // 6. The .mcpb is written straight into release/ by `npm run build:mcpb`; just
+  //    warn if it hasn't been built yet so the release package isn't silently incomplete.
   const mcpb = path.join(RELEASE_DIR, "esp32-matrix.mcpb");
   if (!existsSync(mcpb)) console.warn("note: release/esp32-matrix.mcpb missing — run `npm run build:mcpb` too");
 
-  console.log(`\nRelease ready in release/:\n  ${path.basename(merged)}\n  manifest.json\n  esp32-matrix.mcpb (if built)`);
+  // 7. Assemble a self-contained offline-flash package: the bundled esptool, the
+  //    flash scripts, and the browser-install page all sit beside the merged .bin so
+  //    flash.bat's %~dp0 lookup (esptool.exe + esp32matrix-*-merged.bin) just works.
+  await copyFile(esptool, path.join(RELEASE_DIR, "esptool.exe"));
+  for (const f of ["flash.bat", "flash.sh", "index.html"]) {
+    await copyFile(path.join(INSTALL_DIR, f), path.join(RELEASE_DIR, f));
+  }
+
+  console.log(`\nRelease ready in release/:\n  ${path.basename(merged)}  (flash at 0x0)\n  esptool.exe  flash.bat  flash.sh   (offline flasher)\n  index.html  manifest.json          (browser flasher — needs https/Pages)\n  esp32-matrix.mcpb${existsSync(mcpb) ? "" : "  (MISSING — run build:mcpb)"}            (Claude Desktop extension)`);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
