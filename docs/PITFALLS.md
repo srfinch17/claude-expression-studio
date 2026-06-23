@@ -14,6 +14,22 @@ Entry template:
 
 ---
 
+## 2026-06-23 — A distributable firmware `.bin` can carry your WiFi password (secrets.h is compiled in)
+**Symptom:** after a full `esptool erase-flash` + reflash of the merged factory image, the board
+rejoined WiFi automatically with NO captive portal — credentials seemed to "survive" a wipe.
+**Cause:** the WiFi creds were never in NVS. `esp32_matrix_webserver.ino` does
+`#if __has_include("secrets.h")` → `#ifdef WIFI_SSID` → `WiFi.begin(WIFI_SSID, WIFI_PASSWORD)`, which
+**bypasses WiFiManager and the setup portal entirely**. With a local `secrets.h`, **Export Compiled
+Binary bakes the SSID/password into the app binary** (program flash). Erasing NVS does nothing — the
+same merged image rewrites the app that *contains* the creds, so it connects directly. Two
+distribution hazards: (1) the shipped `.bin` leaks your WiFi password (just `strings` it), and
+(2) `WIFI_SSID` being defined removes the portal, so no other user's board can be onboarded.
+**Fix / rule:** Build the DISTRIBUTABLE image with **`secrets.h` ABSENT** (rename/delete it, then
+re-Export Compiled Binary → `WIFI_SSID` undefined → WiFiManager portal compiles back in).
+`scripts/build-release.mjs` now **refuses if `secrets.h` is present** (override `--allow-secrets` for
+a personal build of your own board only). secrets.h is a dev convenience; it must never ride along in
+anything you publish.
+
 ## 2026-06-21 — Full-panel POSTs froze/rebooted the board: internal-DRAM heap pressure (PSRAM doesn't help)
 **Symptom:** `POST /api/display/matrix` (a single 8×8 hex grid) **hard-froze** the board — panel
 stuck, HTTP dead, watchdog couldn't recover, **power cycle required**. Separately, ~15 rapid

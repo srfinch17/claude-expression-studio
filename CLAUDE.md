@@ -79,12 +79,20 @@ Library Manager is unrelated — it adds no upload command. See `docs/PITFALLS.m
 
 ---
 
-## WiFi (runtime, no hardcoded creds)
+## WiFi (runtime portal, or a secrets.h dev override)
 
 WiFiManager captive portal. On boot it tries saved WiFi (LEDs **blue**); on
 failure it opens hotspot **`ESP32-Matrix-Setup`** (LEDs **amber**) at
 `192.168.4.1`. Hold **BOOT (GPIO 0)** while powering on to wipe creds and force
 setup. Reachable at `http://esp32matrix.local` once joined.
+
+**`secrets.h` dev override (gitignored):** if `esp32_matrix_webserver/secrets.h`
+defines `WIFI_SSID`/`WIFI_PASSWORD`, the firmware connects directly and **skips the
+portal** (`#ifdef WIFI_SSID` path) — convenient for your own board, but it **compiles
+your WiFi creds into the app binary**. ⚠️ A **distributable** merged `.bin` must be
+exported with `secrets.h` ABSENT, or it leaks your password (`strings` it) AND can never
+onboard another user (no portal). `scripts/build-release.mjs` **refuses to build if
+`secrets.h` is present** (`--allow-secrets` = personal build only). See `docs/PITFALLS.md`.
 
 ---
 
