@@ -13,6 +13,10 @@ mcp_server/.env
 # Arduino IDE temporary files
 *.tmp.*
 
+# Arduino "Export Compiled Binary" output — build artifacts, machine-specific, and
+# (with a local secrets.h) the .bin has WiFi creds baked in. Never commit.
+esp32_matrix_webserver/build/
+
 # Claude Code — local/machine-specific settings (permissions, local overrides)
 .claude/settings.local.json
 
