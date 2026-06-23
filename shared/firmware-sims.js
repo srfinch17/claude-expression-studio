@@ -361,9 +361,125 @@ function makeMatrixRain(opts = {}) {
   };
 }
 
+// ---- snow (port of anim_snow.ino) ----
+// Continuous snowfall with a fixed floor bank — flakes fall and vanish when
+// they hit their column's floor surface, then respawn at the top. No accumulation.
+//
+// FLOOR: SNOW_FLOOR_TOP[col] = first lit row of the floor bank in that column.
+//   Columns 2 & 5 have floor_top = 6 (one-row mound); all others = 7.
+//   Every frame, for each column x, rows floor_top[x]..7 are lit in floorColor.
+//
+// COLOR:
+//   opts.flakeColor  → fixed hex color used for all flakes AND the floor
+//                      (gallery deterministic mode — overrides random pick)
+//   opts.confetti    → each flake picks a random SNOW_PALETTE entry; floor = rgb(210,220,255)
+//   default (neither) → one random SNOW_PALETTE entry for all flakes + floor (single-hue mode)
+
+const SNOW_PALETTE_COLORS = [
+  [255, 255, 255],  // white
+  [255,  40,  40],  // red
+  [255, 130,   0],  // orange
+  [255, 200,  40],  // gold
+  [ 80, 255,  40],  // green
+  [ 60, 255, 140],  // mint
+  [  0, 230, 230],  // cyan
+  [ 60, 140, 255],  // ice blue
+  [ 40,  70, 255],  // blue
+  [160,  40, 255],  // violet
+  [255,  60, 230],  // magenta
+  [255,  80, 150],  // pink
+];
+
+// Topmost floor row per column: mounds at cols 2 & 5 rise to row 6, rest at row 7.
+const SNOW_FLOOR_TOP = [7, 7, 6, 7, 7, 6, 7, 7];
+
+const SNOW_FLAKE_COUNT = 6;
+
+function pickSnowPaletteColor() {
+  return SNOW_PALETTE_COLORS[Math.floor(Math.random() * SNOW_PALETTE_COLORS.length)];
+}
+
+function makeSnow(opts = {}) {
+  // Resolve floor color and per-flake color strategy.
+  // opts.flakeColor: fixed hex → use for all flakes AND floor (gallery deterministic).
+  // opts.confetti: true → each flake gets its own random palette color; floor = neutral white.
+  // default: pick one random palette entry for all flakes AND the floor (single-hue).
+  let floorColor;
+  let singleFlakeColor = null;  // null means each flake picks its own (confetti or fixed)
+  const confetti = opts.confetti || false;
+
+  if (opts.flakeColor) {
+    // Gallery deterministic override: fixed color for flakes AND floor.
+    singleFlakeColor = hexToRGB(opts.flakeColor);
+    floorColor = singleFlakeColor;
+  } else if (confetti) {
+    // Each flake random; floor = dim neutral snow-white (matches firmware rgb(210,220,255)).
+    floorColor = [210, 220, 255];
+  } else {
+    // Single random hue for flakes + floor (matches firmware single-hue mode).
+    singleFlakeColor = pickSnowPaletteColor();
+    floorColor = singleFlakeColor;
+  }
+
+  // Spawn a flake at index i. stagger=true: start y anywhere from -1 to -(MATRIX_H).
+  // stagger=false: always start at y=-1 (just above the top).
+  function spawnFlake(flake, stagger) {
+    flake.x     = Math.floor(Math.random() * 8);
+    flake.y     = stagger ? -(1 + Math.floor(Math.random() * 8)) : -1;
+    flake.tick  = 0;
+    flake.speed = 1 + Math.floor(Math.random() * 3);  // 1=fast, 3=slow (ticks per step)
+    flake.color = confetti ? pickSnowPaletteColor() : singleFlakeColor;
+  }
+
+  // Initialize all flakes with staggered start heights.
+  const flakes = Array.from({ length: SNOW_FLAKE_COUNT }, () => {
+    const f = { x: 0, y: 0, tick: 0, speed: 1, color: null };
+    spawnFlake(f, true);
+    return f;
+  });
+
+  return {
+    frame_ms: opts.frame_ms || 110,
+    frame() {
+      const px = [];
+
+      // Fixed floor bank: rows floor_top[x]..7 for each column.
+      for (let x = 0; x < 8; x++) {
+        for (let y = SNOW_FLOOR_TOP[x]; y <= 7; y++) {
+          px.push({ x, y, r: floorColor[0], g: floorColor[1], b: floorColor[2] });
+        }
+      }
+
+      // Advance and draw each flake.
+      for (const f of flakes) {
+        // Count up; step down one row when tick reaches speed threshold.
+        f.tick++;
+        if (f.tick >= f.speed) {
+          f.tick = 0;
+          f.y++;
+        }
+
+        // Reached the floor surface in its column → respawn at top.
+        if (f.y >= SNOW_FLOOR_TOP[f.x]) {
+          spawnFlake(f, false);
+          continue;
+        }
+
+        // Draw only when on-screen and above the floor.
+        if (f.y >= 0) {
+          px.push({ x: f.x, y: f.y, r: f.color[0], g: f.color[1], b: f.color[2] });
+        }
+      }
+
+      return px;
+    },
+  };
+}
+
 export const FIRMWARE_SIMS = {
   claudesweep: makeClaudeSweep,
   frostbite: makeFrostbite,
   fire: makeFire,
   matrix_rain: makeMatrixRain,
+  snow: makeSnow,
 };

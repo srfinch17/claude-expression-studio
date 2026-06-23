@@ -56,3 +56,17 @@ test("matrix_rain sim yields in-bounds frames and at least one lit pixel after w
     assert.ok(px.length > 0, "at least one lit pixel after warm-up");
   }
 });
+
+test("snow sim yields in-bounds frames and floor bank present after accumulation", () => {
+  const sim = FIRMWARE_SIMS.snow({ frame_ms: 110, flakeColor: "#dce6ff" });
+  assert.equal(typeof sim.frame_ms, "number");
+  // run 50 frames — floor bank is always drawn so it's present from frame 1
+  for (let i = 0; i < 50; i++) {
+    const px = sim.frame();
+    assertInBounds(px);
+    // floor bank invariant: SNOW_FLOOR_TOP means row 7 is always lit for all 8 cols
+    // plus cols 2 & 5 also have a pixel at row 6 → at least 8 bottom-row pixels
+    const row7 = px.filter((p) => p.y === 7);
+    assert.ok(row7.length >= 8, `floor bank: at least 8 row-7 pixels (got ${row7.length})`);
+  }
+});
