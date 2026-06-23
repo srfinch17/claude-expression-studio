@@ -54,6 +54,49 @@ function hexToRGB(hex) {
   return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
 }
 
+// ---- frostbite (port of anim_frostbite.ino) ----
+function makeFrostbite(opts = {}) {
+  const color = opts.color ? hexToRGB(opts.color) : [102, 204, 255]; // #66ccff
+  const mistMax = (opts.mist ?? 40) * 2;            // matches firmware (×2), default 80
+  const sparkRate = opts.sparkle ?? 20;
+  const lo = Math.max(8, mistMax >> 1);
+  const bri = new Array(64), dir = new Array(64);
+  for (let i = 0; i < 64; i++) { bri[i] = lo + Math.floor(Math.random() * (mistMax - lo + 1)); dir[i] = Math.random() < 0.5 ? 1 : -1; }
+  const sparks = Array.from({ length: 8 }, () => ({ active: false, idx: 0, phase: 0 }));
+  return {
+    frame_ms: opts.frame_ms || 60,
+    frame() {
+      const px = [];
+      for (let i = 0; i < 64; i++) {
+        if (Math.floor(Math.random() * 30) === 0) dir[i] = -dir[i];
+        let next = bri[i] + dir[i];
+        if (next >= mistMax) { bri[i] = mistMax; dir[i] = -1; }
+        else if (next <= lo) { bri[i] = lo; dir[i] = 1; }
+        else bri[i] = next;
+      }
+      for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
+        const [r, g, b] = nscale8(color, bri[y * 8 + x]);
+        px.push({ x, y, r, g, b });
+      }
+      if (Math.random() * 100 < sparkRate) {
+        const s = sparks.find((s) => !s.active);
+        if (s) { s.active = true; s.idx = Math.floor(Math.random() * 64); s.phase = 0; }
+      }
+      for (const s of sparks) {
+        if (!s.active) continue;
+        const briS = Math.round(Math.sin(s.phase * Math.PI / 39) * 255);
+        if (briS > 0) {
+          const [r, g, b] = nscale8(color, briS);
+          px.push({ x: s.idx % 8, y: (s.idx / 8) | 0, r, g, b });
+        }
+        if (++s.phase >= 40) s.active = false;
+      }
+      return px;
+    },
+  };
+}
+
 export const FIRMWARE_SIMS = {
   claudesweep: makeClaudeSweep,
+  frostbite: makeFrostbite,
 };

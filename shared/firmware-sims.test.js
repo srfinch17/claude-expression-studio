@@ -20,3 +20,12 @@ test("claudesweep ring is always lit (>= ~28 perimeter pixels)", () => {
   const px = sim.frame();
   assert.ok(px.length >= 28, "ring + mascot pixels present");
 });
+
+test("frostbite sim yields 64 in-bounds mist pixels every frame", () => {
+  const sim = FIRMWARE_SIMS.frostbite();
+  for (let i = 0; i < 50; i++) {
+    const px = sim.frame();
+    assertInBounds(px);
+    assert.ok(px.length >= 64, "all 64 mist pixels lit");
+  }
+});
