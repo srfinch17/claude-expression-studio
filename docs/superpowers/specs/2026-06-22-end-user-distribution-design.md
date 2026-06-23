@@ -115,6 +115,15 @@ locally from the release folder):
 
 So one URL provisions **both** halves: firmware + Claude integration.
 
+### Deployment is phased (repo is public)
+The install page is **built and committed in this pass** so both methods exist in the
+repo. But the **shippable path for the first `1.0.0` release is the offline `flash`
+script + merged `.bin`** (zero hosting, works today). Turning on **GitHub Pages** to
+make the browser one-click link live is a deferred, trivial follow-up — the page
+already exists, so it's just enabling the Pages setting and pointing it at the
+`install/` folder. No code changes needed when that day comes. The repo being public
+means Pages will be free when enabled.
+
 ---
 
 ## 5. MCP distribution → `.mcpb`
@@ -218,8 +227,9 @@ Because Claude can't flash, verification is **shared**:
   build:mcpb` produces a `.mcpb` that unzips to a canvas-free `node_modules`; the
   install page loads ESP Web Tools and references a manifest that points at a real
   merged `.bin`; `data/` has no dangling `emoji`/Timer/Clock/Calendar links (grep).
-- **Maintainer-side (hardware):** run `build-release.mjs`; flash the merged `.bin` via
-  the browser flasher onto a **freshly-erased** board; confirm WiFi captive portal →
+- **Maintainer-side (hardware):** run `build-release.mjs`; flash the merged `.bin` onto
+  a **freshly-erased** board via the **offline `flash` script** (the browser one-click
+  path is verified separately once GitHub Pages is enabled); confirm WiFi captive portal →
   join → `http://esp32matrix.local` serves the (emoji-free, Time-hub) web UI **with no
   separate LittleFS upload**; double-click the `.mcpb` into Claude Desktop and confirm
   the tools load and drive the board.
