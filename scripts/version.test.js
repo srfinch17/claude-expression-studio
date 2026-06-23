@@ -45,10 +45,14 @@ async function fixtureRoot(version) {
     path.join(root, "mcp_server", "package.json"),
     JSON.stringify({ name: "esp32-matrix-mcp", version: "0.0.0", type: "module" }, null, 2) + "\n",
   );
+  await writeFile(
+    path.join(root, "mcp_server", "manifest.json"),
+    JSON.stringify({ manifest_version: "0.3", name: "esp32-matrix", version: "0.0.0", server: { type: "node", entry_point: "dist/index.js" } }, null, 2) + "\n",
+  );
   return root;
 }
 
-test("stamp writes the version into all three artifacts", async () => {
+test("stamp writes the version into all four artifacts", async () => {
   const root = await fixtureRoot("0.1.0");
   await stamp("0.3.0", root);
 
@@ -62,6 +66,10 @@ test("stamp writes the version into all three artifacts", async () => {
   const pkg = JSON.parse(await readFile(path.join(root, "mcp_server", "package.json"), "utf8"));
   assert.equal(pkg.version, "0.3.0");
   assert.equal(pkg.name, "esp32-matrix-mcp", "stamp preserves other package.json fields");
+
+  const manifest = JSON.parse(await readFile(path.join(root, "mcp_server", "manifest.json"), "utf8"));
+  assert.equal(manifest.version, "0.3.0");
+  assert.equal(manifest.name, "esp32-matrix", "stamp preserves other manifest fields");
 });
 
 // A fake fetch returning a chosen /api/status body.
@@ -79,7 +87,7 @@ test("checkVersions reports match when board agrees", async () => {
   });
   assert.equal(report.reachable, true);
   const byArtifact = Object.fromEntries(report.rows.map((r) => [r.artifact, r.status]));
-  assert.deepEqual(byArtifact, { firmware: "match", web: "match", mcp: "match" });
+  assert.deepEqual(byArtifact, { firmware: "match", web: "match", mcp: "match", "mcp-bundle": "match" });
 });
 
 test("checkVersions flags firmware drift and unknown web", async () => {

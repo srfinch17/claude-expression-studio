@@ -34,7 +34,16 @@ export async function checkVersions({ root = REPO_ROOT, boardUrl = DEFAULT_BOARD
     mcpVersion = pkg.version ?? "unknown";
   } catch { /* leave as unknown */ }
 
-  const rows = [{ artifact: "mcp", reported: mcpVersion, status: compareArtifact(mcpVersion, expected) }];
+  let bundleVersion = "unknown";
+  try {
+    const m = JSON.parse(await readFile(path.join(root, "mcp_server", "manifest.json"), "utf8"));
+    bundleVersion = m.version ?? "unknown";
+  } catch { /* leave as unknown */ }
+
+  const rows = [
+    { artifact: "mcp", reported: mcpVersion, status: compareArtifact(mcpVersion, expected) },
+    { artifact: "mcp-bundle", reported: bundleVersion, status: compareArtifact(bundleVersion, expected) },
+  ];
 
   // Firmware + web come from the board's /api/status in one call.
   let reachable = true;
