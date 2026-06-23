@@ -81,14 +81,15 @@ const CSS = `
   pointer-events: none;
 }
 @media (max-width: 560px) { .desk-sim { display: none; } }
-@media (prefers-reduced-motion: reduce) { .desk-sim::before { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .desk-sim, .desk-sim::before { transition: none; } }
 `;
 
-let cssInjected = false;
+// ── CSS injection (DOM-based dedup, survives module-cache sharing) ─────────
 function injectCSS() {
-  if (cssInjected || typeof document === "undefined") return;
-  cssInjected = true;
+  if (typeof document === "undefined") return;
+  if (document.getElementById("desk-sim-css")) return;
   const s = document.createElement("style");
+  s.id = "desk-sim-css";
   s.textContent = CSS;
   document.head.appendChild(s);
 }
@@ -104,6 +105,11 @@ function injectCSS() {
  * @returns {{ el: HTMLElement, panel: Panel, destroy(): void }}
  */
 export function mountDeskSim({ expression, dismissible = false } = {}) {
+  // Fix #5: warn on missing expression frames
+  if (!expression?.frames?.length) {
+    console.warn("[desk-sim] no expression frames provided");
+  }
+
   injectCSS();
 
   const REDUCE =
@@ -119,7 +125,23 @@ export function mountDeskSim({ expression, dismissible = false } = {}) {
     x.className = "desk-sim-x";
     x.title = "Dismiss";
     x.textContent = "×";
-    x.addEventListener("click", () => el.classList.add("desk-sim-hidden"));
+    x.addEventListener("click", () => {
+      // Keep the fade animation, then destroy after transition completes.
+      // Under reduced-motion the transition is suppressed (transition:none),
+      // so transitionend may never fire — destroy immediately in that case.
+      el.classList.add("desk-sim-hidden");
+      if (REDUCE) {
+        destroy();
+      } else {
+        // Fallback setTimeout matches the CSS transition duration (~450ms),
+        // in case transitionend doesn't fire (e.g. display:none via media query).
+        const fallback = setTimeout(destroy, 450);
+        el.addEventListener("transitionend", () => {
+          clearTimeout(fallback);
+          destroy();
+        }, { once: true });
+      }
+    });
     el.appendChild(x);
   }
 
@@ -143,6 +165,11 @@ export function mountDeskSim({ expression, dismissible = false } = {}) {
   const panel = new Panel(cv, { device: el });
   panel.setFrames(resolved.frames, resolved.frame_ms);
 
+  // Fix #2: explicit single draw under reduced-motion (robust to Panel internals)
+  if (REDUCE) {
+    panel.draw(0);
+  }
+
   // ── Animation loop (own RAF — independent of any page loop) ──
   let rafId = null;
 
@@ -157,13 +184,16 @@ export function mountDeskSim({ expression, dismissible = false } = {}) {
     rafId = requestAnimationFrame(loop);
   }
 
-  // ── destroy ──
+  // ── destroy (idempotent) ──
   function destroy() {
     if (rafId !== null) {
       cancelAnimationFrame(rafId);
       rafId = null;
     }
-    el.remove();
+    // Guard el.remove() so calling destroy() twice is safe
+    if (el.parentNode) {
+      el.remove();
+    }
   }
 
   return { el, panel, destroy };
