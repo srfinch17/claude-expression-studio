@@ -675,7 +675,7 @@ git commit -m "feat(studio): frostbite firmware-sim port"
   - `buildGalleryData({canned, savedDir, waitWeightsPath, boredDir}) → {expressions: Array<Entry>, firmware: string[], groups: {...}}` where `canned` is the map from `loadCanned` and `Entry = {name:string, source:"canned"|"saved", frames:string[][], colors:object, frame_ms:number, loop:number, description:string, group:string}`.
 - CLI `main()` awaits `loadCanned` then calls `buildGalleryData` and writes `studio/gallery-data.json`.
 
-**Context:** canned expressions are the default export `CANNED` from the **compiled** `mcp_server/dist/expressions.js` (build it first with `npm run build:mcpb`'s tsc step if `dist` is stale: `cd mcp_server && npx tsc --project tsconfig.json`). Saved expressions are `mcp_server/expressions/*.json`. `firmware` is the registry key list `["claudesweep","frostbite","fire","matrix_rain","snow","fireworks","dancefloor"]` (hard-coded list mirrored from `shared/firmware-sims.js` — keep in sync). Use `shared/catalog.js` `buildCatalog` to assign each expression a `group`. `waitNames` = keys of `mcp_server/wait-weights.json`'s `weights` ∪ `{working, claudesweep}`. `boredNames` = basenames in `claude-hooks/bored_animations/`.
+**Context:** the gallery merges expression DATA from **three** sources, de-duped by name (priority saved > canned > bored): canned = the `CANNED` default export of the **compiled** `mcp_server/dist/expressions.js` (build it first if `dist` is stale: `cd mcp_server && npx tsc --project tsconfig.json`); saved = `mcp_server/expressions/*.json`; bored = `claude-hooks/bored_animations/*.json` (the authoritative bored-pool folder — included as a source so bored-only animations like `rocket` are not dropped). `firmware` is the registry key list `["claudesweep","frostbite","fire","matrix_rain","snow","fireworks","dancefloor"]` (mirrored from `shared/firmware-sims.js` — keep in sync). Each unique name is classified by ROTATION ROLE via `shared/catalog.js` `classifyExpression(name, {waitNames, boredNames})` (priority ask > wait > bored); a canned name in no rotation becomes group `"canned"`, a non-canned (saved) name in no rotation is `"orphan"` — so the orphan gate is exactly the saved-and-unwired set `{claude-idle, idea}`, while dual-members (`working`→wait, `heart`/`party`/`smiley`→bored) land in their rotation, not their data tier. `waitNames` = keys of `mcp_server/wait-weights.json`'s `weights` ∪ `{working, claudesweep}`. `boredNames` = basenames in `claude-hooks/bored_animations/`.
 
 - [ ] **Step 1: Write the failing test** — `scripts/build-gallery-data.test.js`
 
@@ -696,16 +696,21 @@ test("buildGalleryData merges canned + saved, classifies, lists firmware", async
     waitWeightsPath: join(ROOT, "mcp_server/wait-weights.json"),
     boredDir: join(ROOT, "claude-hooks/bored_animations"),
   });
-  const names = data.expressions.map((e) => e.name);
-  assert.ok(names.includes("claude-idle"), "saved orphan present");
-  assert.ok(data.firmware.includes("claudesweep"), "firmware listed");
+  const groupOf = (n) => data.expressions.find((e) => e.name === n)?.group;
+  assert.ok(data.firmware.includes("claudesweep") && data.firmware.length === 7, "7 firmware sims listed");
+
+  // The orphan gate: exactly the saved-and-unwired set.
   const orphans = data.expressions.filter((e) => e.group === "orphan").map((e) => e.name).sort();
-  assert.deepEqual(orphans, ["claude-idle", "idea"], "exactly the two known orphans (saved tier only)");
-  // canned expressions form their own group, never orphan
-  const cannedEntries = data.expressions.filter((e) => e.source === "canned");
-  assert.ok(cannedEntries.length > 0, "canned expressions present");
-  for (const e of cannedEntries) assert.equal(e.group, "canned", `${e.name} is grouped canned`);
-  // every entry carries frames + a valid group
+  assert.deepEqual(orphans, ["claude-idle", "idea"], "exactly the two known orphans");
+
+  // Rotation role wins over data-origin tier for dual-members:
+  assert.equal(groupOf("done"), "canned", "pure on-demand glyph → canned");
+  assert.equal(groupOf("heart"), "bored", "canned+bored → bored (rotation wins)");
+  assert.equal(groupOf("working"), "wait", "canned+wait → wait (rotation wins)");
+  // Completeness: a bored-only animation (no canned/saved counterpart) is not dropped.
+  assert.equal(groupOf("rocket"), "bored", "bored-only animation present and grouped bored");
+
+  // Every entry carries frames + a valid group.
   for (const e of data.expressions) {
     assert.ok(Array.isArray(e.frames) && e.frames.length > 0, `${e.name} has frames`);
     assert.ok(["wait","ask","bored","orphan","canned"].includes(e.group), `${e.name} grouped`);
@@ -724,7 +729,7 @@ Expected: FAIL — cannot import `build-gallery-data.mjs`.
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { buildCatalog } from "../shared/catalog.js";
+import { classifyExpression } from "../shared/catalog.js";
 
 const FIRMWARE = ["claudesweep","frostbite","fire","matrix_rain","snow","fireworks","dancefloor"];
 
@@ -735,35 +740,49 @@ export async function loadCanned(cannedModulePath) {
   return mod.CANNED;
 }
 
+// helper: read all *.json in a dir into [name, {source, frames, colors, frame_ms, loop, description}]
+function readDir(dir, source) {
+  const out = [];
+  for (const fn of readdirSync(dir).filter((n) => n.endsWith(".json"))) {
+    const j = JSON.parse(readFileSync(join(dir, fn), "utf8"));
+    out.push([basename(fn, ".json"), { source, frames: j.frames, colors: j.colors,
+      frame_ms: j.frame_ms || 150, loop: j.loop ?? 0, description: j.description || "" }]);
+  }
+  return out;
+}
+
 export function buildGalleryData({ canned, savedDir, waitWeightsPath, boredDir }) {
   const waitWeights = JSON.parse(readFileSync(waitWeightsPath, "utf8")).weights || {};
   const waitNames = new Set([...Object.keys(waitWeights), "working", "claudesweep"]);
-  const boredNames = new Set(
-    readdirSync(boredDir).filter((n) => n.endsWith(".json")).map((n) => basename(n, ".json"))
-  );
+  const boredNames = new Set(readDir(boredDir, "bored").map(([n]) => n));
+  const cannedNames = new Set(Object.keys(canned));
 
-  const expressions = [];
-  // CANNED tier — the on-demand matrix_express palette. Their OWN group; NOT run
-  // through the rotation classifier (they are not wait/ask/bored members and are
-  // never "orphans" — they are always reachable by name).
+  // Merge expression DATA from all three sources, de-duped by name. Data priority
+  // when a name is in multiple sources: saved > canned > bored (set lowest first
+  // so higher priority overwrites). bored_animations/ is a real data source so
+  // bored-only animations (e.g. `rocket`) are not dropped.
+  const byName = new Map();
+  for (const [name, data] of readDir(boredDir, "bored")) byName.set(name, data);
   for (const [name, e] of Object.entries(canned)) {
-    expressions.push({ name, source: "canned", frames: e.frames, colors: e.colors,
-      frame_ms: e.frame_ms || 150, loop: e.loop ?? 0, description: e.description || "", group: "canned" });
+    byName.set(name, { source: "canned", frames: e.frames, colors: e.colors,
+      frame_ms: e.frame_ms || 150, loop: e.loop ?? 0, description: e.description || "" });
   }
-  // SAVED tier — *.json files, classified into wait/ask/bored/orphan. The orphan
-  // gate ({claude-idle, idea}) is defined over THIS tier only.
-  const saved = [];
-  for (const fn of readdirSync(savedDir).filter((n) => n.endsWith(".json"))) {
-    const j = JSON.parse(readFileSync(join(savedDir, fn), "utf8"));
-    saved.push({ name: basename(fn, ".json"), source: "saved", frames: j.frames,
-      colors: j.colors, frame_ms: j.frame_ms || 150, loop: j.loop ?? 0, description: j.description || "" });
-  }
-  const cat = buildCatalog(saved.map((e) => e.name), { waitNames, boredNames });
-  const groupOf = {};
-  for (const g of Object.keys(cat)) for (const n of cat[g]) groupOf[n] = g;
-  for (const e of saved) { e.group = groupOf[e.name]; expressions.push(e); }
+  for (const [name, data] of readDir(savedDir, "saved")) byName.set(name, data);
 
-  return { expressions, firmware: FIRMWARE, groups: cat };
+  // Classify every unique name by ROTATION ROLE (priority: ask > wait > bored via
+  // classifyExpression). A canned name in no rotation → the "canned" on-demand
+  // group; a non-canned (saved) name in no rotation → "orphan". So the orphan gate
+  // is exactly the saved-and-unwired set {claude-idle, idea}.
+  const expressions = [];
+  const groups = { wait: [], ask: [], bored: [], canned: [], orphan: [] };
+  for (const [name, data] of byName) {
+    let group = classifyExpression(name, { waitNames, boredNames });
+    if (group === "orphan" && cannedNames.has(name)) group = "canned";
+    expressions.push({ name, ...data, group });
+    groups[group].push(name);
+  }
+
+  return { expressions, firmware: FIRMWARE, groups };
 }
 
 async function main() {
