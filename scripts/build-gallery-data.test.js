@@ -14,16 +14,21 @@ test("buildGalleryData merges canned + saved, classifies, lists firmware", async
     waitWeightsPath: join(ROOT, "mcp_server/wait-weights.json"),
     boredDir: join(ROOT, "claude-hooks/bored_animations"),
   });
-  const names = data.expressions.map((e) => e.name);
-  assert.ok(names.includes("claude-idle"), "saved orphan present");
-  assert.ok(data.firmware.includes("claudesweep"), "firmware listed");
+  const groupOf = (n) => data.expressions.find((e) => e.name === n)?.group;
+  assert.ok(data.firmware.includes("claudesweep") && data.firmware.length === 7, "7 firmware sims listed");
+
+  // The orphan gate: exactly the saved-and-unwired set.
   const orphans = data.expressions.filter((e) => e.group === "orphan").map((e) => e.name).sort();
-  assert.deepEqual(orphans, ["claude-idle", "idea"], "exactly the two known orphans (saved tier only)");
-  // canned expressions form their own group, never orphan
-  const cannedEntries = data.expressions.filter((e) => e.source === "canned");
-  assert.ok(cannedEntries.length > 0, "canned expressions present");
-  for (const e of cannedEntries) assert.equal(e.group, "canned", `${e.name} is grouped canned`);
-  // every entry carries frames + a valid group
+  assert.deepEqual(orphans, ["claude-idle", "idea"], "exactly the two known orphans");
+
+  // Rotation role wins over data-origin tier for dual-members:
+  assert.equal(groupOf("done"), "canned", "pure on-demand glyph → canned");
+  assert.equal(groupOf("heart"), "bored", "canned+bored → bored (rotation wins)");
+  assert.equal(groupOf("working"), "wait", "canned+wait → wait (rotation wins)");
+  // Completeness: a bored-only animation (no canned/saved counterpart) is not dropped.
+  assert.equal(groupOf("rocket"), "bored", "bored-only animation present and grouped bored");
+
+  // Every entry carries frames + a valid group.
   for (const e of data.expressions) {
     assert.ok(Array.isArray(e.frames) && e.frames.length > 0, `${e.name} has frames`);
     assert.ok(["wait","ask","bored","orphan","canned"].includes(e.group), `${e.name} grouped`);
