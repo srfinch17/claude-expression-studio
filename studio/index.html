@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Expression Studio — Matrix Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0a0a0e;
+    --panel:     #111118;
+    --panel-sub: #15151b;
+    --text:      #e8e8ef;
+    --dim:       #9a9aa8;
+    --faint:     #5a5a68;
+    --mono:      'IBM Plex Mono', ui-monospace, monospace;
+    --sans:      'IBM Plex Sans', system-ui, sans-serif;
+    --orange:    #ff5008;
+    --cyan:      #22ddff;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    padding: 36px 24px 100px;
+    line-height: 1.5;
+  }
+
+  /* ── Header ── */
+  header { margin-bottom: 32px; }
+
+  h1 {
+    font-family: var(--mono);
+    font-size: 1.35rem;
+    letter-spacing: .02em;
+    margin: 0 0 6px;
+  }
+
+  .subtitle {
+    color: var(--dim);
+    font-size: .88rem;
+    margin: 0 0 10px;
+    max-width: 68ch;
+  }
+
+  .legend {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .78rem;
+    color: var(--dim);
+    padding: 6px 12px;
+    border: 1px solid #1e1e26;
+    border-radius: 8px;
+    background: var(--panel);
+  }
+
+  .legend-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--orange);
+    background: rgba(255, 80, 8, .12);
+    flex-shrink: 0;
+  }
+
+  /* ── Section headings ── */
+  h2 {
+    font-family: var(--mono);
+    font-size: .72rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin: 40px 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  h2 .count {
+    color: var(--dim);
+    font-size: .7rem;
+  }
+
+  h2::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #1e1e26;
+  }
+
+  /* ── Grid ── */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(186px, 1fr));
+    gap: 16px;
+  }
+
+  /* ── Cell ── */
+  .cell {
+    background: var(--panel);
+    border: 1px solid #1c1c24;
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: border-color .2s;
+  }
+
+  .cell.orphan {
+    border-color: var(--orange);
+    box-shadow: 0 0 0 1px var(--orange), 0 8px 32px rgba(255, 80, 8, .16);
+  }
+
+  canvas {
+    border-radius: 8px;
+    background: #060608;
+    width: 128px;
+    height: 128px;
+    display: block;
+  }
+
+  .name {
+    font-family: var(--mono);
+    font-size: .82rem;
+    margin-top: 11px;
+    color: var(--text);
+    text-align: center;
+    word-break: break-all;
+  }
+
+  .desc {
+    font-size: .72rem;
+    color: var(--dim);
+    text-align: center;
+    margin-top: 5px;
+    min-height: 2.6em;
+  }
+
+  /* ── Badges ── */
+  .badge {
+    font-family: var(--mono);
+    font-size: .58rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 99px;
+    margin-top: 9px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+
+  /* wait — cyan */
+  .badge.wait     { color: var(--cyan);    border-color: #1c4a55; }
+  /* ask — purple */
+  .badge.ask      { color: #c8a0ff;        border-color: #3a2c55; }
+  /* bored — green */
+  .badge.bored    { color: #9affc8;        border-color: #1e4a33; }
+  /* orphan — orange, filled */
+  .badge.orphan   { color: var(--orange);  border-color: var(--orange); background: rgba(255, 80, 8, .08); }
+  /* canned — yellow-gold */
+  .badge.canned   { color: #ffd060;        border-color: #4a3a10; }
+  /* firmware — blue-grey */
+  .badge.firmware { color: #88aaff;        border-color: #1c2a55; }
+
+  /* ── Error chip ── */
+  .err {
+    color: #ff6464;
+    font-family: var(--mono);
+    font-size: .7rem;
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  p.err {
+    padding: 16px 20px;
+    background: var(--panel);
+    border: 1px solid #3a1c1c;
+    border-radius: 8px;
+    max-width: 60ch;
+  }
+
+  p.err code {
+    background: #1e1e26;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: .85em;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Expression Studio &mdash; Matrix Library</h1>
+  <p class="subtitle">
+    Every expression + firmware animation rendered on the live bloom engine
+    (additive halo + hot core, full brightness), grouped by auto-rotation.
+  </p>
+  <span class="legend">
+    <span class="legend-dot"></span>
+    Orange-ringed = orphan: saved but wired into no rotation
+  </span>
+</header>
+
+<div id="root"></div>
+
+<script type="module" src="./gallery.js"></script>
+</body>
+</html>
