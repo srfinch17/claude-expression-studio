@@ -2,15 +2,19 @@
   "manifest_version": "0.3",
   "name": "esp32-matrix",
   "display_name": "ESP32-S3 Matrix",
-  "version": "1.1.0",
+  "version": "0.12.0",
   "description": "Control a Waveshare ESP32-S3 8x8 LED matrix from Claude — animations, text, clock, weather, and Claude's ambient expression display. Talks to the board at http://esp32matrix.local on your local network.",
-  "author": { "name": "the user" },
+  "author": {
+    "name": "the user"
+  },
   "server": {
     "type": "node",
     "entry_point": "dist/index.js",
     "mcp_config": {
       "command": "node",
-      "args": ["${__dirname}/dist/index.js"],
+      "args": [
+        "${__dirname}/dist/index.js"
+      ],
       "env": {}
     }
   }
