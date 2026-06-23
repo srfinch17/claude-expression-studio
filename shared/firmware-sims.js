@@ -628,6 +628,188 @@ function makeFireworks(opts = {}) {
   };
 }
 
+// ---- dancefloor (port of anim_dance_floor.ino) ----
+// 4×4 grid of 2×2 tiles. Slot assignment: slot = (tx%2) + (ty%2)*2
+// guarantees no two 4-directionally or diagonally adjacent tiles share a slot.
+// Each cycle a Fisher-Yates shuffle assigns a new permutation of the 4 palette
+// colors to the 4 slots. Transitions crossfade over DF_BLEND_F frames, then
+// hold for dfHoldMin + random(DF_HOLD_RNG) frames before the next cycle.
+// Per-tile brightness jitter (160–255) stays fixed across cycles.
+//
+// Palette: DF_PALETTES[0..63][4] — a 64-entry table ported verbatim from
+// the firmware. No FastLED built-in palette used; the table is self-contained.
+
+const DF_BLEND_F  = 10;   // frames to crossfade between cycles
+const DF_HOLD_RNG = 20;   // random extra hold frames per cycle
+
+// DF_PALETTES[64][4] — ported verbatim from anim_dance_floor.ino
+// Each entry is [r,g,b] instead of CRGB; COLOR_ORDER is RGB (straight-through).
+const DF_PALETTES = [
+  // ── 0-7: Neon / Club ──────────────────────────────────────
+  [[255,0,255],[0,255,255],[255,255,0],[0,255,0]],     // 0  Neon Classic
+  [[255,0,128],[0,255,128],[128,0,255],[255,128,0]],   // 1  Neon Shifted
+  [[255,0,200],[0,200,255],[200,255,0],[255,200,0]],   // 2  Neon Soft
+  [[255,0,80],[80,0,255],[0,255,80],[255,80,0]],       // 3  Primary Neon
+  [[220,0,255],[0,255,220],[255,220,0],[0,220,255]],   // 4  Electric
+  [[255,0,255],[255,0,100],[100,0,255],[0,100,255]],   // 5  Pink Purple
+  [[0,255,255],[0,200,255],[0,255,200],[0,150,255]],   // 6  Cyan Family
+  [[255,255,0],[255,200,0],[200,255,0],[255,150,0]],   // 7  Yellow Family
+  // ── 8-15: Fire / Warm ─────────────────────────────────────
+  [[255,50,0],[255,150,0],[255,200,0],[255,255,50]],   // 8  Fire
+  [[255,0,0],[255,80,0],[200,0,0],[255,40,40]],        // 9  Red Hot
+  [[255,100,0],[255,200,50],[255,50,0],[200,100,0]],   // 10 Amber
+  [[255,20,0],[255,100,0],[255,160,0],[255,255,100]],  // 11 Ember
+  [[255,0,50],[255,50,0],[200,0,100],[255,100,50]],    // 12 Lava
+  [[255,80,80],[255,40,0],[200,20,0],[255,160,80]],    // 13 Sunset Warm
+  [[255,200,0],[255,100,0],[255,50,50],[200,200,0]],   // 14 Gold
+  [[255,0,80],[255,80,0],[255,180,0],[200,0,80]],      // 15 Hot Candy
+  // ── 16-23: Ocean / Cool ───────────────────────────────────
+  [[0,100,255],[0,200,255],[0,255,200],[50,50,200]],   // 16 Ocean
+  [[0,150,255],[0,255,255],[0,200,200],[100,200,255]], // 17 Aqua
+  [[0,50,200],[50,100,255],[0,200,255],[100,50,200]],  // 18 Deep Blue
+  [[0,200,200],[0,150,200],[50,200,255],[0,100,150]],  // 19 Teal
+  [[100,0,255],[0,100,255],[0,200,255],[50,0,200]],    // 20 Blue Purple
+  [[0,255,255],[0,200,255],[0,150,255],[0,100,200]],   // 21 Ice
+  [[50,0,200],[100,0,255],[150,50,255],[200,100,255]], // 22 Violet
+  [[0,100,200],[0,50,150],[50,150,255],[100,200,255]], // 23 Navy
+  // ── 24-31: Nature ─────────────────────────────────────────
+  [[0,200,0],[50,255,50],[100,255,0],[0,150,50]],      // 24 Forest
+  [[0,255,0],[100,255,0],[0,200,50],[50,255,100]],     // 25 Lime
+  [[100,255,0],[200,255,0],[50,200,0],[150,255,50]],   // 26 Chartreuse
+  [[0,150,50],[0,200,100],[50,255,150],[0,100,50]],    // 27 Emerald
+  [[200,150,50],[150,100,0],[100,200,50],[200,200,100]], // 28 Earth
+  [[255,150,0],[200,100,0],[100,200,0],[255,200,50]],  // 29 Autumn
+  [[255,100,150],[200,255,100],[100,200,255],[255,200,100]], // 30 Spring
+  [[0,200,150],[0,150,100],[50,255,200],[100,255,200]], // 31 Jade
+  // ── 32-39: Pastel ─────────────────────────────────────────
+  [[255,150,200],[150,200,255],[200,255,150],[255,255,150]], // 32 Pastel Rainbow
+  [[255,150,200],[255,100,150],[200,100,200],[255,200,220]], // 33 Pastel Pink
+  [[150,200,255],[100,150,255],[150,150,255],[200,220,255]], // 34 Pastel Blue
+  [[200,255,200],[150,255,150],[100,220,150],[200,255,180]], // 35 Pastel Green
+  [[255,200,150],[255,220,150],[200,150,100],[255,230,180]], // 36 Pastel Warm
+  [[200,150,255],[220,180,255],[180,100,255],[240,200,255]], // 37 Pastel Purple
+  [[150,255,240],[150,220,255],[180,255,220],[200,255,255]], // 38 Pastel Mint
+  [[255,255,150],[255,240,100],[255,200,100],[255,255,200]], // 39 Pastel Yellow
+  // ── 40-47: Monochrome ─────────────────────────────────────
+  [[255,0,0],[200,0,0],[150,0,0],[100,0,0]],           // 40 Red Mono
+  [[255,80,0],[200,60,0],[150,40,0],[255,120,0]],      // 41 Orange Mono
+  [[255,255,0],[200,200,0],[150,150,0],[255,220,50]],  // 42 Yellow Mono
+  [[0,255,0],[0,200,0],[0,150,0],[50,255,50]],         // 43 Green Mono
+  [[0,0,255],[0,0,200],[0,50,255],[50,50,255]],        // 44 Blue Mono
+  [[150,0,255],[100,0,200],[200,50,255],[80,0,180]],   // 45 Purple Mono
+  [[255,0,150],[200,0,100],[255,50,180],[150,0,80]],   // 46 Pink Mono
+  [[0,255,200],[0,200,150],[50,255,220],[0,150,120]],  // 47 Teal Mono
+  // ── 48-55: Retro / 80s ────────────────────────────────────
+  [[255,0,255],[0,255,0],[255,255,0],[0,0,255]],       // 48 80s Classic
+  [[255,0,100],[0,200,255],[200,255,0],[255,100,0]],   // 49 Miami Vice
+  [[100,0,255],[255,0,255],[0,200,200],[255,200,0]],   // 50 Synthwave
+  [[255,50,150],[150,0,255],[0,200,255],[255,200,50]], // 51 VHS
+  [[0,255,0],[0,200,0],[255,0,0],[0,0,255]],           // 52 Arcade
+  [[255,200,0],[255,100,0],[0,200,0],[200,0,200]],     // 53 Pac-Man
+  [[255,255,0],[255,0,0],[0,0,255],[255,255,255]],     // 54 Pinball
+  [[0,255,150],[255,0,100],[255,150,0],[100,0,255]],   // 55 Funky
+  // ── 56-63: Dark / Moody ───────────────────────────────────
+  [[100,0,150],[0,50,150],[150,0,100],[0,100,100]],    // 56 Dark Galaxy
+  [[80,0,0],[50,0,50],[0,0,80],[80,40,0]],             // 57 Ember Dark
+  [[150,0,50],[100,0,100],[50,0,150],[0,50,100]],      // 58 Noir
+  [[0,100,0],[0,80,50],[50,100,0],[0,60,60]],          // 59 Deep Forest
+  [[100,50,0],[80,0,0],[50,50,0],[60,30,0]],           // 60 Rust
+  [[0,80,100],[0,50,80],[50,0,100],[0,100,80]],        // 61 Abyss
+  [[80,0,80],[60,0,60],[100,0,50],[50,0,80]],          // 62 Dusk
+  [[50,50,50],[80,80,80],[120,120,120],[30,30,30]],    // 63 Grayscale
+];
+
+// Fisher-Yates shuffle in-place on a 4-element array (mirrors dfShuffle in the firmware)
+function dfShuffle(perm) {
+  for (let i = 3; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = perm[i]; perm[i] = perm[j]; perm[j] = tmp;
+  }
+}
+
+// FastLED blend() equivalent: linear lerp between two [r,g,b] at t in 0..255
+function dfBlend(a, b, t) {
+  const u = t / 255;
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * u),
+    Math.round(a[1] + (b[1] - a[1]) * u),
+    Math.round(a[2] + (b[2] - a[2]) * u),
+  ];
+}
+
+function makeDancefloor(opts = {}) {
+  const palette   = Math.max(0, Math.min(63, opts.palette ?? 0));
+  // hold maps to dfHoldMin (firmware default 12 when not provided; gallery uses 6)
+  const holdMin   = Math.max(4, Math.min(40, opts.hold ?? 12));
+  const pal       = DF_PALETTES[palette];
+
+  // 4 color slots, current + next
+  const slotCur = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]];
+  const slotNxt = [[0,0,0],[0,0,0],[0,0,0],[0,0,0]];
+  // per-tile brightness jitter (16 tiles), range 160..255, fixed across cycles
+  const brightness = new Array(16);
+  let blendPos  = 0;
+  let holdCount = 0;
+  let inited    = false;
+
+  function newCycle() {
+    const perm = [0, 1, 2, 3];
+    dfShuffle(perm);
+    for (let s = 0; s < 4; s++) {
+      slotCur[s] = slotNxt[s].slice();
+      slotNxt[s] = pal[perm[s]].slice();
+    }
+    blendPos  = 0;
+    holdCount = holdMin + Math.floor(Math.random() * DF_HOLD_RNG);
+  }
+
+  return {
+    frame_ms: opts.frame_ms || 80,
+    frame() {
+      if (!inited) {
+        let perm = [0, 1, 2, 3];
+        dfShuffle(perm);
+        for (let s = 0; s < 4; s++) slotCur[s] = pal[perm[s]].slice();
+        perm = [0, 1, 2, 3];
+        dfShuffle(perm);
+        for (let s = 0; s < 4; s++) slotNxt[s] = pal[perm[s]].slice();
+        for (let i = 0; i < 16; i++) brightness[i] = 160 + Math.floor(Math.random() * 96);
+        blendPos  = DF_BLEND_F;  // start fully blended (skip initial fade-in)
+        holdCount = holdMin;
+        inited    = true;
+      }
+
+      // State machine: advance blend or hold, or start a new cycle
+      if (blendPos < DF_BLEND_F)  blendPos++;
+      else if (holdCount > 0)     holdCount--;
+      else                        newCycle();
+
+      const blend_t = (blendPos >= DF_BLEND_F)
+        ? 255
+        : Math.round(blendPos * 255 / DF_BLEND_F);
+
+      const px = [];
+      for (let i = 0; i < 16; i++) {
+        const tx   = i % 4;
+        const ty   = (i / 4) | 0;
+        const slot = (tx % 2) + (ty % 2) * 2;
+        const c    = dfBlend(slotCur[slot], slotNxt[slot], blend_t);
+        // nscale8: (channel * brightness) >> 8 — matches firmware c.nscale8(dfBrightness[i])
+        const bri  = brightness[i];
+        const r    = (c[0] * bri) >> 8;
+        const g    = (c[1] * bri) >> 8;
+        const b    = (c[2] * bri) >> 8;
+        const px0  = tx * 2, py0 = ty * 2;
+        px.push({ x: px0,   y: py0,   r, g, b });
+        px.push({ x: px0+1, y: py0,   r, g, b });
+        px.push({ x: px0,   y: py0+1, r, g, b });
+        px.push({ x: px0+1, y: py0+1, r, g, b });
+      }
+      return px;
+    },
+  };
+}
+
 export const FIRMWARE_SIMS = {
   claudesweep: makeClaudeSweep,
   frostbite: makeFrostbite,
@@ -635,4 +817,5 @@ export const FIRMWARE_SIMS = {
   matrix_rain: makeMatrixRain,
   snow: makeSnow,
   fireworks: makeFireworks,
+  dancefloor: makeDancefloor,
 };

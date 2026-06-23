@@ -82,3 +82,13 @@ test("fireworks sim yields in-bounds frames and a burst occurs in a 100-frame wi
   }
   assert.ok(burstSeen, "at least one frame with ≥3 lit pixels (a burst) in 100-frame window");
 });
+
+test("dancefloor sim yields in-bounds frames and many pixels lit every frame", () => {
+  const sim = FIRMWARE_SIMS.dancefloor({ palette: 0, hold: 6 });
+  assert.equal(typeof sim.frame_ms, "number");
+  for (let i = 0; i < 50; i++) {
+    const px = sim.frame();
+    assertInBounds(px);
+    assert.ok(px.length >= 16, `tiled floor: at least 16 pixels lit (got ${px.length})`);
+  }
+});
