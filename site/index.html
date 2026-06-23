@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Matrix — give Claude a face</title>
+<meta name="description" content="A small 8×8 LED panel that becomes Claude's expression channel — it shows what Claude is doing and how it's going while you work. Open-source hardware for Claude Code & Claude Desktop." />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230a0a0c'/%3E%3Crect x='5' y='2' width='6' height='2' fill='%23ff5008'/%3E%3Crect x='3' y='4' width='10' height='2' fill='%23ff5008'/%3E%3Crect x='4' y='6' width='2' height='1' fill='%23ff5008'/%3E%3Crect x='10' y='6' width='2' height='1' fill='%23ff5008'/%3E%3Crect x='2' y='7' width='12' height='2' fill='%23ff5008'/%3E%3Crect x='3' y='9' width='10' height='2' fill='%23ff5008'/%3E%3Crect x='3' y='11' width='3' height='2' fill='%23ff5008'/%3E%3Crect x='10' y='11' width='3' height='2' fill='%23ff5008'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#08080b; --bg-2:#0c0c10; --panel-sub:#060608;
+    --text:#ecedf2; --dim:#9a9ba6; --faint:#5d5e6a; --hair:#1c1c24;
+    --emotion:#ff5008;        /* the mascot — Claude's color here */
+    --info:#22ddff;           /* status / data */
+    --mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --sans:"IBM Plex Sans", system-ui, -apple-system, sans-serif;
+    --maxw:1080px;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:var(--sans); color:var(--text);
+    background:
+      radial-gradient(1200px 700px at 78% -8%, rgba(255,80,8,.10), transparent 60%),
+      radial-gradient(900px 600px at 0% 100%, rgba(34,221,255,.06), transparent 55%),
+      var(--bg);
+    line-height:1.55; -webkit-font-smoothing:antialiased; overflow-x:hidden;
+  }
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 24px;}
+  a{color:inherit;}
+
+  /* ── shared type ─────────────────────────────────────────── */
+  .eyebrow{
+    font-family:var(--mono); font-size:.72rem; font-weight:600;
+    letter-spacing:.22em; text-transform:uppercase; color:var(--emotion);
+    display:inline-flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{content:""; width:26px; height:1px; background:var(--emotion); opacity:.6;}
+  h2{
+    font-family:var(--mono); font-weight:600; letter-spacing:-.01em;
+    font-size:clamp(1.5rem,3.6vw,2.2rem); line-height:1.1; margin:14px 0 10px;
+  }
+  .section-lead{color:var(--dim); max-width:54ch; font-size:1.02rem;}
+  section{padding:clamp(64px,10vw,120px) 0; position:relative;}
+  .divider{height:1px; background:linear-gradient(90deg,transparent,var(--hair),transparent);}
+
+  /* ── nav ─────────────────────────────────────────────────── */
+  header.nav{
+    position:sticky; top:0; z-index:40; backdrop-filter:blur(10px);
+    background:linear-gradient(var(--bg),rgba(8,8,11,.6));
+    border-bottom:1px solid var(--hair);
+  }
+  .nav .wrap{display:flex; align-items:center; justify-content:space-between; height:60px;}
+  .brand{font-family:var(--mono); font-weight:600; letter-spacing:.02em; display:flex; align-items:center; gap:11px; text-decoration:none;}
+  .brand .glyph{width:22px; height:22px; display:block;}
+  .nav-links{display:flex; gap:26px; align-items:center; font-size:.86rem;}
+  .nav-links a{color:var(--dim); text-decoration:none; transition:color .15s;}
+  .nav-links a:hover{color:var(--text);}
+  .nav-links .ghub{color:var(--text);}
+  @media(max-width:720px){ .nav-links a:not(.ghub){display:none;} }
+
+  /* ── hero ────────────────────────────────────────────────── */
+  .hero{padding:clamp(48px,8vw,96px) 0 clamp(56px,9vw,104px);}
+  .hero-grid{display:grid; grid-template-columns:1.05fr .95fr; gap:clamp(32px,5vw,64px); align-items:center;}
+  h1{
+    font-family:var(--mono); font-weight:700; letter-spacing:-.03em;
+    font-size:clamp(2.6rem,6.4vw,4.4rem); line-height:.98; margin:18px 0 0;
+  }
+  h1 .em{color:var(--emotion);}
+  .lead{margin-top:22px; font-size:1.16rem; color:var(--dim); max-width:46ch;}
+  .lead b{color:var(--text); font-weight:600;}
+  .cta-row{display:flex; gap:14px; flex-wrap:wrap; margin-top:32px;}
+  .btn{
+    font-family:var(--mono); font-size:.9rem; font-weight:500; text-decoration:none;
+    padding:13px 22px; border-radius:10px; border:1px solid var(--hair);
+    display:inline-flex; align-items:center; gap:9px; cursor:pointer;
+    transition:transform .12s, border-color .15s, background .15s, color .15s; background:transparent; color:var(--text);
+  }
+  .btn:hover{transform:translateY(-2px);}
+  .btn-primary{background:var(--emotion); color:#160600; border-color:var(--emotion); font-weight:600;}
+  .btn-primary:hover{box-shadow:0 10px 30px -8px rgba(255,80,8,.55);}
+  .btn-ghost:hover{border-color:#3a3a46; background:rgba(255,255,255,.03);}
+
+  /* ── the glowing device ──────────────────────────────────── */
+  .device-stage{display:flex; justify-content:center; align-items:center;}
+  .device{
+    position:relative; padding:18px; border-radius:22px;
+    background:linear-gradient(160deg,#1a1a20,#0c0c10 70%);
+    border:1px solid #26262f;
+    box-shadow:0 30px 80px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .device::before{ /* ambient colored glow cast by the panel — driven per-frame */
+    content:""; position:absolute; inset:-14%; z-index:-1; border-radius:40px;
+    background:radial-gradient(closest-side, var(--glow,rgba(255,80,8,.5)), transparent 72%);
+    opacity:.7; filter:blur(14px); transition:background .35s ease;
+  }
+  .device canvas{display:block; border-radius:11px; background:var(--panel-sub);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.03), inset 0 6px 24px rgba(0,0,0,.6);}
+  .device .now{
+    font-family:var(--mono); font-size:.68rem; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--faint); text-align:center; margin-top:13px; min-height:1em;
+  }
+  .device .now b{color:var(--dim); font-weight:500;}
+
+  /* ── beats (body language) ───────────────────────────────── */
+  .beats{display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:48px;}
+  .beat{border:1px solid var(--hair); border-radius:16px; padding:20px; background:linear-gradient(180deg,rgba(255,255,255,.015),transparent);}
+  .beat canvas{display:block; margin:0 auto 16px; border-radius:9px; background:var(--panel-sub);}
+  .beat .tag{font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--emotion); display:block; margin-bottom:6px;}
+  .beat h3{font-size:1.02rem; font-weight:600; margin-bottom:6px;}
+  .beat p{font-size:.86rem; color:var(--dim);}
+
+  /* ── playground ──────────────────────────────────────────── */
+  .play-grid{display:grid; grid-template-columns:auto 1fr; gap:clamp(32px,5vw,60px); align-items:center; margin-top:44px;}
+  .expr-pad{display:flex; flex-wrap:wrap; gap:10px; max-width:520px;}
+  .chip{
+    font-family:var(--mono); font-size:.82rem; color:var(--dim); cursor:pointer;
+    border:1px solid var(--hair); background:rgba(255,255,255,.02); border-radius:9px;
+    padding:9px 15px; transition:all .14s; display:inline-flex; align-items:center; gap:8px;
+  }
+  .chip:hover{color:var(--text); border-color:#36363f;}
+  .chip .dot{width:8px; height:8px; border-radius:50%; background:currentColor; opacity:.55;}
+  .chip[data-kind=emotion]{--c:var(--emotion);} .chip[data-kind=status]{--c:var(--info);} .chip[data-kind=info]{--c:var(--info);}
+  .chip.active{color:var(--c); border-color:color-mix(in srgb,var(--c) 55%,#2a2a32); background:color-mix(in srgb,var(--c) 12%,transparent);}
+  .chip.active .dot{opacity:1; box-shadow:0 0 8px var(--c);}
+  .play-hint{font-family:var(--mono); font-size:.74rem; color:var(--faint); margin-top:18px; max-width:520px;}
+
+  /* ── data / presence ─────────────────────────────────────── */
+  .data-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:22px; margin-top:40px; max-width:760px;}
+  .data-card{border:1px solid var(--hair); border-radius:16px; padding:22px; display:flex; gap:20px; align-items:center;}
+  .data-card canvas{display:block; border-radius:9px; background:var(--panel-sub); flex:0 0 auto;}
+  .data-card .tag{font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--info); display:block; margin-bottom:6px;}
+  .data-card h3{font-size:1rem; font-weight:600; margin-bottom:5px;}
+  .data-card p{font-size:.84rem; color:var(--dim);}
+
+  /* ── renderers / vision ──────────────────────────────────── */
+  .renderers{display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-top:42px;}
+  .rnd{border:1px solid var(--hair); border-radius:16px; padding:24px; position:relative; background:linear-gradient(180deg,rgba(255,255,255,.015),transparent);}
+  .rnd .n{font-family:var(--mono); font-size:.72rem; color:var(--faint); letter-spacing:.1em;}
+  .rnd h3{font-size:1.05rem; font-weight:600; margin:12px 0 7px;}
+  .rnd p{font-size:.86rem; color:var(--dim);}
+  .rnd.future{border-style:dashed; opacity:.82;}
+  .rnd .soon{position:absolute; top:18px; right:18px; font-family:var(--mono); font-size:.6rem; letter-spacing:.14em; color:var(--info); border:1px solid color-mix(in srgb,var(--info) 40%,transparent); border-radius:5px; padding:3px 7px;}
+  .proto-msg{font-family:var(--mono); font-size:.92rem; margin-top:38px; padding:18px 22px; border:1px solid var(--hair); border-radius:12px; background:var(--panel-sub); color:var(--dim); overflow-x:auto;}
+  .proto-msg .k{color:var(--info);} .proto-msg .v{color:var(--emotion);} .proto-msg .c{color:var(--faint);}
+
+  /* ── install ─────────────────────────────────────────────── */
+  .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:42px;}
+  .step{border:1px solid var(--hair); border-radius:16px; padding:24px;}
+  .step .num{font-family:var(--mono); font-size:.78rem; color:var(--emotion); letter-spacing:.1em;}
+  .step h3{font-size:1.06rem; font-weight:600; margin:12px 0 8px;}
+  .step p{font-size:.88rem; color:var(--dim);}
+  .step code{font-family:var(--mono); font-size:.82rem; background:rgba(255,255,255,.05); padding:2px 6px; border-radius:5px; color:var(--text);}
+  .install-note{font-size:.84rem; color:var(--faint); margin-top:24px; max-width:62ch;}
+  .install-note b{color:var(--dim); font-weight:600;}
+
+  /* ── floating desk companion ─────────────────────────────── */
+  .companion{
+    position:fixed; right:22px; bottom:22px; z-index:50; padding:11px; border-radius:16px;
+    background:linear-gradient(160deg,#1a1a20,#0c0c10); border:1px solid #26262f;
+    box-shadow:0 18px 50px -18px rgba(0,0,0,.9); transition:opacity .4s, transform .4s; cursor:default;
+  }
+  .companion::before{content:""; position:absolute; inset:-30%; z-index:-1; border-radius:40px;
+    background:radial-gradient(closest-side,var(--glow,rgba(255,80,8,.5)),transparent 72%); filter:blur(10px); opacity:.6;}
+  .companion canvas{display:block; border-radius:8px; background:var(--panel-sub);}
+  .companion .lbl{font-family:var(--mono); font-size:.56rem; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); text-align:center; margin-top:7px;}
+  .companion .x{position:absolute; top:-9px; right:-9px; width:22px; height:22px; border-radius:50%; border:1px solid #2c2c36; background:#15151b; color:var(--dim); font-size:.8rem; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .companion .x:hover{color:var(--text);}
+  .companion.hidden{opacity:0; transform:translateY(20px) scale(.9); pointer-events:none;}
+  @media(max-width:560px){ .companion{display:none;} }
+
+  /* ── footer ──────────────────────────────────────────────── */
+  footer.site{padding:56px 0 64px; border-top:1px solid var(--hair); color:var(--faint); font-size:.82rem;}
+  footer.site .wrap{display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; align-items:center;}
+  footer.site a{color:var(--dim); text-decoration:none;} footer.site a:hover{color:var(--text);}
+  .mono{font-family:var(--mono);}
+
+  /* ── responsive ──────────────────────────────────────────── */
+  @media(max-width:860px){
+    .hero-grid{grid-template-columns:1fr; gap:44px; text-align:center;}
+    .hero .device-stage{order:-1;}
+    .eyebrow{justify-content:center;} .lead{margin-left:auto; margin-right:auto;} .cta-row{justify-content:center;}
+    .beats{grid-template-columns:repeat(2,1fr);}
+    .play-grid{grid-template-columns:1fr; justify-items:center; text-align:center;} .expr-pad{justify-content:center;}
+    .renderers{grid-template-columns:1fr;} .steps{grid-template-columns:1fr;} .data-grid{grid-template-columns:1fr;}
+  }
+  @media(max-width:440px){ .beats{grid-template-columns:1fr;} }
+
+  @media(prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} .device::before,.companion::before{transition:none;} }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <svg class="glyph" viewBox="0 0 16 16" aria-hidden="true"><rect x="5" y="2" width="6" height="2" fill="#ff5008"/><rect x="3" y="4" width="10" height="2" fill="#ff5008"/><rect x="4" y="6" width="2" height="1" fill="#ff5008"/><rect x="10" y="6" width="2" height="1" fill="#ff5008"/><rect x="2" y="7" width="12" height="2" fill="#ff5008"/><rect x="3" y="9" width="10" height="2" fill="#ff5008"/><rect x="3" y="11" width="3" height="2" fill="#ff5008"/><rect x="10" y="11" width="3" height="2" fill="#ff5008"/></svg>
+      Matrix
+    </a>
+    <nav class="nav-links">
+      <a href="#language">Body language</a>
+      <a href="#playground">Try it</a>
+      <a href="#protocol">The idea</a>
+      <a href="#install">Install</a>
+      <a class="ghub" href="https://github.com/srfinch17/peckworks-esp32s3matrix">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+
+<a id="top"></a>
+<main>
+  <!-- ───────────────────────── HERO ───────────────────────── -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <span class="eyebrow">Expression channel · Claude Code + Desktop</span>
+        <h1>Give Claude<br>a <span class="em">face</span>.</h1>
+        <p class="lead">A small 8×8 LED panel becomes Claude's <b>expression channel</b> — a glowing thing on your desk that shows what Claude is doing and how it's going, in real time, while you work. Working, finished, stuck, celebrating: <b>body language for an AI</b>.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#install">Put it on your desk</a>
+          <a class="btn btn-ghost" href="#playground">Try the panel ↓</a>
+        </div>
+      </div>
+      <div class="device-stage">
+        <div class="device" id="heroDevice">
+          <canvas id="heroPanel" width="680" height="680" style="width:340px;height:340px"></canvas>
+          <div class="now" id="heroNow"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="divider"></div></div>
+
+  <!-- ─────────────────────── BODY LANGUAGE ─────────────────── -->
+  <section id="language">
+    <div class="wrap">
+      <span class="eyebrow">What it's saying</span>
+      <h2>Claude, out loud.</h2>
+      <p class="section-lead">You don't watch a terminal the whole time. The panel is the glance — Claude's status and mood, ambient, in the corner of your eye. These are the real frames the board shows.</p>
+      <div class="beats">
+        <div class="beat">
+          <canvas data-expr="working" width="160" height="160" style="width:80px;height:80px"></canvas>
+          <span class="tag">Busy</span><h3>Heads-down</h3>
+          <p>A comet circles while Claude compiles, searches, or runs a long task. You know it's working without looking.</p>
+        </div>
+        <div class="beat">
+          <canvas data-expr="done" width="160" height="160" style="width:80px;height:80px"></canvas>
+          <span class="tag">Finished</span><h3>Done</h3>
+          <p>A green check the instant a task completes. The "you can look now" signal.</p>
+        </div>
+        <div class="beat">
+          <canvas data-expr="alert" width="160" height="160" style="width:80px;height:80px"></canvas>
+          <span class="tag">Your turn</span><h3>Stuck on you</h3>
+          <p>When Claude needs an answer or a permission, a gentle amber tap — the silent shoulder-tap.</p>
+        </div>
+        <div class="beat">
+          <canvas data-expr="party" width="160" height="160" style="width:80px;height:80px"></canvas>
+          <span class="tag">Win</span><h3>Shipped it</h3>
+          <p>Confetti for the moments worth celebrating. Yes, it's a little theatrical. That's the point.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="divider"></div></div>
+
+  <!-- ───────────────────────── PLAYGROUND ──────────────────── -->
+  <section id="playground">
+    <div class="wrap">
+      <span class="eyebrow">Your turn</span>
+      <h2>Poke it.</h2>
+      <p class="section-lead">Tap an expression — it plays on the panel below, running the exact frame data the firmware would push to the LEDs. <span style="color:var(--emotion)">Orange</span> is feeling, <span style="color:var(--info)">cyan</span> is information.</p>
+      <div class="play-grid">
+        <div class="device-stage">
+          <div class="device" id="playDevice">
+            <canvas id="playPanel" width="600" height="600" style="width:300px;height:300px"></canvas>
+            <div class="now" id="playNow"></div>
+          </div>
+        </div>
+        <div>
+          <div class="expr-pad" id="exprPad"></div>
+          <p class="play-hint">Nothing here is faked — each button feeds the same 8×8 frames, color map, and timing from the board's expression library.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="divider"></div></div>
+
+  <!-- ───────────────────────── DATA ────────────────────────── -->
+  <section id="data">
+    <div class="wrap">
+      <span class="eyebrow" style="color:var(--info)"><!---->Not just feelings</span>
+      <h2>Facts, too.</h2>
+      <p class="section-lead">The panel is an <i>informational</i> output as much as an emotional one. Claude can push live data — and the board renders it natively, no text needed.</p>
+      <div class="data-grid">
+        <div class="data-card">
+          <canvas data-gen="progress" width="140" height="140" style="width:70px;height:70px"></canvas>
+          <div><span class="tag">Progress</span><h3>How far along</h3><p>A bottom-up fill tracks a long job from 0 to done — a glance tells you roughly how much is left.</p></div>
+        </div>
+        <div class="data-card">
+          <canvas data-gen="spark" width="140" height="140" style="width:70px;height:70px"></canvas>
+          <div><span class="tag">Trend</span><h3>A live sparkline</h3><p>A reading over time — build times, a sensor, a queue depth — as a moving column chart.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="divider"></div></div>
+
+  <!-- ───────────────────────── PROTOCOL ────────────────────── -->
+  <section id="protocol">
+    <div class="wrap">
+      <span class="eyebrow">The bigger idea</span>
+      <h2>One message. Any screen.</h2>
+      <p class="section-lead">Under the panel is a tiny protocol. Claude sends one <i>semantic</i> message — an intent, maybe some data — and any display you've connected renders it its own way. The 8×8 is just the first renderer.</p>
+
+      <div class="proto-msg"><span class="c">// Claude says it once —</span><br>presence.<span class="k">set</span>({ intent: <span class="v">"working"</span>, headline: <span class="v">"Running tests"</span>, data: { progress: <span class="v">0.6</span> } })</div>
+
+      <div class="renderers">
+        <div class="rnd">
+          <span class="n">Renderer 01</span>
+          <h3>This 8×8 panel</h3>
+          <p>The intent becomes a glyph; the progress becomes a fill. The thing on your desk.</p>
+        </div>
+        <div class="rnd">
+          <span class="n">Renderer 02</span>
+          <h3>A desktop card</h3>
+          <p>The same message, rendered rich — headline, detail, a sparkline — in a window.</p>
+        </div>
+        <div class="rnd future">
+          <span class="soon">Next</span>
+          <span class="n">Renderer 03+</span>
+          <h3>Any ESP32 board</h3>
+          <p>Bigger matrices, round displays, a lamp. A fabric of screens you've <i>chosen</i> to let Claude speak through — it only ever drives the ones you enlist.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="divider"></div></div>
+
+  <!-- ───────────────────────── INSTALL ─────────────────────── -->
+  <section id="install">
+    <div class="wrap">
+      <span class="eyebrow">Get it</span>
+      <h2>Real hardware. Fully open.</h2>
+      <p class="section-lead">It runs on a low-cost <b style="color:var(--text)">Waveshare ESP32-S3-Matrix</b> (a ~$15 board, 8×8 WS2812B). The board and your computer just need to be on the same Wi-Fi. Three steps:</p>
+      <div class="steps">
+        <div class="step">
+          <span class="num">01 · Flash</span>
+          <h3>One file to the board</h3>
+          <p>Download the release and run <code>flash.bat</code> / <code>flash.sh</code>. One merged image — firmware and the web UI together, no extra upload. A one-click browser flasher is coming once this site is hosted.</p>
+        </div>
+        <div class="step">
+          <span class="num">02 · Connect</span>
+          <h3>Add it to Claude Desktop</h3>
+          <p>Double-click the <code>.mcpb</code> extension. No JSON, no Node install, no config — the board lives at <code>esp32matrix.local</code> on your network.</p>
+        </div>
+        <div class="step">
+          <span class="num">03 · Say hi</span>
+          <h3>Watch it come alive</h3>
+          <p>Claude starts using the panel on its own — a spinner when it's busy, a check when it's done, a tap when it needs you.</p>
+        </div>
+      </div>
+      <p class="install-note"><b>Where it stands:</b> the firmware, the web control panel, and the Claude integration all work and are hardware-verified. The offline flasher is ready now; the one-click browser install goes live when this page is published. Full instructions and downloads are on <a href="https://github.com/srfinch17/peckworks-esp32s3matrix" style="color:var(--emotion)">GitHub</a>.</p>
+      <div class="cta-row" style="margin-top:30px">
+        <a class="btn btn-primary" href="https://github.com/srfinch17/peckworks-esp32s3matrix/releases">Download the release</a>
+        <a class="btn btn-ghost" href="https://github.com/srfinch17/peckworks-esp32s3matrix">Read the docs ↗</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <span class="mono">Matrix — an expression channel for Claude.</span>
+    <span>Open source · built with Claude Code · <a href="https://github.com/srfinch17/peckworks-esp32s3matrix">GitHub</a></span>
+  </div>
+</footer>
+
+<!-- floating desk companion -->
+<div class="companion hidden" id="companion" aria-hidden="true">
+  <button class="x" id="companionX" title="Dismiss">×</button>
+  <canvas id="companionPanel" width="160" height="160" style="width:80px;height:80px"></canvas>
+  <div class="lbl">on your desk</div>
+</div>
+
+<script>
+/* ============================================================
+ * Matrix showcase — a faithful 8×8 LED simulation.
+ * Frame data is the project's real expression library (char-art
+ * + color map), rendered with additive bloom so it reads as a
+ * physical panel emitting light. No board required.
+ * ========================================================== */
+(() => {
+  const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ── The real expression vocabulary (ported from mcp_server/expressions) ──
+  // '.' = off; any other char → its hex in `colors`.
+  const A8 = r => [r,r,r,r,r,r,r,r];
+  const EXPR = {
+    mascot: { label:"Claude", kind:"emotion", frame_ms:200, colors:{R:"#ff5008"}, frames:[
+      ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+      ["..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........","........"],
+      ["..RRRR..",".RRRRRR.",".RRRRRR.","RRRRRRRR",".RRRRRR.",".RR..RR.","........","........"],
+      ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"]]},
+    idle: { label:"Bored", kind:"emotion", frame_ms:250, colors:{R:"#ff5008"}, frames:[
+      ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+      ["........","..RRRR..",".RRRRRR.","..RR.RR.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+      ["........","..RRRR..",".RRRRRR.","..RR.RR.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+      ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+      ["........","..RRRR..",".RRRRRR.",".RR.RR..","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+      ["........","..RRRR..",".RRRRRR.",".RR.RR..","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+      ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+      ["........",".RRRR...","RRRRRR..","R.RR.R..","RRRRRRR.","RRRRRR..","RR..RR..","........"],
+      ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+      ["........","...RRRR.","..RRRRRR","..R.RR.R",".RRRRRRR","..RRRRRR","..RR..RR","........"],
+      ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+      ["........","..RRRR..",".RRRRRR.",".RRRRRR.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"]]},
+    working: { label:"Working", kind:"status", frame_ms:80, colors:{A:"#c8e6ff",B:"#5a6773",C:"#2c3338"}, frames:[
+      ["AA......","AA......","BB......","BB......","CC......","CC......","........","........"],
+      ["BBAA....","BBAA....","CC......","CC......","........","........","........","........"],
+      ["CCBBAA..","CCBBAA..","........","........","........","........","........","........"],
+      ["..CCBBAA","..CCBBAA","........","........","........","........","........","........"],
+      ["....CCBB","....CCBB","......AA","......AA","........","........","........","........"],
+      ["......CC","......CC","......BB","......BB","......AA","......AA","........","........"],
+      ["........","........","......CC","......CC","......BB","......BB","......AA","......AA"],
+      ["........","........","........","........","......CC","......CC","....AABB","....AABB"],
+      ["........","........","........","........","........","........","..AABBCC","..AABBCC"],
+      ["........","........","........","........","........","........","AABBCC..","AABBCC.."],
+      ["........","........","........","........","AA......","AA......","BBCC....","BBCC...."],
+      ["........","........","AA......","AA......","BB......","BB......","CC......","CC......"]]},
+    done: { label:"Done", kind:"status", frame_ms:220, colors:{G:"#00c83c"}, frames:[
+      ["........",".......G","......GG","G....GG.","GG..GG..",".GGGG...","..GG....","........"],
+      ["GGGGGGGG","GGGGGGG.","GGGGGG..",".GGGG..G","..GG..GG","G....GGG","GG..GGGG","GGGGGGGG"],
+      ["........",".......G","......GG","G....GG.","GG..GG..",".GGGG...","..GG....","........"],
+      ["GGGGGGGG","GGGGGGG.","GGGGGG..",".GGGG..G","..GG..GG","G....GGG","GG..GGGG","GGGGGGGG"],
+      ["........",".......G","......GG","G....GG.","GG..GG..",".GGGG...","..GG....","........"]]},
+    alert: { label:"Needs you", kind:"emotion", frame_ms:230, colors:{A:"#ffa000"}, frames:[
+      ["...AA...","...AA...","...AA...","...AA...","...AA...","........","...AA...","...AA..."],
+      ["AAA..AAA","AAA..AAA","AAA..AAA","AAA..AAA","AAA..AAA","AAAAAAAA","AAA..AAA","AAA..AAA"],
+      ["...AA...","...AA...","...AA...","...AA...","...AA...","........","...AA...","...AA..."],
+      ["AAA..AAA","AAA..AAA","AAA..AAA","AAA..AAA","AAA..AAA","AAAAAAAA","AAA..AAA","AAA..AAA"],
+      ["...AA...","...AA...","...AA...","...AA...","...AA...","........","...AA...","...AA..."]]},
+    party: { label:"Party", kind:"emotion", frame_ms:130, colors:{M:"#ff28b4",C:"#28c8ff",Y:"#ffc800",G:"#00c83c",W:"#ffffff"}, frames:[
+      ["..W...C.","M...G...","...Y...W",".C...M..","..M...G.","Y...W...","...C...M",".G...Y.."],
+      [".G...Y..","..W...C.","M...G...","...Y...W",".C...M..","..M...G.","Y...W...","...C...M"],
+      ["...C...M",".G...Y..","..W...C.","M...G...","...Y...W",".C...M..","..M...G.","Y...W..."],
+      ["Y...W...","...C...M",".G...Y..","..W...C.","M...G...","...Y...W",".C...M..","..M...G."],
+      ["..M...G.","Y...W...","...C...M",".G...Y..","..W...C.","M...G...","...Y...W",".C...M.."],
+      [".C...M..","..M...G.","Y...W...","...C...M",".G...Y..","..W...C.","M...G...","...Y...W"],
+      ["...Y...W",".C...M..","..M...G.","Y...W...","...C...M",".G...Y..","..W...C.","M...G..."],
+      ["M...G...","...Y...W",".C...M..","..M...G.","Y...W...","...C...M",".G...Y..","..W...C."]]},
+    heart: { label:"Love it", kind:"emotion", frame_ms:520, colors:{R:"#ff1432"}, frames:[
+      [".RR..RR.","RRRRRRRR","RRRRRRRR","RRRRRRRR",".RRRRRR.","..RRRR..","...RR...","........"],
+      ["........",".RR..RR.","RRRRRRRR","RRRRRRRR",".RRRRRR.","..RRRR..","...RR...","........"]]},
+    spaceship: { label:"Liftoff", kind:"emotion", frame_ms:160, colors:{R:"#ff2828",O:"#ff8c00",W:"#ffffff",B:"#2060ff"}, frames:[
+      ["...RR...","..RWWR..","..WBBW..",".RWWWWR.",".R.WW.R.","...RR...","...OO...","...OO..."],
+      ["...RR...","..RWWR..","..WBBW..",".RWWWWR.",".R.WW.R.","...OO...","...RR...","...OO..."],
+      ["...RR...","..RWWR..","..WBBW..",".RWWWWR.",".R.WW.R.","...OO...","...OO...","...RR..."]]},
+    smiley: { label:"All good", kind:"emotion", frame_ms:150, colors:{Y:"#ffc800"}, frames:[
+      ["..YYYY..",".YYYYYY.","YY.YY.YY","YYYYYYYY","Y.YYYY.Y","YY....YY",".YYYYYY.","..YYYY.."]]},
+    sleep: { label:"Resting", kind:"emotion", frame_ms:600, colors:{W:"#b4c8e6",B:"#32509b"}, frames:[
+      ["WWWW....","..WW....",".WW.....","WWWW....",".....BBB","......B.",".....B..",".....BBB"],
+      ["WWWW....","..WW....",".WW.....","WWWW....","........","........","........","........"]]},
+    cross: { label:"Failed", kind:"status", frame_ms:520, colors:{R:"#ff2814"}, frames:[
+      ["RR....RR",".RR..RR.","..RRRR..","...RR...","..RRRR..",".RR..RR.","RR....RR","........"]]},
+  };
+
+  // ── Pre-resolve char-art → flat [{x,y,r,g,b}] per frame ──
+  const hexRGB = h => { h=h.replace('#',''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; };
+  for (const e of Object.values(EXPR)) {
+    e._f = e.frames.map(rows => {
+      const px = [];
+      for (let y=0;y<8;y++) for (let x=0;x<8;x++){ const ch=rows[y][x]; if(ch==='.')continue; const c=e.colors[ch]; if(!c)continue; const [r,g,b]=hexRGB(c); px.push({x,y,r,g,b}); }
+      return px;
+    });
+  }
+
+  // ── Synthetic data generators (the informational side) ──
+  const GEN = {
+    progress(t){ // 0..1 sawtooth fill, cyan
+      const p = (t/3200)%1, lit = Math.round(p*8), px=[];
+      for(let y=0;y<8;y++){ if(8-1-y < lit){ const k=0.55+0.45*((8-1-y)/Math.max(lit,1)); for(let x=0;x<8;x++) px.push({x,y,r:0|34*k,g:0|221*k,b:0|255*k}); } }
+      return px;
+    },
+    spark(t){ // moving column chart
+      const px=[]; for(let x=0;x<8;x++){ const h=1+Math.round(3.5+3.4*Math.sin(t/360 + x*0.85)); for(let y=0;y<8;y++){ if(y>=8-h){ const k=0.5+0.5*((y-(8-h))/Math.max(h-1,1)); px.push({x,y,r:0|34*k,g:0|221*k,b:0|255*k}); } } }
+      return px;
+    },
+  };
+
+  // ── Panel: renders frames/generator on a canvas with bloom + glow bleed ──
+  const panels = [];
+  class Panel {
+    constructor(canvas, device){
+      this.cv=canvas; this.ctx=canvas.getContext('2d'); this.device=device;
+      this.S=canvas.width; this.cell=this.S/8; this.acc=0; this.fi=0;
+      this.expr=null; this.gen=null;
+    }
+    set(name){ this.expr=EXPR[name]; this.gen=null; this.fi=0; this.acc=0; this.name=name; if(this.device) this._label(this.expr.label); this.draw(0); }
+    setGen(fn){ this.gen=GEN[fn]; this.expr=null; this.draw(0); }
+    _label(t){ const el=this.device.querySelector?.('.now'); if(el) el.innerHTML='showing <b>'+t+'</b>'; }
+    tick(dt, now){
+      if(this.gen){ this.draw(now); return; }
+      if(!this.expr) return;
+      this.acc+=dt; const fm=this.expr.frame_ms||150;
+      while(this.acc>=fm){ this.acc-=fm; this.fi=(this.fi+1)%this.expr._f.length; this._dirty=true; }
+      if(this._dirty){ this._dirty=false; this.draw(now); }
+    }
+    pixels(now){ return this.gen ? this.gen(now) : (this.expr? this.expr._f[this.fi] : []); }
+    draw(now){
+      const ctx=this.ctx, S=this.S, c=this.cell, px=this.pixels(now);
+      // substrate + unlit dots
+      ctx.globalCompositeOperation='source-over';
+      ctx.clearRect(0,0,S,S);
+      ctx.fillStyle='#060608'; ctx.fillRect(0,0,S,S);
+      ctx.fillStyle='rgba(255,255,255,.022)';
+      for(let y=0;y<8;y++)for(let x=0;x<8;x++){ ctx.beginPath(); ctx.arc(x*c+c/2,y*c+c/2,c*0.13,0,7); ctx.fill(); }
+      // lit pixels — additive bloom
+      ctx.globalCompositeOperation='lighter';
+      let R=0,G=0,B=0,n=0;
+      for(const p of px){
+        const cx=p.x*c+c/2, cy=p.y*c+c/2;
+        const halo=ctx.createRadialGradient(cx,cy,0,cx,cy,c*0.92);
+        halo.addColorStop(0,`rgba(${p.r},${p.g},${p.b},.85)`);
+        halo.addColorStop(.45,`rgba(${p.r},${p.g},${p.b},.34)`);
+        halo.addColorStop(1,`rgba(${p.r},${p.g},${p.b},0)`);
+        ctx.fillStyle=halo; ctx.fillRect(cx-c,cy-c,c*2,c*2);
+        // hot core
+        const core=ctx.createRadialGradient(cx,cy,0,cx,cy,c*0.34);
+        core.addColorStop(0,`rgba(${Math.min(255,p.r+90)},${Math.min(255,p.g+90)},${Math.min(255,p.b+90)},1)`);
+        core.addColorStop(1,`rgba(${p.r},${p.g},${p.b},.15)`);
+        ctx.fillStyle=core; ctx.beginPath(); ctx.arc(cx,cy,c*0.34,0,7); ctx.fill();
+        R+=p.r;G+=p.g;B+=p.b;n++;
+      }
+      ctx.globalCompositeOperation='source-over';
+      // ambient glow bleed → CSS var on the device
+      if(this.device && n){ const k=1.1; this.device.style.setProperty('--glow',`rgba(${Math.min(255,0|R/n*k)},${Math.min(255,0|G/n*k)},${Math.min(255,0|B/n*k)},.55)`); }
+    }
+  }
+
+  function mk(canvas, device){ const p=new Panel(canvas, device); panels.push(p); return p; }
+
+  // ── Wire up panels ──
+  const hero = mk(document.getElementById('heroPanel'), document.getElementById('heroDevice'));
+  const play = mk(document.getElementById('playPanel'), document.getElementById('playDevice'));
+  document.querySelectorAll('.beat canvas[data-expr]').forEach(cv => mk(cv, null).set(cv.dataset.expr));
+  document.querySelectorAll('canvas[data-gen]').forEach(cv => mk(cv, null).setGen(cv.dataset.gen));
+
+  // companion
+  const comp = document.getElementById('companion');
+  const compPanel = mk(document.getElementById('companionPanel'), comp).set('idle');
+  document.getElementById('companionX').onclick = () => comp.classList.add('hidden');
+
+  // ── Playground buttons ──
+  const ORDER = ['mascot','working','done','alert','party','heart','spaceship','smiley','sleep','cross','idle'];
+  const pad = document.getElementById('exprPad');
+  ORDER.forEach((name,i) => {
+    const e=EXPR[name], b=document.createElement('button');
+    b.className='chip'; b.dataset.kind=e.kind; b.innerHTML='<span class="dot"></span>'+e.label;
+    b.onclick=() => { play.set(name); pad.querySelectorAll('.chip').forEach(c=>c.classList.remove('active')); b.classList.add('active'); };
+    pad.appendChild(b); if(i===0){ b.classList.add('active'); }
+  });
+  play.set('mascot');
+
+  // ── Hero auto-reel ──
+  const REEL=['mascot','working','done','party','spaceship','heart','idle'];
+  let ri=0;
+  hero.set(REEL[0]);
+  function advanceReel(){ ri=(ri+1)%REEL.length; hero.set(REEL[ri]); }
+  if(!REDUCE) setInterval(advanceReel, 3400);
+
+  // ── Single shared animation loop ──
+  if(REDUCE){
+    // static: draw one resting frame each; show companion without motion
+    panels.forEach(p=>p.draw(0));
+    comp.classList.remove('hidden');
+  } else {
+    let last=performance.now();
+    function loop(now){ const dt=now-last; last=now; for(const p of panels) p.tick(dt, now); requestAnimationFrame(loop); }
+    requestAnimationFrame(loop);
+    // reveal companion after a beat (the desk-buddy showing up)
+    setTimeout(()=>comp.classList.remove('hidden'), 2600);
+  }
+})();
+</script>
+</body>
+</html>
