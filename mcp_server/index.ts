@@ -22,8 +22,6 @@
 // file — Node16 module resolution needs the compiled extension.
 // ------------------------------------------------------------
 
-import { createCanvas } from "@napi-rs/canvas";
-
 // Claude's expression channel: canned glyph library + text-art → wire conversion.
 import { CANNED, MAX_FRAMES, artToFrameHex, expressionToWire, type Expression } from "./expressions.js";
 // Wait-animation library: the random "wait" pool (snake + saved wait-* expressions).
@@ -192,133 +190,6 @@ async function versionReport(): Promise<string> {
 }
 
 // ------------------------------------------------------------
-// EMOJI RENDERER
-// Draws an emoji onto a 64×64 Skia canvas (same API as the browser's
-// CanvasRenderingContext2D), then downsamples to 8×8 by averaging each
-// 8×8 pixel block — alpha-composited against black so transparent edges
-// don't wash out the colors.
-// ------------------------------------------------------------
-// These MUST stay in sync with data/emoji.html's render pipeline so matrix_show_emoji
-// produces the SAME 8×8 the web preview shows: 192px render → feature-snap downsample →
-// normalize → contrast-gated vibrance. Tune one, tune the other (shared knobs below).
-// KEEP IN SYNC WITH: esp32_matrix_webserver/data/emoji.html (renderEmoji + punchColors).
-const FEATURE_RATIO = 0.50;     // a source pixel is "ink" (a feature) if its luminance < fieldL * this
-const FEATURE_SNAP = 0.30;      // a cell snaps to ink if at least this fraction of its pixels are ink
-const LOCAL_DARK_RATIO = 0.70;  // a cell is a "feature" if darker than this × its neighbour-mean luminance
-const FEATURE_DEEPEN = 0.85;    // deepen a detected feature cell's value by this (crisper, no lift)
-function parseHex(hex: string): [number, number, number] {
-  return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
-}
-function toHex(r: number, g: number, b: number): string {
-  return "#" + [r, g, b].map(v => Math.min(255, Math.round(v)).toString(16).padStart(2, "0")).join("");
-}
-function luma(r: number, g: number, b: number): number { return r * 0.299 + g * 0.587 + b * 0.114; }
-function rgb2hsv(r: number, g: number, b: number): [number, number, number] {
-  r /= 255; g /= 255; b /= 255;
-  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn;
-  let h = 0;
-  if (d) { if (mx === r) h = ((g - b) / d) % 6; else if (mx === g) h = (b - r) / d + 2; else h = (r - g) / d + 4; h *= 60; if (h < 0) h += 360; }
-  return [h, mx === 0 ? 0 : d / mx, mx];
-}
-function hsv2rgb(h: number, s: number, v: number): [number, number, number] {
-  const c = v * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = v - c;
-  let r = 0, g = 0, b = 0;
-  if (h < 60) { r = c; g = x; } else if (h < 120) { r = x; g = c; } else if (h < 180) { g = c; b = x; }
-  else if (h < 240) { g = x; b = c; } else if (h < 300) { r = x; b = c; } else { r = c; b = x; }
-  return [(r + m) * 255, (g + m) * 255, (b + m) * 255];
-}
-function punch(matrix: string[][], amount: number): string[][] {
-  const k = amount / 100;
-  // Per-cell luminance grid (black cells = 0) so we can judge local contrast.
-  const L = matrix.map(row => row.map(hex => { const [r, g, b] = parseHex(hex); return luma(r, g, b); }));
-  return matrix.map((row, y) => row.map((hex, x) => {
-    const [r, g, b] = parseHex(hex);
-    if (r === 0 && g === 0 && b === 0) return "#000000";
-    let [h, s, v] = rgb2hsv(r, g, b);
-    // Ramp the saturation boost in by the ORIGINAL saturation (mirrors emoji.html
-    // punchColors): achromatic cells (s≈0, hue undefined → defaults to red) must
-    // stay achromatic or white/gray emoji render pink.
-    s = Math.min(1, s + (1 - s) * k * Math.min(1, s / 0.15));
-    // Local-contrast gate: a cell darker than its (non-black) neighbours is a feature
-    // (eye/mouth) — keep it dark (deepen, no lift); otherwise lift muddy/dark FILL cells.
-    let sum = 0, n = 0;
-    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-      if (!dy && !dx) continue;
-      const ny = y + dy, nx = x + dx;
-      if (ny < 0 || ny > 7 || nx < 0 || nx > 7) continue;
-      if (L[ny][nx] <= 0) continue;
-      sum += L[ny][nx]; n++;
-    }
-    const localMean = n ? sum / n : 0;
-    if (n && L[y][x] < localMean * LOCAL_DARK_RATIO) v = v * FEATURE_DEEPEN;
-    else v = Math.min(1, v + (1 - v) * k * 0.45);
-    const [nr, ng, nb] = hsv2rgb(h, s, v);
-    return toHex(nr, ng, nb);
-  }));
-}
-function normalize(matrix: string[][]): string[][] {
-  let maxCh = 0;
-  for (const row of matrix) for (const hex of row) { const [r, g, b] = parseHex(hex); maxCh = Math.max(maxCh, r, g, b); }
-  if (maxCh === 0 || maxCh >= 255) return matrix;
-  const scale = 255 / maxCh;
-  return matrix.map(row => row.map(hex => {
-    const [r, g, b] = parseHex(hex);
-    if (r === 0 && g === 0 && b === 0) return "#000000";
-    return toHex(r * scale, g * scale, b * scale);
-  }));
-}
-
-function emojiToMatrix(emoji: string): string[][] {
-  const SIZE = 192;
-  const BLOCK = SIZE / 8;
-  const MIN_OPAQUE = Math.floor(BLOCK * BLOCK * 0.06);
-  const canvas = createCanvas(SIZE, SIZE);
-  const ctx = canvas.getContext("2d");
-
-  ctx.clearRect(0, 0, SIZE, SIZE);   // transparent bg so we can detect opaque emoji pixels
-  ctx.font = `${Math.floor(SIZE * 0.82)}px serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(emoji, SIZE / 2, SIZE / 2);
-
-  const { data } = ctx.getImageData(0, 0, SIZE, SIZE);
-
-  // Pass 1 — bright-field luminance = 75th percentile of opaque pixels (the dominant
-  // fill, e.g. a face's yellow). Pixels darker than fieldL*FEATURE_RATIO are "ink".
-  const lumas: number[] = [];
-  for (let i = 0; i < data.length; i += 4) if (data[i + 3] > 50) lumas.push(luma(data[i], data[i + 1], data[i + 2]));
-  if (!lumas.length) return Array.from({ length: 8 }, () => Array(8).fill("#000000"));
-  lumas.sort((a, b) => a - b);
-  const fieldL = lumas[Math.min(lumas.length - 1, Math.floor(lumas.length * 0.75))];
-  const inkThreshold = fieldL * FEATURE_RATIO;
-
-  // Pass 2 — per 8×8 cell, split ink (feature) vs field pixels; snap the cell to the
-  // dark feature when enough of it is ink, else average only the clean field.
-  const raw: string[][] = [];
-  for (let by = 0; by < 8; by++) {
-    const row: string[] = [];
-    for (let bx = 0; bx < 8; bx++) {
-      let iR = 0, iG = 0, iB = 0, iN = 0, fR = 0, fG = 0, fB = 0, fN = 0;
-      for (let py = 0; py < BLOCK; py++) {
-        for (let px = 0; px < BLOCK; px++) {
-          const i = ((by * BLOCK + py) * SIZE + (bx * BLOCK + px)) * 4;
-          if (data[i + 3] <= 50) continue;
-          const Lp = luma(data[i], data[i + 1], data[i + 2]);
-          if (Lp < inkThreshold) { iR += data[i]; iG += data[i + 1]; iB += data[i + 2]; iN++; }
-          else { fR += data[i]; fG += data[i + 1]; fB += data[i + 2]; fN++; }
-        }
-      }
-      const opaque = iN + fN;
-      if (opaque < MIN_OPAQUE) row.push("#000000");
-      else if (iN / opaque >= FEATURE_SNAP) row.push(toHex(iR / iN, iG / iN, iB / iN)); // snap to feature
-      else if (fN) row.push(toHex(fR / fN, fG / fN, fB / fN));                          // clean field
-      else row.push(toHex(iR / iN, iG / iN, iB / iN));                                  // all-ink cell
-    }
-    raw.push(row);
-  }
-  return punch(normalize(raw), 60);   // normalize + contrast-gated vibrance (matches emoji.html)
-}
-
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 // ------------------------------------------------------------
@@ -632,37 +503,6 @@ If a drawing lands well (or the user likes it), re-call with save_as (kebab-case
       },
     },
     {
-      name: "matrix_show_emoji",
-      description: `Display one or more emoji on the LED matrix in full color, scaled to fit the 8×8 grid.
-
-Pass the actual Unicode emoji characters — Claude should resolve any description to the right emoji before calling this tool. For a sequence, each emoji shows for duration_per_emoji seconds before the next one appears; the final emoji stays on screen.
-
-Examples of how to map intent to emojis:
-- "heart" or "I love you" → ["❤️"]
-- "thumbs up" or "great job" → ["👍"]
-- "birthday" or "happy birthday" → ["🎂", "🎁", "🥳"]
-- "celebrate" → ["🎉", "🌟", "🎊"]
-- "good night" → ["🌙", "😴"]
-- "rocket launch" → ["🚀", "⭐", "🌟"]
-
-Use a duration of 2–4 seconds per emoji. Default is 3.`,
-      inputSchema: {
-        type: "object",
-        properties: {
-          emojis: {
-            type: "array",
-            items: { type: "string" },
-            description: "Array of emoji Unicode characters to display, e.g. [\"🎂\", \"🎁\"]. Pass the actual emoji characters, not names.",
-          },
-          duration_per_emoji: {
-            type: "number",
-            description: "Seconds each emoji stays on screen before the next one appears. Default 3. The last emoji stays on screen indefinitely.",
-          },
-        },
-        required: ["emojis"],
-      },
-    },
-    {
       name: "matrix_get_settings",
       description:
         "Read the board's current persistent settings — idle screensaver behavior (enabled, which apps rotate, how long before it starts, how often it re-picks, idle brightness), default brightness, default boot animation, and clock timezone. Use this to answer questions like 'what's my idle timeout?' or before changing a setting.",
@@ -890,33 +730,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "matrix_get_accelerometer": {
         const r = await get("/api/sensors/accelerometer");
         return { content: [{ type: "text", text: r.ok ? r.body : `Error ${r.status}: ${r.body}` }] };
-      }
-
-      case "matrix_show_emoji": {
-        const emojis = (args.emojis as string[]) ?? [];
-        const durationMs = ((args.duration_per_emoji as number) ?? 3) * 1000;
-
-        if (emojis.length === 0) {
-          return { content: [{ type: "text", text: "No emojis provided." }] };
-        }
-
-        for (let i = 0; i < emojis.length; i++) {
-          const emoji = emojis[i];
-          const matrix = emojiToMatrix(emoji);
-          const r = await post("/api/display/matrix", { matrix });
-          if (!r.ok) {
-            return { content: [{ type: "text", text: `Error displaying ${emoji}: ${r.status} ${r.body}` }] };
-          }
-          // Wait between emojis; skip the delay after the last one so it stays on screen
-          if (i < emojis.length - 1) await sleep(durationMs);
-        }
-
-        const summary =
-          emojis.length === 1
-            ? `Showing ${emojis[0]} on the matrix.`
-            : `Showed sequence: ${emojis.join(" → ")}. ${emojis[emojis.length - 1]} is still on screen.`;
-
-        return { content: [{ type: "text", text: summary }] };
       }
 
       case "matrix_get_settings": {

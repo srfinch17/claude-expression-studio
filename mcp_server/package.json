@@ -7,8 +7,7 @@
     "start": "tsx index.ts"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.11.0",
-    "@napi-rs/canvas": "^0.1.67"
+    "@modelcontextprotocol/sdk": "^1.11.0"
   },
   "devDependencies": {
     "typescript": "^5.0.0",
