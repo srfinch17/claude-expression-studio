@@ -280,8 +280,90 @@ function makeFire(opts = {}) {
   };
 }
 
+// ---- matrix_rain (port of anim_matrix.ino + initMatrixDrops) ----
+// Per-column falling drops: a bright "head" + TRAIL_LEN fading pixels above it.
+// Each drop has its own random speed (1–3 ticks/step). Drops start staggered
+// above the top edge (random headY in −1..−8) so columns don't sync.
+// When the head + entire trail clear the bottom, the drop recycles with a new
+// random starting position above the screen and a new speed.
+// The trail fades linearly: t=1 (just behind head) = (TRAIL_LEN)/(TRAIL_LEN+1)
+// brightness, t=TRAIL_LEN = 1/(TRAIL_LEN+1) brightness.
+// COLOR THEMES: classic = green trail / white head, blue = dark-blue / light-blue,
+//               red = deep-red / pink, purple = purple / lavender.
+
+const MATRIX_TRAIL_LEN = 4;
+const MATRIX_W = 8;
+const MATRIX_H = 8;
+
+const MATRIX_THEMES = {
+  classic: { trail: [0, 180, 20],   head: [255, 255, 255] },
+  blue:    { trail: [0, 80, 220],   head: [180, 220, 255] },
+  red:     { trail: [220, 20, 0],   head: [255, 200, 180] },
+  purple:  { trail: [160, 0, 220],  head: [230, 200, 255] },
+};
+
+function makeMatrixRain(opts = {}) {
+  const theme = MATRIX_THEMES[opts.theme] || MATRIX_THEMES.classic;
+  const headColor  = theme.head;
+  const trailColor = theme.trail;
+
+  // Staggered init: headY starts 1..MATRIX_H rows above the top edge (negative)
+  const drops = Array.from({ length: MATRIX_W }, () => ({
+    headY: -(1 + Math.floor(Math.random() * MATRIX_H)),  // −1 to −8
+    tick:  0,
+    speed: 1 + Math.floor(Math.random() * 3),             // 1=fast, 3=slow
+  }));
+
+  return {
+    frame_ms: opts.frame_ms || 60,
+    frame() {
+      const px = [];
+
+      for (let col = 0; col < MATRIX_W; col++) {
+        const d = drops[col];
+
+        // Advance one row when tick reaches speed threshold
+        d.tick++;
+        if (d.tick >= d.speed) {
+          d.tick = 0;
+          d.headY++;
+        }
+
+        // Recycle when head + full trail have cleared the bottom
+        if (d.headY > MATRIX_H + MATRIX_TRAIL_LEN) {
+          d.headY = -(1 + Math.floor(Math.random() * MATRIX_H));
+          d.speed = 1 + Math.floor(Math.random() * 3);
+        }
+
+        // Draw bright head (only when on-screen)
+        if (d.headY >= 0 && d.headY < MATRIX_H) {
+          px.push({ x: col, y: d.headY, r: headColor[0], g: headColor[1], b: headColor[2] });
+        }
+
+        // Draw fading trail above the head.
+        // fade = (TRAIL_LEN - t) / (TRAIL_LEN + 1): 1.0 near head, 0.0 at far end.
+        for (let t = 1; t <= MATRIX_TRAIL_LEN; t++) {
+          const ty = d.headY - t;
+          if (ty < 0 || ty >= MATRIX_H) continue;
+          const fade = (MATRIX_TRAIL_LEN - t) / (MATRIX_TRAIL_LEN + 1);
+          px.push({
+            x: col,
+            y: ty,
+            r: Math.round(trailColor[0] * fade),
+            g: Math.round(trailColor[1] * fade),
+            b: Math.round(trailColor[2] * fade),
+          });
+        }
+      }
+
+      return px;
+    },
+  };
+}
+
 export const FIRMWARE_SIMS = {
   claudesweep: makeClaudeSweep,
   frostbite: makeFrostbite,
   fire: makeFire,
+  matrix_rain: makeMatrixRain,
 };

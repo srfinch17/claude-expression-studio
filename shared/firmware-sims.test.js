@@ -42,3 +42,17 @@ test("fire sim yields in-bounds frames and is not all-black after warm-up", () =
     assert.ok(px.length > 0, "not all-black after warm-up");
   }
 });
+
+test("matrix_rain sim yields in-bounds frames and at least one lit pixel after warm-up", () => {
+  const sim = FIRMWARE_SIMS.matrix_rain({ theme: "classic", frame_ms: 60 });
+  assert.equal(typeof sim.frame_ms, "number");
+  assert.equal(sim.frame_ms, 60);
+  // run 20 warm-up frames (drops need time to travel onto screen from staggered start above)
+  for (let i = 0; i < 20; i++) sim.frame();
+  // run 50 more frames: check in-bounds and invariant
+  for (let i = 0; i < 50; i++) {
+    const px = sim.frame();
+    assertInBounds(px);
+    assert.ok(px.length > 0, "at least one lit pixel after warm-up");
+  }
+});
