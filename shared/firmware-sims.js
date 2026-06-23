@@ -476,10 +476,163 @@ function makeSnow(opts = {}) {
   };
 }
 
+// ---- fireworks (port of anim_fireworks.ino, FW1 variant — "fireworks" animation type) ----
+// Phase machine: IDLE (wait ~700 ms) → LAUNCH (mortar rises col 2-6, explodes at row 2-5)
+//   → EXPLODE (flash fwColor1 for 2 frames) → FADE (12 tendrils radiate + decay then loop).
+// fwTendrilColor maps brightness 255→0 through color2→color1 / color3→color2 / black→color3.
+// Off-grid tendrils are culled (active=false) exactly as the firmware does.
+
+// Linear interpolation between two [r,g,b] triplets; t in 0..255 (0=a, 255=b)
+function blendRGB(a, b, t) {
+  const u = t / 255;
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * u),
+    Math.round(a[1] + (b[1] - a[1]) * u),
+    Math.round(a[2] + (b[2] - a[2]) * u),
+  ];
+}
+
+// Maps brightness (255→0) to a color cycling color1→color2→color3→black
+// Matches fwTendrilColor() in anim_fireworks.ino:
+//   bri>170 → blend(color2, color1, map(bri,170,255,0,255))   (near 255: toward color1)
+//   bri>85  → blend(color3, color2, map(bri, 85,170,0,255))   (mid: toward color2)
+//   else    → blend(black,  color3, map(bri,  0, 85,0,255))   (low: toward color3)
+function fwColorAt(bri, c1, c2, c3) {
+  if (bri > 170) {
+    const t = Math.round((bri - 170) / (255 - 170) * 255);
+    return blendRGB(c2, c1, t);
+  }
+  if (bri > 85) {
+    const t = Math.round((bri - 85) / (170 - 85) * 255);
+    return blendRGB(c3, c2, t);
+  }
+  const t = Math.round(bri / 85 * 255);
+  return blendRGB([0, 0, 0], c3, t);
+}
+
+// Number of idle frames before a new launch (~700 ms at 50 ms/frame = 14 frames)
+const FW_IDLE_FRAMES = 14;
+const FW_IDLE    = 0;
+const FW_LAUNCH  = 1;
+const FW_EXPLODE = 2;
+const FW_FADE    = 3;
+
+function makeFireworks(opts = {}) {
+  const c1 = opts.color1 ? hexToRGB(opts.color1) : [255, 0, 80];   // #ff0050
+  const c2 = opts.color2 ? hexToRGB(opts.color2) : [0, 224, 255];  // #00e0ff
+  const c3 = opts.color3 ? hexToRGB(opts.color3) : [255, 208, 0];  // #ffd000
+
+  let phase         = FW_IDLE;
+  let idleFrames    = 0;          // counts frames waited in IDLE state
+  let mortarX       = 0;
+  let mortarY       = 0;
+  let mortarDx      = 0;
+  let mortarDy      = 0;
+  let explodeY      = 0;
+  let flashFrames   = 0;
+
+  // 12 tendrils (matches fwTendrils[12] in the firmware)
+  const tendrils = Array.from({ length: 12 }, () => ({
+    x: 0, y: 0, dx: 0, dy: 0, brightness: 0, active: false,
+  }));
+
+  function launchNew() {
+    mortarX  = 2 + Math.floor(Math.random() * 5);  // cols 2-6
+    mortarY  = 7.0;
+    mortarDx = (Math.floor(Math.random() * 3) - 1) * 0.25;
+    mortarDy = -(0.8 + Math.floor(Math.random() * 5) * 0.08);
+    explodeY = 2 + Math.floor(Math.random() * 4);  // rows 2-5
+    phase    = FW_LAUNCH;
+  }
+
+  return {
+    frame_ms: opts.frame_ms || 50,
+    frame() {
+      const px = [];
+
+      if (phase === FW_IDLE) {
+        idleFrames++;
+        if (idleFrames >= FW_IDLE_FRAMES) {
+          idleFrames = 0;
+          launchNew();
+        }
+        return px;  // blank frame during idle
+      }
+
+      if (phase === FW_LAUNCH) {
+        mortarX += mortarDx;
+        mortarY += mortarDy;
+        if (Math.floor(mortarY) <= Math.floor(explodeY)) {
+          // Spawn 12 tendrils in a circle with random jitter + speed variation
+          for (let i = 0; i < 12; i++) {
+            const angle = i * (2.0 * Math.PI / 12) + (Math.floor(Math.random() * 30)) * (Math.PI / 180);
+            const speed = 0.35 + Math.floor(Math.random() * 4) * 0.08;
+            tendrils[i].x          = mortarX;
+            tendrils[i].y          = mortarY;
+            tendrils[i].dx         = Math.cos(angle) * speed;
+            tendrils[i].dy         = Math.sin(angle) * speed;
+            tendrils[i].brightness = 255;
+            tendrils[i].active     = true;
+          }
+          flashFrames = 2;
+          phase = FW_EXPLODE;
+        } else {
+          // Draw mortar as white pixel (only when on-grid)
+          const mx = Math.floor(mortarX), my = Math.floor(mortarY);
+          if (mx >= 0 && mx < 8 && my >= 0 && my < 8) {
+            px.push({ x: mx, y: my, r: 255, g: 255, b: 255 });
+          }
+        }
+        return px;
+      }
+
+      if (phase === FW_EXPLODE) {
+        // Flash the burst color at explode position (on-grid only)
+        const ex = Math.floor(mortarX), ey = Math.floor(mortarY);
+        if (ex >= 0 && ex < 8 && ey >= 0 && ey < 8) {
+          px.push({ x: ex, y: ey, r: c1[0], g: c1[1], b: c1[2] });
+        }
+        flashFrames--;
+        if (flashFrames === 0) phase = FW_FADE;
+        return px;
+      }
+
+      // FW_FADE: advance tendrils, decay brightness, cull off-grid
+      let anyActive = false;
+      for (const t of tendrils) {
+        if (!t.active) continue;
+        anyActive = true;
+        t.x += t.dx;
+        t.y += t.dy;
+        if (t.brightness > 12) {
+          t.brightness -= 12;
+        } else {
+          t.active = false;
+          continue;
+        }
+        // Cull off-grid (matches firmware: if (t.x < 0 || t.x > 7 || t.y < 0 || t.y > 7) { active=false; continue; })
+        if (t.x < 0 || t.x > 7 || t.y < 0 || t.y > 7) {
+          t.active = false;
+          continue;
+        }
+        const [r, g, b] = fwColorAt(t.brightness, c1, c2, c3);
+        px.push({ x: Math.floor(t.x), y: Math.floor(t.y), r, g, b });
+      }
+      if (!anyActive) {
+        phase      = FW_IDLE;
+        idleFrames = 0;
+      }
+
+      return px;
+    },
+  };
+}
+
 export const FIRMWARE_SIMS = {
   claudesweep: makeClaudeSweep,
   frostbite: makeFrostbite,
   fire: makeFire,
   matrix_rain: makeMatrixRain,
   snow: makeSnow,
+  fireworks: makeFireworks,
 };

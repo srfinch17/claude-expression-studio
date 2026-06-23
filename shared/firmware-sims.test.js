@@ -70,3 +70,15 @@ test("snow sim yields in-bounds frames and floor bank present after accumulation
     assert.ok(row7.length >= 8, `floor bank: at least 8 row-7 pixels (got ${row7.length})`);
   }
 });
+
+test("fireworks sim yields in-bounds frames and a burst occurs in a 100-frame window", () => {
+  const sim = FIRMWARE_SIMS.fireworks({ color1: "#ff0050", color2: "#00e0ff", color3: "#ffd000" });
+  assert.equal(typeof sim.frame_ms, "number");
+  let burstSeen = false;
+  for (let i = 0; i < 100; i++) {
+    const px = sim.frame();
+    assertInBounds(px);
+    if (px.length >= 3) burstSeen = true;
+  }
+  assert.ok(burstSeen, "at least one frame with ≥3 lit pixels (a burst) in 100-frame window");
+});
