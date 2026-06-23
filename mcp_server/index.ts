@@ -159,7 +159,8 @@ async function post(path: string, body: object = {}) {
 // ------------------------------------------------------------
 // VERSION DRIFT REPORT (for the matrix_version tool)
 // Compares the repo's canonical /VERSION against what each artifact actually
-// reports: firmware + web bundle via /api/status, MCP via package.json. Mirrors
+// reports: firmware + web bundle via /api/status, MCP via package.json, and
+// the .mcpb bundle manifest via mcp_server/manifest.json. Mirrors
 // scripts/version-check.js — kept inline so the TS build doesn't depend on the
 // repo-root tooling (which is plain JS with no type declarations).
 // ------------------------------------------------------------
@@ -186,6 +187,9 @@ async function versionReport(): Promise<string> {
     lines.push(`  firmware/web   ✗ board unreachable`);
   }
   lines.push(`  mcp       ${MCP_VERSION.padEnd(8)} ${versionMark(MCP_VERSION, expected)}`);
+  let bundleVersion = "unknown";
+  try { bundleVersion = JSON.parse(readFileSync(path.join(MCP_DIR, "manifest.json"), "utf8")).version ?? "unknown"; } catch { /* leave unknown */ }
+  lines.push(`  mcp-bundle ${String(bundleVersion).padEnd(7)} ${versionMark(bundleVersion, expected)}`);
   return lines.join("\n");
 }
 
@@ -247,7 +251,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "matrix_version",
       description:
-        "Check version drift across the three artifacts. Compares the repo's canonical VERSION against the flashed firmware (with its build timestamp), the uploaded web bundle, and this MCP server. Use to answer 'are we current?' — a ⚠ DRIFT row means that artifact needs a redeploy (reflash / LittleFS re-upload / reconnect).",
+        "Check version drift across the four artifacts. Compares the repo's canonical VERSION against the flashed firmware (with its build timestamp), the uploaded web bundle, this MCP server, and the .mcpb Claude Desktop bundle manifest. Use to answer 'are we current?' — a ⚠ DRIFT row means that artifact needs a redeploy (reflash / LittleFS re-upload / reconnect / rebuild:mcpb).",
       inputSchema: {
         type: "object",
         properties: {},

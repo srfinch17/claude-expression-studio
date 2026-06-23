@@ -6,7 +6,7 @@
 // core toolchain, builds a LittleFS image from data/, merges everything into
 // release/esp32matrix-<version>-merged.bin, and writes the ESP Web Tools
 // manifest. Offsets come from huge_app.csv, never hardcoded.
-import { readFile, writeFile, mkdir, copyFile } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";

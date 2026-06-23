@@ -264,8 +264,9 @@ artifact to make it live**: flash (firmware), LittleFS-upload (web), rebuild+rec
 (MCP) — a bump is *not* live until its artifact is redeployed.
 
 **For end-user releases:** `npm run build:release` merges firmware + web into
-`release/esp32matrix-<version>-merged.bin` + `release/manifest.json` + copies the
-`.mcpb` into `release/`. Use `npm run build:mcpb` to rebuild the extension alone.
+`release/esp32matrix-<version>-merged.bin` + `release/manifest.json` and expects
+the `.mcpb` produced by `npm run build:mcpb` to already be in `release/` (it warns
+if missing). Use `npm run build:mcpb` to rebuild the extension alone.
 
 **Check drift:** `npm run check` (terminal) or the **`matrix_version`** MCP tool — both
 compare repo `VERSION` to what each artifact reports and flag `⚠ DRIFT`. The general,
