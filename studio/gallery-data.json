@@ -1,0 +1,3196 @@
+{
+  "expressions": [
+    {
+      "name": "smiley",
+      "source": "canned",
+      "frames": [
+        [
+          "..YYYY..",
+          ".YYYYYY.",
+          "YY.YY.YY",
+          "YYYYYYYY",
+          "Y.YYYY.Y",
+          "YY....YY",
+          ".YYYYYY.",
+          "..YYYY.."
+        ]
+      ],
+      "colors": {
+        "Y": "#ffc800"
+      },
+      "frame_ms": 150,
+      "loop": 0,
+      "description": "Friendly yellow smiley face — greeting, contentment, all-is-well.",
+      "group": "canned"
+    },
+    {
+      "name": "sad",
+      "source": "canned",
+      "frames": [
+        [
+          "..YYYY..",
+          ".YYYYYY.",
+          "YY.YY.YY",
+          "YYYYYYYY",
+          "YY....YY",
+          "Y.YYYY.Y",
+          ".YYYYYY.",
+          "..YYYY.."
+        ]
+      ],
+      "colors": {
+        "Y": "#ffc800"
+      },
+      "frame_ms": 150,
+      "loop": 0,
+      "description": "Sad face — something failed or didn't go to plan (gentle, not alarming).",
+      "group": "canned"
+    },
+    {
+      "name": "heart",
+      "source": "canned",
+      "frames": [
+        [
+          ".RR..RR.",
+          "RRRRRRRR",
+          "RRRRRRRR",
+          "RRRRRRRR",
+          ".RRRRRR.",
+          "..RRRR..",
+          "...RR...",
+          "........"
+        ]
+      ],
+      "colors": {
+        "R": "#ff1432"
+      },
+      "frame_ms": 150,
+      "loop": 0,
+      "description": "Red heart — appreciation, warmth, 'love it'.",
+      "group": "canned"
+    },
+    {
+      "name": "check",
+      "source": "canned",
+      "frames": [
+        [
+          "........",
+          ".......G",
+          "......GG",
+          "G....GG.",
+          "GG..GG..",
+          ".GGGG...",
+          "..GG....",
+          "........"
+        ]
+      ],
+      "colors": {
+        "G": "#00d23c"
+      },
+      "frame_ms": 150,
+      "loop": 0,
+      "description": "Green checkmark — success, confirmed, tests pass.",
+      "group": "canned"
+    },
+    {
+      "name": "cross",
+      "source": "canned",
+      "frames": [
+        [
+          "RR....RR",
+          ".RR..RR.",
+          "..RRRR..",
+          "...RR...",
+          "..RRRR..",
+          ".RR..RR.",
+          "RR....RR",
+          "........"
+        ]
+      ],
+      "colors": {
+        "R": "#ff2814"
+      },
+      "frame_ms": 150,
+      "loop": 0,
+      "description": "Red X — failure, error, 'no'.",
+      "group": "canned"
+    },
+    {
+      "name": "thumbsup",
+      "source": "canned",
+      "frames": [
+        [
+          "....AA..",
+          "....AA..",
+          "...AAA..",
+          "AAAAAAAA",
+          "AAAAAAAA",
+          "AAAAAAAA",
+          "AAAAAAAA",
+          "...AAAAA"
+        ]
+      ],
+      "colors": {
+        "A": "#ffb414"
+      },
+      "frame_ms": 150,
+      "loop": 0,
+      "description": "Thumbs up — approval, good job, agreed.",
+      "group": "canned"
+    },
+    {
+      "name": "question",
+      "source": "canned",
+      "frames": [
+        [
+          "..WWWW..",
+          ".WW..WW.",
+          ".....WW.",
+          "....WW..",
+          "...WW...",
+          "...WW...",
+          "........",
+          "...WW..."
+        ]
+      ],
+      "colors": {
+        "W": "#e6e6f0"
+      },
+      "frame_ms": 150,
+      "loop": 0,
+      "description": "White question mark — confused, ambiguous result, 'which one?'.",
+      "group": "canned"
+    },
+    {
+      "name": "ok",
+      "source": "canned",
+      "frames": [
+        [
+          "........",
+          "........",
+          "........",
+          "GGG.G.G.",
+          "G.G.GG..",
+          "GGG.G.G.",
+          "........",
+          "........"
+        ]
+      ],
+      "colors": {
+        "G": "#00d264"
+      },
+      "frame_ms": 150,
+      "loop": 0,
+      "description": "Green 'OK' text — acknowledged, settings applied.",
+      "group": "canned"
+    },
+    {
+      "name": "sparkle",
+      "source": "canned",
+      "frames": [
+        [
+          "aedbaaaa",
+          "bbbaaaaa",
+          "baadaabb",
+          "aaaaabbd",
+          "aaadbbaa",
+          "abbbaaaa",
+          "bbaaaaaa",
+          "aaaaaadb"
+        ],
+        [
+          "aedbaaaa",
+          "bbaaaaaa",
+          "aaadaabb",
+          "aaaabbbd",
+          "aabbbbaa",
+          "bbbbaaaa",
+          "bbaaaaaa",
+          "aaaaaaeb"
+        ],
+        [
+          "bebbaaaa",
+          "bbaaaaab",
+          "aaabaabb",
+          "aaaabbbb",
+          "aabbbaaa",
+          "bbbaaaaa",
+          "baaaaaab",
+          "aaaaabeb"
+        ],
+        [
+          "bdbaaaaa",
+          "baaaaaab",
+          "aaaaabbb",
+          "aaabbbba",
+          "aabbbaaa",
+          "bbbaaaaa",
+          "baaaaaab",
+          "aaaaabeb"
+        ],
+        [
+          "bdbaaaaa",
+          "baaaaaab",
+          "aaaaabbb",
+          "aaabbbaa",
+          "abbbaaaa",
+          "bbbaaaaa",
+          "baaaaabb",
+          "aaaaabdb"
+        ],
+        [
+          "bbbaaaaa",
+          "baaaaabb",
+          "aaaaabbb",
+          "aaabbbaa",
+          "abbbaaaa",
+          "bbaaaaaa",
+          "aaaaaabb",
+          "aaaabbda"
+        ],
+        [
+          "bbaaaaaa",
+          "aaaaaabb",
+          "aaaabbbd",
+          "aabbbbaa",
+          "bbbbaaab",
+          "bbaaaaaa",
+          "aaaaaabb",
+          "aaaabbba"
+        ],
+        [
+          "bbaaaaab",
+          "aaaaaabb",
+          "aaaabbbd",
+          "aabbbaaa",
+          "bbbaaaad",
+          "baaaaaab",
+          "aaaaabbb",
+          "aaabbbba"
+        ],
+        [
+          "baaaaaab",
+          "aaaaabbb",
+          "aaabbbbe",
+          "aabbbaaa",
+          "bbbaaaad",
+          "baaaaaab",
+          "aaaaabbb",
+          "aaabbbaa"
+        ],
+        [
+          "baaaaaab",
+          "aaaaabbb",
+          "aaabbbae",
+          "bbbbaaaa",
+          "bbbaaaae",
+          "baaaaabb",
+          "aaaaabbb",
+          "aaabbbaa"
+        ],
+        [
+          "baaaaabb",
+          "aaaabbbb",
+          "aaabbbae",
+          "dbbbaaaa",
+          "bbaaaaae",
+          "aaaaaabb",
+          "aaaabbba",
+          "aabbbbaa"
+        ],
+        [
+          "aaaaaabb",
+          "aaaabbba",
+          "aabbbbad",
+          "dbbbaaaa",
+          "bbaaaaae",
+          "aaaaaabb",
+          "aaaabbba",
+          "aabbbaaa"
+        ],
+        [
+          "aaaaaabb",
+          "aaaabbba",
+          "aabbbaad",
+          "ebbaaaaa",
+          "baaaaaad",
+          "aaaaabbb",
+          "aaabbbba",
+          "babbbaaa"
+        ],
+        [
+          "aaaaabbb",
+          "aaabbbba",
+          "aabbbaab",
+          "ebbaaaaa",
+          "baaaaaad",
+          "aaaaabbb",
+          "aaabbbaa",
+          "dbbbaaaa"
+        ],
+        [
+          "aaaaabbb",
+          "aaabbbaa",
+          "abbbaaaa",
+          "ebbaaaaa",
+          "baaaaabb",
+          "aaaaabbb",
+          "aaabbbaa",
+          "dbbbaaaa"
+        ],
+        [
+          "aaaabbbb",
+          "aaabbbaa",
+          "abbbaaaa",
+          "dbaaaaaa",
+          "aaaaaabb",
+          "aaaabbba",
+          "aabbbbaa",
+          "ebbbaaaa"
+        ],
+        [
+          "aaaabbba",
+          "aabbbbaa",
+          "bbbbaaaa",
+          "dbaaaaaa",
+          "aaaaaabb",
+          "aaaabbba",
+          "aabbbaaa",
+          "ebbaaaab"
+        ],
+        [
+          "aaaabbba",
+          "aabbbaaa",
+          "bbbaaaaa",
+          "baaaaaab",
+          "aaababbb",
+          "aaabbbba",
+          "aabbbaaa",
+          "ebbaaaad"
+        ],
+        [
+          "aabbbbba",
+          "aabbbaaa",
+          "bbbbaaaa",
+          "baaaaaab",
+          "aaadabbb",
+          "aaabbbaa",
+          "abbbaaaa",
+          "dbbaaaad"
+        ],
+        [
+          "aadbbbaa",
+          "abbbaaaa",
+          "bbbdaaaa",
+          "baaaaabd",
+          "aaadabbb",
+          "aaabbbaa",
+          "abbbaaaa",
+          "dbaaaaae"
+        ],
+        [
+          "aadbbbaa",
+          "abbbaaaa",
+          "bbadaaaa",
+          "aaaaaabd",
+          "aaaebbba",
+          "aabbbbaa",
+          "bbbbaaaa",
+          "bbaaaaae"
+        ],
+        [
+          "abebbaaa",
+          "bbbbaaaa",
+          "bbaeaaab",
+          "aaaaaabe",
+          "aaaebbba",
+          "aabbbaaa",
+          "bbbaaaaa",
+          "baaaaaae"
+        ],
+        [
+          "adebbaaa",
+          "bbbaaaaa",
+          "baaeaaab",
+          "aaaaabbe",
+          "aaaebbba",
+          "aabbbaaa",
+          "bbbaaaaa",
+          "baaaaabd"
+        ],
+        [
+          "adebbaaa",
+          "bbbaaaaa",
+          "baaeaaab",
+          "aaaaabbe",
+          "aaadbbaa",
+          "abbbaaaa",
+          "bbbaaaaa",
+          "baaaaadd"
+        ]
+      ],
+      "colors": {
+        "a": "#1a3440",
+        "b": "#2c576b",
+        "d": "#509dc0",
+        "e": "#62c0eb"
+      },
+      "frame_ms": 70,
+      "loop": 0,
+      "description": "Frostbite-style shimmer — an icy mist glows across the whole panel while bright cyan points fade in and out on smooth sine-bell curves, staggered so they twinkle. Delight, a nice find, a magic moment. The 4 brightness levels are pinned to distinct bri-5 bands so they stay visible.",
+      "group": "canned"
+    },
+    {
+      "name": "alert",
+      "source": "canned",
+      "frames": [
+        [
+          "...AA...",
+          "...AA...",
+          "...AA...",
+          "...AA...",
+          "...AA...",
+          "........",
+          "...AA...",
+          "...AA..."
+        ],
+        [
+          "AAA..AAA",
+          "AAA..AAA",
+          "AAA..AAA",
+          "AAA..AAA",
+          "AAA..AAA",
+          "AAAAAAAA",
+          "AAA..AAA",
+          "AAA..AAA"
+        ],
+        [
+          "...AA...",
+          "...AA...",
+          "...AA...",
+          "...AA...",
+          "...AA...",
+          "........",
+          "...AA...",
+          "...AA..."
+        ],
+        [
+          "AAA..AAA",
+          "AAA..AAA",
+          "AAA..AAA",
+          "AAA..AAA",
+          "AAA..AAA",
+          "AAAAAAAA",
+          "AAA..AAA",
+          "AAA..AAA"
+        ],
+        [
+          "...AA...",
+          "...AA...",
+          "...AA...",
+          "...AA...",
+          "...AA...",
+          "........",
+          "...AA...",
+          "...AA..."
+        ],
+        [
+          "AAA..AAA",
+          "AAA..AAA",
+          "AAA..AAA",
+          "AAA..AAA",
+          "AAA..AAA",
+          "AAAAAAAA",
+          "AAA..AAA",
+          "AAA..AAA"
+        ],
+        [
+          "...AA...",
+          "...AA...",
+          "...AA...",
+          "...AA...",
+          "...AA...",
+          "........",
+          "...AA...",
+          "...AA..."
+        ]
+      ],
+      "colors": {
+        "A": "#ffa000"
+      },
+      "frame_ms": 220,
+      "loop": 1,
+      "description": "Amber exclamation mark that blinks against its photo-negative three times, then holds — INPUT NEEDED / waiting on the human. Show this when blocked on a question or permission.",
+      "group": "canned"
+    },
+    {
+      "name": "working",
+      "source": "canned",
+      "frames": [
+        [
+          "AA......",
+          "AA......",
+          "BB......",
+          "BB......",
+          "CC......",
+          "CC......",
+          "........",
+          "........"
+        ],
+        [
+          "BBAA....",
+          "BBAA....",
+          "CC......",
+          "CC......",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "CCBBAA..",
+          "CCBBAA..",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "..CCBBAA",
+          "..CCBBAA",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "....CCBB",
+          "....CCBB",
+          "......AA",
+          "......AA",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "......CC",
+          "......CC",
+          "......BB",
+          "......BB",
+          "......AA",
+          "......AA",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "......CC",
+          "......CC",
+          "......BB",
+          "......BB",
+          "......AA",
+          "......AA"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "......CC",
+          "......CC",
+          "....AABB",
+          "....AABB"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "..AABBCC",
+          "..AABBCC"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "AABBCC..",
+          "AABBCC.."
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "AA......",
+          "AA......",
+          "BBCC....",
+          "BBCC...."
+        ],
+        [
+          "........",
+          "........",
+          "AA......",
+          "AA......",
+          "BB......",
+          "BB......",
+          "CC......",
+          "CC......"
+        ]
+      ],
+      "colors": {
+        "A": "#c8e6ff",
+        "B": "#5a6773",
+        "C": "#2c3338"
+      },
+      "frame_ms": 80,
+      "loop": 0,
+      "description": "Snake spinner — a 3-chunk (2x2) comet chases clockwise around the panel's perimeter, bright head with a dimming trail. Busy on a long task (compiling, searching, running a workflow). Loops until replaced; show at task start, replace with done/check/cross at the end.",
+      "group": "canned"
+    },
+    {
+      "name": "done",
+      "source": "canned",
+      "frames": [
+        [
+          "........",
+          ".......G",
+          "......GG",
+          "G....GG.",
+          "GG..GG..",
+          ".GGGG...",
+          "..GG....",
+          "........"
+        ],
+        [
+          "GGGGGGGG",
+          "GGGGGGG.",
+          "GGGGGG..",
+          ".GGGG..G",
+          "..GG..GG",
+          "G....GGG",
+          "GG..GGGG",
+          "GGGGGGGG"
+        ],
+        [
+          "........",
+          ".......G",
+          "......GG",
+          "G....GG.",
+          "GG..GG..",
+          ".GGGG...",
+          "..GG....",
+          "........"
+        ],
+        [
+          "GGGGGGGG",
+          "GGGGGGG.",
+          "GGGGGG..",
+          ".GGGG..G",
+          "..GG..GG",
+          "G....GGG",
+          "GG..GGGG",
+          "GGGGGGGG"
+        ],
+        [
+          "........",
+          ".......G",
+          "......GG",
+          "G....GG.",
+          "GG..GG..",
+          ".GGGG...",
+          "..GG....",
+          "........"
+        ],
+        [
+          "GGGGGGGG",
+          "GGGGGGG.",
+          "GGGGGG..",
+          ".GGGG..G",
+          "..GG..GG",
+          "G....GGG",
+          "GG..GGGG",
+          "GGGGGGGG"
+        ],
+        [
+          "........",
+          ".......G",
+          "......GG",
+          "G....GG.",
+          "GG..GG..",
+          ".GGGG...",
+          "..GG....",
+          "........"
+        ]
+      ],
+      "colors": {
+        "G": "#00c83c"
+      },
+      "frame_ms": 220,
+      "loop": 1,
+      "description": "Task complete — a green checkmark blinks against its photo-negative (black check on a green field) three times, then holds a solid checkmark. The 'I finished' signal.",
+      "group": "canned"
+    },
+    {
+      "name": "party",
+      "source": "canned",
+      "frames": [
+        [
+          "..W...C.",
+          "M...G...",
+          "...Y...W",
+          ".C...M..",
+          "..M...G.",
+          "Y...W...",
+          "...C...M",
+          ".G...Y.."
+        ],
+        [
+          ".G...Y..",
+          "..W...C.",
+          "M...G...",
+          "...Y...W",
+          ".C...M..",
+          "..M...G.",
+          "Y...W...",
+          "...C...M"
+        ],
+        [
+          "...C...M",
+          ".G...Y..",
+          "..W...C.",
+          "M...G...",
+          "...Y...W",
+          ".C...M..",
+          "..M...G.",
+          "Y...W..."
+        ],
+        [
+          "Y...W...",
+          "...C...M",
+          ".G...Y..",
+          "..W...C.",
+          "M...G...",
+          "...Y...W",
+          ".C...M..",
+          "..M...G."
+        ],
+        [
+          "..M...G.",
+          "Y...W...",
+          "...C...M",
+          ".G...Y..",
+          "..W...C.",
+          "M...G...",
+          "...Y...W",
+          ".C...M.."
+        ],
+        [
+          ".C...M..",
+          "..M...G.",
+          "Y...W...",
+          "...C...M",
+          ".G...Y..",
+          "..W...C.",
+          "M...G...",
+          "...Y...W"
+        ],
+        [
+          "...Y...W",
+          ".C...M..",
+          "..M...G.",
+          "Y...W...",
+          "...C...M",
+          ".G...Y..",
+          "..W...C.",
+          "M...G..."
+        ],
+        [
+          "M...G...",
+          "...Y...W",
+          ".C...M..",
+          "..M...G.",
+          "Y...W...",
+          "...C...M",
+          ".G...Y..",
+          "..W...C."
+        ]
+      ],
+      "colors": {
+        "M": "#ff28b4",
+        "C": "#28c8ff",
+        "Y": "#ffc800",
+        "G": "#00c83c",
+        "W": "#ffffff"
+      },
+      "frame_ms": 130,
+      "loop": 0,
+      "description": "Falling multicolor confetti — celebration, big win, milestone shipped. 16 pieces drift down continuously; the 8 frames loop seamlessly.",
+      "group": "canned"
+    },
+    {
+      "name": "spaceship",
+      "source": "canned",
+      "frames": [
+        [
+          "...RR...",
+          "..RWWR..",
+          "..WBBW..",
+          ".RWWWWR.",
+          ".R.WW.R.",
+          "...RR...",
+          "...OO...",
+          "...OO..."
+        ],
+        [
+          "...RR...",
+          "..RWWR..",
+          "..WBBW..",
+          ".RWWWWR.",
+          ".R.WW.R.",
+          "...OO...",
+          "...RR...",
+          "...OO..."
+        ],
+        [
+          "...RR...",
+          "..RWWR..",
+          "..WBBW..",
+          ".RWWWWR.",
+          ".R.WW.R.",
+          "...OO...",
+          "...OO...",
+          "...RR..."
+        ]
+      ],
+      "colors": {
+        "R": "#ff2828",
+        "O": "#ff8c00",
+        "W": "#ffffff",
+        "B": "#2060ff"
+      },
+      "frame_ms": 160,
+      "loop": 0,
+      "description": "Rocket pointing up with a thrusting flame — playful, 'off we go', kicking something off. The ship is fixed in the top rows; the 2-wide flame's red ember scrolls down through orange to read as upward thrust.",
+      "group": "canned"
+    },
+    {
+      "name": "sleep",
+      "source": "canned",
+      "frames": [
+        [
+          "WWWW....",
+          "..WW....",
+          ".WW.....",
+          "WWWW....",
+          ".....BBB",
+          "......B.",
+          ".....B..",
+          ".....BBB"
+        ],
+        [
+          "WWWW....",
+          "..WW....",
+          ".WW.....",
+          "WWWW....",
+          "........",
+          "........",
+          "........",
+          "........"
+        ]
+      ],
+      "colors": {
+        "W": "#b4c8e6",
+        "B": "#32509b"
+      },
+      "frame_ms": 600,
+      "loop": 0,
+      "description": "Drifting Zz — idle, waiting quietly, nothing needs attention.",
+      "group": "canned"
+    },
+    {
+      "name": "ask-attention",
+      "source": "saved",
+      "frames": [
+        [
+          "...A....",
+          "..AAA...",
+          "..AAA...",
+          ".AAAAA..",
+          ".AAAAA..",
+          "AAAAAAA.",
+          "...A....",
+          "........"
+        ],
+        [
+          "...A....",
+          "..AAA...",
+          "..AAA...",
+          ".AAAAAB.",
+          ".AAAAA..",
+          "AAAAAAA.",
+          "....A...",
+          "........"
+        ],
+        [
+          "...A....",
+          "..AAA...",
+          "..AAA...",
+          ".AAAAA..",
+          ".AAAAA..",
+          "AAAAAAA.",
+          "...A....",
+          "........"
+        ],
+        [
+          "...A....",
+          "..AAA...",
+          "..AAA...",
+          "BAAAAA..",
+          ".AAAAA..",
+          "AAAAAAA.",
+          "..A.....",
+          "........"
+        ],
+        [
+          "...A....",
+          "..AAA...",
+          "..AAA...",
+          ".AAAAA..",
+          ".AAAAA..",
+          "AAAAAAA.",
+          "...A....",
+          "........"
+        ],
+        [
+          "...A....",
+          "..AAA...",
+          "..AAA...",
+          ".AAAAAB.",
+          ".AAAAA..",
+          "AAAAAAA.",
+          "....A...",
+          "........"
+        ],
+        [
+          "...A....",
+          "..AAA...",
+          "..AAA...",
+          ".AAAAA..",
+          ".AAAAA..",
+          "AAAAAAA.",
+          "...A....",
+          "........"
+        ],
+        [
+          "...A....",
+          "..AAA...",
+          "..AAA...",
+          "BAAAAA..",
+          ".AAAAA..",
+          "AAAAAAA.",
+          "..A.....",
+          "........"
+        ]
+      ],
+      "colors": {
+        "A": "#ffb000",
+        "B": "#ffffff"
+      },
+      "frame_ms": 95,
+      "loop": 0,
+      "description": "Awaiting input — an amber bell ringing (clapper swings, side ticks flash). Fired when Claude needs the user's permission. Holds (loop 0) until replaced.",
+      "group": "ask"
+    },
+    {
+      "name": "ask-confirm",
+      "source": "saved",
+      "frames": [
+        [
+          "........",
+          ".AAAAAA.",
+          ".A....A.",
+          ".A....A.",
+          ".A....A.",
+          ".A....A.",
+          ".AAAAAA.",
+          "........"
+        ],
+        [
+          "........",
+          ".AAAAAA.",
+          ".A....A.",
+          ".A....A.",
+          ".AB...A.",
+          ".A....A.",
+          ".AAAAAA.",
+          "........"
+        ],
+        [
+          "........",
+          ".AAAAAA.",
+          ".A....A.",
+          ".A....A.",
+          ".AB...A.",
+          ".A.B..A.",
+          ".AAAAAA.",
+          "........"
+        ],
+        [
+          "........",
+          ".AAAAAA.",
+          ".A....A.",
+          ".A....A.",
+          ".AB.B.A.",
+          ".A.B..A.",
+          ".AAAAAA.",
+          "........"
+        ],
+        [
+          "........",
+          ".AAAAAA.",
+          ".A....A.",
+          ".A...BA.",
+          ".AB.B.A.",
+          ".A.B..A.",
+          ".AAAAAA.",
+          "........"
+        ],
+        [
+          "........",
+          ".AAAAAA.",
+          ".A....B.",
+          ".A...BA.",
+          ".AB.B.A.",
+          ".A.B..A.",
+          ".AAAAAA.",
+          "........"
+        ],
+        [
+          "........",
+          ".AAAAAA.",
+          ".A....B.",
+          ".A...BA.",
+          ".AB.B.A.",
+          ".A.B..A.",
+          ".AAAAAA.",
+          "........"
+        ],
+        [
+          "........",
+          ".AAAAAA.",
+          ".A....C.",
+          ".A...CA.",
+          ".AC.C.A.",
+          ".A.C..A.",
+          ".AAAAAA.",
+          "........"
+        ]
+      ],
+      "colors": {
+        "A": "#b8b8b8",
+        "B": "#00ff88",
+        "C": "#00b25f"
+      },
+      "frame_ms": 120,
+      "loop": 0,
+      "description": "Awaiting input — an empty box with a green checkmark drawing itself in, then holding. Fired when Claude presents a plan for the user's approval. Holds (loop 0) until replaced.",
+      "group": "ask"
+    },
+    {
+      "name": "ask-question",
+      "source": "saved",
+      "frames": [
+        [
+          "..AAA...",
+          ".B...A..",
+          ".....A..",
+          "....A...",
+          "...A....",
+          "...A....",
+          "........",
+          "...A...."
+        ],
+        [
+          "..BCC...",
+          ".C...C..",
+          ".....C..",
+          "....C...",
+          "...C....",
+          "...C....",
+          "........",
+          "...C...."
+        ],
+        [
+          "..DBD...",
+          ".D...D..",
+          ".....D..",
+          "....D...",
+          "...D....",
+          "...D....",
+          "........",
+          "...D...."
+        ],
+        [
+          "..EEB...",
+          ".E...E..",
+          ".....E..",
+          "....E...",
+          "...E....",
+          "...E....",
+          "........",
+          "...E...."
+        ],
+        [
+          "..FFF...",
+          ".F...B..",
+          ".....F..",
+          "....F...",
+          "...F....",
+          "...F....",
+          "........",
+          "...F...."
+        ],
+        [
+          "..GGG...",
+          ".G...G..",
+          ".....B..",
+          "....G...",
+          "...G....",
+          "...G....",
+          "........",
+          "...G...."
+        ],
+        [
+          "..HHH...",
+          ".H...H..",
+          ".....H..",
+          "....B...",
+          "...H....",
+          "...H....",
+          "........",
+          "...H...."
+        ],
+        [
+          "..GGG...",
+          ".G...G..",
+          ".....G..",
+          "....G...",
+          "...B....",
+          "...G....",
+          "........",
+          "...G...."
+        ],
+        [
+          "..III...",
+          ".I...I..",
+          ".....I..",
+          "....I...",
+          "...I....",
+          "...B....",
+          "........",
+          "...I...."
+        ],
+        [
+          "..EEE...",
+          ".E...E..",
+          ".....E..",
+          "....E...",
+          "...E....",
+          "...E....",
+          "........",
+          "...B...."
+        ],
+        [
+          "..DDD...",
+          ".B...D..",
+          ".....D..",
+          "....D...",
+          "...D....",
+          "...D....",
+          "........",
+          "...D...."
+        ],
+        [
+          "..BCC...",
+          ".C...C..",
+          ".....C..",
+          "....C...",
+          "...C....",
+          "...C....",
+          "........",
+          "...C...."
+        ]
+      ],
+      "colors": {
+        "A": "#298f99",
+        "B": "#ffffff",
+        "C": "#2b95a0",
+        "D": "#30a7b2",
+        "E": "#36becc",
+        "F": "#3dd6e5",
+        "G": "#42e8f8",
+        "H": "#44eeff",
+        "I": "#3dd6e6"
+      },
+      "frame_ms": 110,
+      "loop": 0,
+      "description": "Awaiting input — a pulsing cyan '?' with a white shine sweeping its stroke. Fired when Claude poses a questionnaire and is waiting for the user's answer. Holds (loop 0) until replaced.",
+      "group": "ask"
+    },
+    {
+      "name": "bored-eyes",
+      "source": "saved",
+      "frames": [
+        [
+          "........",
+          "........",
+          "WWW..WWW",
+          "WBW..WBW",
+          "WWW..WWW",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "WWW..WWW",
+          "BWW..BWW",
+          "WWW..WWW",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "WWW..WWW",
+          "WBW..WBW",
+          "WWW..WWW",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "WWW..WWW",
+          "WWB..WWB",
+          "WWW..WWW",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "WWW..WWW",
+          "WBW..WBW",
+          "WWW..WWW",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "WWW..WWW",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "WWW..WWW",
+          "WBW..WBW",
+          "WWW..WWW",
+          "........",
+          "........",
+          "........"
+        ]
+      ],
+      "colors": {
+        "W": "#ffffff",
+        "B": "#2060ff"
+      },
+      "frame_ms": 280,
+      "loop": 0,
+      "description": "Googly eyes glancing left, right, then a blink — lazy 'I'm bored waiting' idle goof. Part of the bored-Claude idle rotation.",
+      "group": "bored"
+    },
+    {
+      "name": "bounce",
+      "source": "saved",
+      "frames": [
+        [
+          "..OO....",
+          "..OO....",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "...OO...",
+          "...OO...",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "....OO..",
+          "....OO..",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          ".....OO.",
+          ".....OO.",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "......OO",
+          "......OO",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          ".....OO.",
+          ".....OO.",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "....OO..",
+          "....OO.."
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "...OO...",
+          "...OO...",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "..OO....",
+          "..OO....",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          ".OO.....",
+          ".OO.....",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "OO......",
+          "OO......",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          ".OO.....",
+          ".OO.....",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........"
+        ]
+      ],
+      "colors": {
+        "O": "#28c8ff"
+      },
+      "frame_ms": 150,
+      "loop": 0,
+      "description": "A cyan 2x2 dot bouncing diagonally off all four walls (DVD-logo style), seamless 12-frame loop. Hypnotic idle motion — part of the bored-Claude rotation.",
+      "group": "bored"
+    },
+    {
+      "name": "claude-idle",
+      "source": "saved",
+      "frames": [
+        [
+          "........",
+          "..RRRR..",
+          ".RRRRRR.",
+          ".R.RR.R.",
+          "RRRRRRRR",
+          ".RRRRRR.",
+          ".RR..RR.",
+          "........"
+        ],
+        [
+          "........",
+          "..RRRR..",
+          ".RRRRRR.",
+          "..RR.RR.",
+          "RRRRRRRR",
+          ".RRRRRR.",
+          ".RR..RR.",
+          "........"
+        ],
+        [
+          "........",
+          "..RRRR..",
+          ".RRRRRR.",
+          "..RR.RR.",
+          "RRRRRRRR",
+          ".RRRRRR.",
+          ".RR..RR.",
+          "........"
+        ],
+        [
+          "........",
+          "..RRRR..",
+          ".RRRRRR.",
+          ".R.RR.R.",
+          "RRRRRRRR",
+          ".RRRRRR.",
+          ".RR..RR.",
+          "........"
+        ],
+        [
+          "........",
+          "..RRRR..",
+          ".RRRRRR.",
+          ".RR.RR..",
+          "RRRRRRRR",
+          ".RRRRRR.",
+          ".RR..RR.",
+          "........"
+        ],
+        [
+          "........",
+          "..RRRR..",
+          ".RRRRRR.",
+          ".RR.RR..",
+          "RRRRRRRR",
+          ".RRRRRR.",
+          ".RR..RR.",
+          "........"
+        ],
+        [
+          "........",
+          "..RRRR..",
+          ".RRRRRR.",
+          ".R.RR.R.",
+          "RRRRRRRR",
+          ".RRRRRR.",
+          ".RR..RR.",
+          "........"
+        ],
+        [
+          "........",
+          ".RRRR...",
+          "RRRRRR..",
+          "R.RR.R..",
+          "RRRRRRR.",
+          "RRRRRR..",
+          "RR..RR..",
+          "........"
+        ],
+        [
+          "........",
+          "..RRRR..",
+          ".RRRRRR.",
+          ".R.RR.R.",
+          "RRRRRRRR",
+          ".RRRRRR.",
+          ".RR..RR.",
+          "........"
+        ],
+        [
+          "........",
+          "...RRRR.",
+          "..RRRRRR",
+          "..R.RR.R",
+          ".RRRRRRR",
+          "..RRRRRR",
+          "..RR..RR",
+          "........"
+        ],
+        [
+          "........",
+          "..RRRR..",
+          ".RRRRRR.",
+          ".R.RR.R.",
+          "RRRRRRRR",
+          ".RRRRRR.",
+          ".RR..RR.",
+          "........"
+        ],
+        [
+          "........",
+          "..RRRR..",
+          ".RRRRRR.",
+          ".RRRRRR.",
+          "RRRRRRRR",
+          ".RRRRRR.",
+          ".RR..RR.",
+          "........"
+        ]
+      ],
+      "colors": {
+        "R": "#ff5008"
+      },
+      "frame_ms": 250,
+      "loop": 0,
+      "description": "The Claude mascot (orange Space-Invader alien) amusing himself when idle/bored: glances left, glances right, does a happy side-to-side sway, then a slow blink. Playful/wistful. Fire when idle.",
+      "group": "orphan"
+    },
+    {
+      "name": "dizzy",
+      "source": "saved",
+      "frames": [
+        [
+          "........",
+          "........",
+          "BWW..BWW",
+          "WWW..WWW",
+          "WWW..WWW",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "WBW..WBW",
+          "WWW..WWW",
+          "WWW..WWW",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "WWB..WWB",
+          "WWW..WWW",
+          "WWW..WWW",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "WWW..WWW",
+          "WWB..WWB",
+          "WWW..WWW",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "WWW..WWW",
+          "WWW..WWW",
+          "WWB..WWB",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "WWW..WWW",
+          "WWW..WWW",
+          "WBW..WBW",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "WWW..WWW",
+          "WWW..WWW",
+          "BWW..BWW",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "WWW..WWW",
+          "BWW..BWW",
+          "WWW..WWW",
+          "........",
+          "........",
+          "........"
+        ]
+      ],
+      "colors": {
+        "W": "#ffffff",
+        "B": "#2060ff"
+      },
+      "frame_ms": 120,
+      "loop": 0,
+      "description": "Two eyes with pupils rolling around in circles — woozy/dizzy/loopy. Part of the bored-Claude idle rotation.",
+      "group": "bored"
+    },
+    {
+      "name": "idea",
+      "source": "saved",
+      "frames": [
+        [
+          "..DDDD..",
+          ".DDDDDD.",
+          ".DDDDDD.",
+          ".DDDDDD.",
+          "..DDDD..",
+          "..wwww..",
+          "..wwww..",
+          "...ww..."
+        ],
+        [
+          "..MMMM..",
+          ".MMMMMM.",
+          ".MMMMMM.",
+          ".MMMMMM.",
+          "..MMMM..",
+          "..wwww..",
+          "..wwww..",
+          "...ww..."
+        ],
+        [
+          "..YYYY..",
+          ".YYYYYY.",
+          ".YYYYYY.",
+          ".YYYYYY.",
+          "..YYYY..",
+          "..wwww..",
+          "..wwww..",
+          "...ww..."
+        ],
+        [
+          "..YYYY..",
+          ".YYYYYY.",
+          ".YYYYYY.",
+          ".YYYYYY.",
+          "..YYYY..",
+          "..wwww..",
+          "..wwww..",
+          "...ww..."
+        ],
+        [
+          "..MMMM..",
+          ".MMMMMM.",
+          ".MMMMMM.",
+          ".MMMMMM.",
+          "..MMMM..",
+          "..wwww..",
+          "..wwww..",
+          "...ww..."
+        ],
+        [
+          "..DDDD..",
+          ".DDDDDD.",
+          ".DDDDDD.",
+          ".DDDDDD.",
+          "..DDDD..",
+          "..wwww..",
+          "..wwww..",
+          "...ww..."
+        ]
+      ],
+      "colors": {
+        "Y": "#ffd000",
+        "M": "#a08800",
+        "D": "#5a4c00",
+        "w": "#b8c0c8"
+      },
+      "frame_ms": 180,
+      "loop": 0,
+      "description": "A lightbulb that breathes dim-to-bright and back — \"I have an idea / a suggestion.\" Glass bulb on top, tapered white base.",
+      "group": "orphan"
+    },
+    {
+      "name": "pacman",
+      "source": "saved",
+      "frames": [
+        [
+          "........",
+          "........",
+          "........",
+          "..D.D.D.",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "P.......",
+          "PP......",
+          "PPD.D.D.",
+          "PP......",
+          "PP......",
+          "P.......",
+          "........"
+        ],
+        [
+          "........",
+          "PP......",
+          "P.......",
+          "..D.D.D.",
+          "........",
+          "P.......",
+          "PP......",
+          "........"
+        ],
+        [
+          "........",
+          "PPP.....",
+          "PPPP....",
+          "PPPPD.D.",
+          "PPPP....",
+          "PPPP....",
+          "PPP.....",
+          "........"
+        ],
+        [
+          "........",
+          "PPPP....",
+          "PPP.....",
+          "PP..D.D.",
+          "PP......",
+          "PPP.....",
+          "PPPP....",
+          "........"
+        ],
+        [
+          "........",
+          ".PPPP...",
+          "PPPPPP..",
+          "PPPPPPD.",
+          "PPPPPP..",
+          "PPPPPP..",
+          ".PPPP...",
+          "........"
+        ],
+        [
+          "........",
+          "..PPPP..",
+          ".PPPP...",
+          ".PPP..D.",
+          ".PPP....",
+          ".PPPP...",
+          "..PPPP..",
+          "........"
+        ],
+        [
+          "........",
+          "...PPPP.",
+          "..PPPPPP",
+          "..PPPPPP",
+          "..PPPPPP",
+          "..PPPPPP",
+          "...PPPP.",
+          "........"
+        ],
+        [
+          "........",
+          "....PPPP",
+          "...PPPP.",
+          "...PPP..",
+          "...PPP..",
+          "...PPPP.",
+          "....PPPP",
+          "........"
+        ],
+        [
+          "........",
+          ".....PPP",
+          "....PPPP",
+          "....PPPP",
+          "....PPPP",
+          "....PPPP",
+          ".....PPP",
+          "........"
+        ],
+        [
+          "........",
+          "......PP",
+          ".....PPP",
+          ".....PPP",
+          ".....PPP",
+          ".....PPP",
+          "......PP",
+          "........"
+        ],
+        [
+          "........",
+          ".......P",
+          "......PP",
+          "......PP",
+          "......PP",
+          "......PP",
+          ".......P",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          ".......P",
+          ".......P",
+          ".......P",
+          ".......P",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........"
+        ]
+      ],
+      "colors": {
+        "P": "#ffc800",
+        "D": "#ffffff"
+      },
+      "frame_ms": 130,
+      "loop": 0,
+      "description": "Yellow Pac-Man chomping left-to-right across the panel, eating three white pellets as his mouth reaches them. Playful idle goof — part of the bored-Claude rotation.",
+      "group": "bored"
+    },
+    {
+      "name": "shooting-star",
+      "source": "saved",
+      "frames": [
+        [
+          ".H......",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          ".A......",
+          "..H.....",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          ".B......",
+          "..A.....",
+          "...H....",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          ".C......",
+          "..B.....",
+          "...A....",
+          "....H...",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "..C.....",
+          "...B....",
+          "....A...",
+          ".....H..",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "...C....",
+          "....B...",
+          ".....A..",
+          "......H.",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "....C...",
+          ".....B..",
+          "......A.",
+          ".......H",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          ".....C..",
+          "......B.",
+          ".......A",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "......C.",
+          ".......B",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          ".......C",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........"
+        ]
+      ],
+      "colors": {
+        "H": "#ffffff",
+        "A": "#c8c8c8",
+        "B": "#909090",
+        "C": "#585858"
+      },
+      "frame_ms": 130,
+      "loop": 0,
+      "description": "A white shooting star streaks diagonally down-right with a 3-pixel fading tail, then drains off the corner pixel-by-pixel (enters and exits smoothly). Part of the bored-Claude idle rotation.",
+      "group": "bored"
+    },
+    {
+      "name": "wait-claude",
+      "source": "saved",
+      "frames": [
+        [
+          "........",
+          "..RRRR..",
+          ".RRRRRR.",
+          ".R.RR.R.",
+          "RRRRRRRR",
+          ".RRRRRR.",
+          ".RR..RR.",
+          "........"
+        ],
+        [
+          "..RRRR..",
+          ".RRRRRR.",
+          ".R.RR.R.",
+          "RRRRRRRR",
+          ".RRRRRR.",
+          ".RR..RR.",
+          "........",
+          "........"
+        ],
+        [
+          "..RRRR..",
+          ".RRRRRR.",
+          ".RRRRRR.",
+          "RRRRRRRR",
+          ".RRRRRR.",
+          ".RR..RR.",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "..RRRR..",
+          ".RRRRRR.",
+          ".R.RR.R.",
+          "RRRRRRRR",
+          ".RRRRRR.",
+          ".RR..RR.",
+          "........"
+        ]
+      ],
+      "colors": {
+        "R": "#ff5008"
+      },
+      "frame_ms": 200,
+      "loop": 0,
+      "description": "The Claude mascot (orange Space-Invader alien) bobbing up and down with an eye-blink at the top of each bounce. A 'busy/working' wait indicator. Joins the wait pool via the wait- prefix.",
+      "group": "wait"
+    },
+    {
+      "name": "wait-logo-boot",
+      "source": "saved",
+      "frames": [
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "AA......",
+          "AA......",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "AA....BB",
+          "AA....BB",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "AA....BB",
+          "AA....BB",
+          "........",
+          "........",
+          "........",
+          "........",
+          "......AA",
+          "......AA"
+        ],
+        [
+          "AA....BB",
+          "AA....BB",
+          "........",
+          "........",
+          "........",
+          "........",
+          "BB....AA",
+          "BB....AA"
+        ],
+        [
+          "AA....BB",
+          "AA....BB",
+          "........",
+          "...CC...",
+          "...CC...",
+          "........",
+          "BB....AA",
+          "BB....AA"
+        ],
+        [
+          "AA....BB",
+          "AA....BB",
+          "........",
+          "...CC...",
+          "...CC...",
+          "........",
+          "BB....AA",
+          "BB....AA"
+        ],
+        [
+          "AA....BB",
+          "AA....BB",
+          "........",
+          "...CC...",
+          "...CC...",
+          "........",
+          "BB....AA",
+          "BB....AA"
+        ]
+      ],
+      "colors": {
+        "A": "#00ff88",
+        "B": "#ffb000",
+        "C": "#44eeff"
+      },
+      "frame_ms": 110,
+      "loop": 0,
+      "description": "Animated board logo powering up — blocks light one by one clockwise then the full logo holds before restarting. A wait spinner; auto-joins the random 'wait' pool via its wait- name.",
+      "group": "wait"
+    },
+    {
+      "name": "wait-logo-breathe",
+      "source": "saved",
+      "frames": [
+        [
+          "AA....BB",
+          "AA....BB",
+          "........",
+          "...CC...",
+          "...CC...",
+          "........",
+          "BB....AA",
+          "BB....AA"
+        ],
+        [
+          "DD....EE",
+          "DD....EE",
+          "........",
+          "...FF...",
+          "...FF...",
+          "........",
+          "EE....DD",
+          "EE....DD"
+        ],
+        [
+          "GG....HH",
+          "GG....HH",
+          "........",
+          "...II...",
+          "...II...",
+          "........",
+          "HH....GG",
+          "HH....GG"
+        ],
+        [
+          "JJ....KK",
+          "JJ....KK",
+          "........",
+          "...LL...",
+          "...LL...",
+          "........",
+          "KK....JJ",
+          "KK....JJ"
+        ],
+        [
+          "MM....NN",
+          "MM....NN",
+          "........",
+          "...OO...",
+          "...OO...",
+          "........",
+          "NN....MM",
+          "NN....MM"
+        ],
+        [
+          "PP....QQ",
+          "PP....QQ",
+          "........",
+          "...RR...",
+          "...RR...",
+          "........",
+          "QQ....PP",
+          "QQ....PP"
+        ],
+        [
+          "SS....TT",
+          "SS....TT",
+          "........",
+          "...UU...",
+          "...UU...",
+          "........",
+          "TT....SS",
+          "TT....SS"
+        ],
+        [
+          "VV....WW",
+          "VV....WW",
+          "........",
+          "...XX...",
+          "...XX...",
+          "........",
+          "WW....VV",
+          "WW....VV"
+        ],
+        [
+          "YY....ZZ",
+          "YY....ZZ",
+          "........",
+          "...aa...",
+          "...aa...",
+          "........",
+          "ZZ....YY",
+          "ZZ....YY"
+        ],
+        [
+          "VV....WW",
+          "VV....WW",
+          "........",
+          "...XX...",
+          "...XX...",
+          "........",
+          "WW....VV",
+          "WW....VV"
+        ],
+        [
+          "SS....TT",
+          "SS....TT",
+          "........",
+          "...UU...",
+          "...UU...",
+          "........",
+          "TT....SS",
+          "TT....SS"
+        ],
+        [
+          "PP....QQ",
+          "PP....QQ",
+          "........",
+          "...RR...",
+          "...RR...",
+          "........",
+          "QQ....PP",
+          "QQ....PP"
+        ],
+        [
+          "MM....NN",
+          "MM....NN",
+          "........",
+          "...OO...",
+          "...OO...",
+          "........",
+          "NN....MM",
+          "NN....MM"
+        ],
+        [
+          "JJ....KK",
+          "JJ....KK",
+          "........",
+          "...LL...",
+          "...LL...",
+          "........",
+          "KK....JJ",
+          "KK....JJ"
+        ],
+        [
+          "GG....HH",
+          "GG....HH",
+          "........",
+          "...II...",
+          "...II...",
+          "........",
+          "HH....GG",
+          "HH....GG"
+        ],
+        [
+          "DD....EE",
+          "DD....EE",
+          "........",
+          "...FF...",
+          "...FF...",
+          "........",
+          "EE....DD",
+          "EE....DD"
+        ]
+      ],
+      "colors": {
+        "A": "#008044",
+        "B": "#805800",
+        "C": "#227780",
+        "D": "#008447",
+        "E": "#845b00",
+        "F": "#237c84",
+        "G": "#00924e",
+        "H": "#926500",
+        "I": "#278892",
+        "J": "#00a759",
+        "K": "#a77300",
+        "L": "#2c9ca7",
+        "M": "#00bf66",
+        "N": "#bf8400",
+        "O": "#33b2bf",
+        "P": "#00d873",
+        "Q": "#d89500",
+        "R": "#3ac9d8",
+        "S": "#00ec7e",
+        "T": "#eca300",
+        "U": "#3fddec",
+        "V": "#00fa85",
+        "W": "#faad00",
+        "X": "#43e9fa",
+        "Y": "#00ff88",
+        "Z": "#ffb000",
+        "a": "#44eeff"
+      },
+      "frame_ms": 90,
+      "loop": 0,
+      "description": "Animated board logo (quincunx of 5 dots) breathing — all five blocks fade in and out together, a calm heartbeat. A wait/working spinner; auto-joins the random 'wait' pool via its wait- name.",
+      "group": "wait"
+    },
+    {
+      "name": "wait-logo-chase",
+      "source": "saved",
+      "frames": [
+        [
+          "AA....BB",
+          "AA....BB",
+          "........",
+          "...CC...",
+          "...CC...",
+          "........",
+          "BB....DD",
+          "BB....DD"
+        ],
+        [
+          "AA....BB",
+          "AA....BB",
+          "........",
+          "...EE...",
+          "...EE...",
+          "........",
+          "BB....DD",
+          "BB....DD"
+        ],
+        [
+          "DD....FF",
+          "DD....FF",
+          "........",
+          "...GG...",
+          "...GG...",
+          "........",
+          "BB....DD",
+          "BB....DD"
+        ],
+        [
+          "DD....FF",
+          "DD....FF",
+          "........",
+          "...HH...",
+          "...HH...",
+          "........",
+          "BB....DD",
+          "BB....DD"
+        ],
+        [
+          "DD....BB",
+          "DD....BB",
+          "........",
+          "...II...",
+          "...II...",
+          "........",
+          "BB....AA",
+          "BB....AA"
+        ],
+        [
+          "DD....BB",
+          "DD....BB",
+          "........",
+          "...HH...",
+          "...HH...",
+          "........",
+          "BB....AA",
+          "BB....AA"
+        ],
+        [
+          "DD....BB",
+          "DD....BB",
+          "........",
+          "...GG...",
+          "...GG...",
+          "........",
+          "FF....DD",
+          "FF....DD"
+        ],
+        [
+          "DD....BB",
+          "DD....BB",
+          "........",
+          "...EE...",
+          "...EE...",
+          "........",
+          "FF....DD",
+          "FF....DD"
+        ]
+      ],
+      "colors": {
+        "A": "#00ff88",
+        "B": "#805800",
+        "C": "#227780",
+        "D": "#008044",
+        "E": "#278892",
+        "F": "#ffb000",
+        "G": "#33b2bf",
+        "H": "#3fddec",
+        "I": "#44eeff"
+      },
+      "frame_ms": 120,
+      "loop": 0,
+      "description": "Animated board logo — a bright highlight chases clockwise around the four corners while the cyan center pulses, reading as 'computing'. A wait spinner; auto-joins the random 'wait' pool via its wait- name.",
+      "group": "wait"
+    },
+    {
+      "name": "wait-logo-ripple",
+      "source": "saved",
+      "frames": [
+        [
+          "........",
+          "........",
+          "........",
+          "...AA...",
+          "...AA...",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "BB....CC",
+          "BB....CC",
+          "........",
+          "...DD...",
+          "...DD...",
+          "........",
+          "CC....BB",
+          "CC....BB"
+        ],
+        [
+          "EE....FF",
+          "EE....FF",
+          "........",
+          "...GG...",
+          "...GG...",
+          "........",
+          "FF....EE",
+          "FF....EE"
+        ],
+        [
+          "HH....II",
+          "HH....II",
+          "........",
+          "........",
+          "........",
+          "........",
+          "II....HH",
+          "II....HH"
+        ],
+        [
+          "JJ....KK",
+          "JJ....KK",
+          "........",
+          "........",
+          "........",
+          "........",
+          "KK....JJ",
+          "KK....JJ"
+        ],
+        [
+          "LL....MM",
+          "LL....MM",
+          "........",
+          "........",
+          "........",
+          "........",
+          "MM....LL",
+          "MM....LL"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........",
+          "........"
+        ]
+      ],
+      "colors": {
+        "A": "#44eeff",
+        "B": "#005930",
+        "C": "#593e00",
+        "D": "#30a7b2",
+        "E": "#00b25f",
+        "F": "#b27b00",
+        "G": "#1b5f66",
+        "H": "#00ff88",
+        "I": "#ffb000",
+        "J": "#008c4b",
+        "K": "#8c6100",
+        "L": "#004022",
+        "M": "#402c00"
+      },
+      "frame_ms": 110,
+      "loop": 0,
+      "description": "Animated board logo as sonar — the cyan core pulses and ripples outward to the corners, then fades. A wait spinner; auto-joins the random 'wait' pool via its wait- name.",
+      "group": "wait"
+    },
+    {
+      "name": "wait-orbit",
+      "source": "saved",
+      "frames": [
+        [
+          "RRYYGGCC",
+          "RRYYGGCC",
+          "......BB",
+          "......BB",
+          "......MM",
+          "......MM",
+          "........",
+          "........"
+        ],
+        [
+          "..RRYYGG",
+          "..RRYYGG",
+          "......CC",
+          "......CC",
+          "......BB",
+          "......BB",
+          "......MM",
+          "......MM"
+        ],
+        [
+          "....RRYY",
+          "....RRYY",
+          "......GG",
+          "......GG",
+          "......CC",
+          "......CC",
+          "....MMBB",
+          "....MMBB"
+        ],
+        [
+          "......RR",
+          "......RR",
+          "......YY",
+          "......YY",
+          "......GG",
+          "......GG",
+          "..MMBBCC",
+          "..MMBBCC"
+        ],
+        [
+          "........",
+          "........",
+          "......RR",
+          "......RR",
+          "......YY",
+          "......YY",
+          "MMBBCCGG",
+          "MMBBCCGG"
+        ],
+        [
+          "........",
+          "........",
+          "........",
+          "........",
+          "MM....RR",
+          "MM....RR",
+          "BBCCGGYY",
+          "BBCCGGYY"
+        ],
+        [
+          "........",
+          "........",
+          "MM......",
+          "MM......",
+          "BB......",
+          "BB......",
+          "CCGGYYRR",
+          "CCGGYYRR"
+        ],
+        [
+          "MM......",
+          "MM......",
+          "BB......",
+          "BB......",
+          "CC......",
+          "CC......",
+          "GGYYRR..",
+          "GGYYRR.."
+        ],
+        [
+          "BBMM....",
+          "BBMM....",
+          "CC......",
+          "CC......",
+          "GG......",
+          "GG......",
+          "YYRR....",
+          "YYRR...."
+        ],
+        [
+          "CCBBMM..",
+          "CCBBMM..",
+          "GG......",
+          "GG......",
+          "YY......",
+          "YY......",
+          "RR......",
+          "RR......"
+        ],
+        [
+          "GGCCBBMM",
+          "GGCCBBMM",
+          "YY......",
+          "YY......",
+          "RR......",
+          "RR......",
+          "........",
+          "........"
+        ],
+        [
+          "YYGGCCBB",
+          "YYGGCCBB",
+          "RR....MM",
+          "RR....MM",
+          "........",
+          "........",
+          "........",
+          "........"
+        ]
+      ],
+      "colors": {
+        "R": "#ff0000",
+        "Y": "#ffff00",
+        "G": "#00ff00",
+        "C": "#00ffff",
+        "B": "#0040ff",
+        "M": "#ff00ff"
+      },
+      "frame_ms": 80,
+      "loop": 0,
+      "description": "Rainbow perimeter orbit — a six-hue arc (red/yellow/green/cyan/blue/magenta) sweeps clockwise around the panel edge in 2x2 blocks, reading as a rotating color wheel. A wait/working spinner; auto-joins the random 'wait' pool via its wait- name. Channel-distinct hues so it stays legible at low brightness.",
+      "group": "wait"
+    },
+    {
+      "name": "wait-rainbow",
+      "source": "saved",
+      "frames": [
+        [
+          "...BB...",
+          ".CCBBMM.",
+          ".CCBBMM.",
+          "CCCCMMMM",
+          "GGGGRRRR",
+          ".GGYYRR.",
+          ".GGYYRR.",
+          "...YY..."
+        ],
+        [
+          "...BB...",
+          ".CCBBBM.",
+          ".CCCBMM.",
+          "GGCCMMMM",
+          "GGGGRRMM",
+          ".GGYRRR.",
+          ".GYYYRR.",
+          "...YY..."
+        ],
+        [
+          "...CB...",
+          ".CCCBBB.",
+          ".CCCBBB.",
+          "GGGCBMMM",
+          "GGGYRMMM",
+          ".YYYRRR.",
+          ".YYYRRR.",
+          "...YR..."
+        ],
+        [
+          "...CC...",
+          ".CCCCBB.",
+          ".GCCBBB.",
+          "GGGCBBMM",
+          "GGYYRMMM",
+          ".YYYRRM.",
+          ".YYRRRR.",
+          "...RR..."
+        ],
+        [
+          "...CC...",
+          ".GGCCBB.",
+          ".GGCCBB.",
+          "GGGGBBBB",
+          "YYYYMMMM",
+          ".YYRRMM.",
+          ".YYRRMM.",
+          "...RR..."
+        ],
+        [
+          "...CC...",
+          ".GGCCCB.",
+          ".GGGCBB.",
+          "YYGGBBBB",
+          "YYYYMMBB",
+          ".YYRMMM.",
+          ".YRRRMM.",
+          "...RR..."
+        ],
+        [
+          "...GC...",
+          ".GGGCCC.",
+          ".GGGCCC.",
+          "YYYGCBBB",
+          "YYYRMBBB",
+          ".RRRMMM.",
+          ".RRRMMM.",
+          "...RM..."
+        ],
+        [
+          "...GG...",
+          ".GGGGCC.",
+          ".YGGCCC.",
+          "YYYGCCBB",
+          "YYRRMBBB",
+          ".RRRMMB.",
+          ".RRMMMM.",
+          "...MM..."
+        ],
+        [
+          "...GG...",
+          ".YYGGCC.",
+          ".YYGGCC.",
+          "YYYYCCCC",
+          "RRRRBBBB",
+          ".RRMMBB.",
+          ".RRMMBB.",
+          "...MM..."
+        ],
+        [
+          "...GG...",
+          ".YYGGGC.",
+          ".YYYGCC.",
+          "RRYYCCCC",
+          "RRRRBBCC",
+          ".RRMBBB.",
+          ".RMMMBB.",
+          "...MM..."
+        ],
+        [
+          "...YG...",
+          ".YYYGGG.",
+          ".YYYGGG.",
+          "RRRYGCCC",
+          "RRRMBCCC",
+          ".MMMBBB.",
+          ".MMMBBB.",
+          "...MB..."
+        ],
+        [
+          "...YY...",
+          ".YYYYGG.",
+          ".RYYGGG.",
+          "RRRYGGCC",
+          "RRMMBCCC",
+          ".MMMBBC.",
+          ".MMBBBB.",
+          "...BB..."
+        ],
+        [
+          "...YY...",
+          ".RRYYGG.",
+          ".RRYYGG.",
+          "RRRRGGGG",
+          "MMMMCCCC",
+          ".MMBBCC.",
+          ".MMBBCC.",
+          "...BB..."
+        ],
+        [
+          "...YY...",
+          ".RRYYYG.",
+          ".RRRYGG.",
+          "MMRRGGGG",
+          "MMMMCCGG",
+          ".MMBCCC.",
+          ".MBBBCC.",
+          "...BB..."
+        ],
+        [
+          "...RY...",
+          ".RRRYYY.",
+          ".RRRYYY.",
+          "MMMRYGGG",
+          "MMMBCGGG",
+          ".BBBCCC.",
+          ".BBBCCC.",
+          "...BC..."
+        ],
+        [
+          "...RR...",
+          ".RRRRYY.",
+          ".MRRYYY.",
+          "MMMRYYGG",
+          "MMBBCGGG",
+          ".BBBCCG.",
+          ".BBCCCC.",
+          "...CC..."
+        ],
+        [
+          "...RR...",
+          ".MMRRYY.",
+          ".MMRRYY.",
+          "MMMMYYYY",
+          "BBBBGGGG",
+          ".BBCCGG.",
+          ".BBCCGG.",
+          "...CC..."
+        ],
+        [
+          "...RR...",
+          ".MMRRRY.",
+          ".MMMRYY.",
+          "BBMMYYYY",
+          "BBBBGGYY",
+          ".BBCGGG.",
+          ".BCCCGG.",
+          "...CC..."
+        ],
+        [
+          "...MR...",
+          ".MMMRRR.",
+          ".MMMRRR.",
+          "BBBMRYYY",
+          "BBBCGYYY",
+          ".CCCGGG.",
+          ".CCCGGG.",
+          "...CG..."
+        ],
+        [
+          "...MM...",
+          ".MMMMRR.",
+          ".BMMRRR.",
+          "BBBMRRYY",
+          "BBCCGYYY",
+          ".CCCGGY.",
+          ".CCGGGG.",
+          "...GG..."
+        ],
+        [
+          "...MM...",
+          ".BBMMRR.",
+          ".BBMMRR.",
+          "BBBBRRRR",
+          "CCCCYYYY",
+          ".CCGGYY.",
+          ".CCGGYY.",
+          "...GG..."
+        ],
+        [
+          "...MM...",
+          ".BBMMMR.",
+          ".BBBMRR.",
+          "CCBBRRRR",
+          "CCCCYYRR",
+          ".CCGYYY.",
+          ".CGGGYY.",
+          "...GG..."
+        ],
+        [
+          "...BM...",
+          ".BBBMMM.",
+          ".BBBMMM.",
+          "CCCBMRRR",
+          "CCCGYRRR",
+          ".GGGYYY.",
+          ".GGGYYY.",
+          "...GY..."
+        ],
+        [
+          "...BB...",
+          ".BBBBMM.",
+          ".CBBMMM.",
+          "CCCBMMRR",
+          "CCGGYRRR",
+          ".GGGYYR.",
+          ".GGYYYY.",
+          "...YY..."
+        ]
+      ],
+      "colors": {
+        "R": "#ff0000",
+        "Y": "#ffff00",
+        "G": "#00ff00",
+        "C": "#00ffff",
+        "B": "#0040ff",
+        "M": "#ff00ff"
+      },
+      "frame_ms": 90,
+      "loop": 0,
+      "description": "Spinning rainbow color wheel (old-Mac pinwheel) — a wait/working spinner. Auto-joins the random 'wait' pool via its wait- name.",
+      "group": "wait"
+    },
+    {
+      "name": "wink",
+      "source": "saved",
+      "frames": [
+        [
+          "........",
+          "........",
+          "WWW..WWW",
+          "WBW..WBW",
+          "WWW..WWW",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "WWW..WWW",
+          "WBW..WBW",
+          "WWW..WWW",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "WWW.....",
+          "WBW..WWW",
+          "WWW.....",
+          ".W....W.",
+          "..WWWW..",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "WWW..WWW",
+          "WBW..WBW",
+          "WWW..WWW",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          "........",
+          "WWW..WWW",
+          "WBW..WBW",
+          "WWW..WWW",
+          "........",
+          "........",
+          "........"
+        ]
+      ],
+      "colors": {
+        "W": "#ffffff",
+        "B": "#2060ff"
+      },
+      "frame_ms": 240,
+      "loop": 0,
+      "description": "Eyes looking forward, then the right eye winks shut while a little smile pops up, then back to both open. Charming idle goof — part of the bored-Claude rotation.",
+      "group": "bored"
+    },
+    {
+      "name": "yawn",
+      "source": "saved",
+      "frames": [
+        [
+          "........",
+          ".WW..WW.",
+          ".WW..WW.",
+          "........",
+          "...WW...",
+          "........",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          ".WW..WW.",
+          "........",
+          "...WW...",
+          "..WWWW..",
+          "..WWWW..",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          ".WW..WW.",
+          "........",
+          "..WWWW..",
+          ".WWWWWW.",
+          ".WWWWWW.",
+          "..WWWW..",
+          "........"
+        ],
+        [
+          "........",
+          ".WW..WW.",
+          "........",
+          "..WWWW..",
+          ".WWWWWW.",
+          ".WWWWWW.",
+          "..WWWW..",
+          "........"
+        ],
+        [
+          "........",
+          ".WW..WW.",
+          "........",
+          "..WWWW..",
+          ".WWWWWW.",
+          ".WWWWWW.",
+          "..WWWW..",
+          "........"
+        ],
+        [
+          "........",
+          ".WW..WW.",
+          "........",
+          "...WW...",
+          "..WWWW..",
+          "..WWWW..",
+          "........",
+          "........"
+        ],
+        [
+          "........",
+          ".WW..WW.",
+          ".WW..WW.",
+          "........",
+          "...WW...",
+          "........",
+          "........",
+          "........"
+        ]
+      ],
+      "colors": {
+        "W": "#ffffff"
+      },
+      "frame_ms": 240,
+      "loop": 0,
+      "description": "A sleepy yawn — eyes squeeze from open to slits while a big round mouth swells open, holds, then relaxes. Part of the bored-Claude idle rotation.",
+      "group": "bored"
+    }
+  ],
+  "firmware": [
+    "claudesweep",
+    "frostbite",
+    "fire",
+    "matrix_rain",
+    "snow",
+    "fireworks",
+    "dancefloor"
+  ],
+  "groups": {
+    "wait": [
+      "wait-claude",
+      "wait-logo-boot",
+      "wait-logo-breathe",
+      "wait-logo-chase",
+      "wait-logo-ripple",
+      "wait-orbit",
+      "wait-rainbow"
+    ],
+    "ask": [
+      "ask-attention",
+      "ask-confirm",
+      "ask-question"
+    ],
+    "bored": [
+      "bored-eyes",
+      "bounce",
+      "dizzy",
+      "pacman",
+      "shooting-star",
+      "wink",
+      "yawn"
+    ],
+    "orphan": [
+      "claude-idle",
+      "idea"
+    ]
+  }
+}

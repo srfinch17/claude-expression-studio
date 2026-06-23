@@ -700,11 +700,15 @@ test("buildGalleryData merges canned + saved, classifies, lists firmware", async
   assert.ok(names.includes("claude-idle"), "saved orphan present");
   assert.ok(data.firmware.includes("claudesweep"), "firmware listed");
   const orphans = data.expressions.filter((e) => e.group === "orphan").map((e) => e.name).sort();
-  assert.deepEqual(orphans, ["claude-idle", "idea"], "exactly the two known orphans");
-  // every entry carries frames + a group
+  assert.deepEqual(orphans, ["claude-idle", "idea"], "exactly the two known orphans (saved tier only)");
+  // canned expressions form their own group, never orphan
+  const cannedEntries = data.expressions.filter((e) => e.source === "canned");
+  assert.ok(cannedEntries.length > 0, "canned expressions present");
+  for (const e of cannedEntries) assert.equal(e.group, "canned", `${e.name} is grouped canned`);
+  // every entry carries frames + a valid group
   for (const e of data.expressions) {
     assert.ok(Array.isArray(e.frames) && e.frames.length > 0, `${e.name} has frames`);
-    assert.ok(["wait","ask","bored","orphan"].includes(e.group), `${e.name} grouped`);
+    assert.ok(["wait","ask","bored","orphan","canned"].includes(e.group), `${e.name} grouped`);
   }
 });
 ```
@@ -739,20 +743,25 @@ export function buildGalleryData({ canned, savedDir, waitWeightsPath, boredDir }
   );
 
   const expressions = [];
+  // CANNED tier — the on-demand matrix_express palette. Their OWN group; NOT run
+  // through the rotation classifier (they are not wait/ask/bored members and are
+  // never "orphans" — they are always reachable by name).
   for (const [name, e] of Object.entries(canned)) {
     expressions.push({ name, source: "canned", frames: e.frames, colors: e.colors,
-      frame_ms: e.frame_ms || 150, loop: e.loop ?? 0, description: e.description || "" });
+      frame_ms: e.frame_ms || 150, loop: e.loop ?? 0, description: e.description || "", group: "canned" });
   }
+  // SAVED tier — *.json files, classified into wait/ask/bored/orphan. The orphan
+  // gate ({claude-idle, idea}) is defined over THIS tier only.
+  const saved = [];
   for (const fn of readdirSync(savedDir).filter((n) => n.endsWith(".json"))) {
     const j = JSON.parse(readFileSync(join(savedDir, fn), "utf8"));
-    expressions.push({ name: basename(fn, ".json"), source: "saved", frames: j.frames,
+    saved.push({ name: basename(fn, ".json"), source: "saved", frames: j.frames,
       colors: j.colors, frame_ms: j.frame_ms || 150, loop: j.loop ?? 0, description: j.description || "" });
   }
-
-  const cat = buildCatalog(expressions.map((e) => e.name), { waitNames, boredNames });
+  const cat = buildCatalog(saved.map((e) => e.name), { waitNames, boredNames });
   const groupOf = {};
   for (const g of Object.keys(cat)) for (const n of cat[g]) groupOf[n] = g;
-  for (const e of expressions) e.group = groupOf[e.name];
+  for (const e of saved) { e.group = groupOf[e.name]; expressions.push(e); }
 
   return { expressions, firmware: FIRMWARE, groups: cat };
 }
@@ -818,8 +827,8 @@ import { Panel } from "../shared/render.js";
 import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";
 
 const REDUCE = matchMedia("(prefers-reduced-motion:reduce)").matches;
-const GROUP_ORDER = ["orphan", "wait", "ask", "bored", "firmware"];
-const GROUP_TITLE = { orphan: "Orphans — no rotation", wait: "Wait pool", ask: "Ask-* hooks", bored: "Bored pool", firmware: "Firmware animations" };
+const GROUP_ORDER = ["orphan", "canned", "wait", "ask", "bored", "firmware"];
+const GROUP_TITLE = { orphan: "Orphans — no rotation", canned: "Canned glyphs (matrix_express)", wait: "Wait pool", ask: "Ask-* hooks", bored: "Bored pool", firmware: "Firmware animations" };
 const FW_DEFAULTS = {
   claudesweep: {}, frostbite: { mist: 40, sparkle: 20 }, fire: { palette: "classic", intensity: 6 },
   matrix_rain: { theme: "classic", frame_ms: 60 }, snow: { frame_ms: 110, flakeColor: "#dce6ff" },
@@ -846,7 +855,7 @@ async function build() {
   try { data = await (await fetch("./gallery-data.json")).json(); }
   catch (e) { root.innerHTML = `<p class="err">Could not load ./gallery-data.json — run <code>npm run build:gallery</code>. (${e.message})</p>`; return; }
 
-  const byGroup = { orphan: [], wait: [], ask: [], bored: [], firmware: [] };
+  const byGroup = { orphan: [], canned: [], wait: [], ask: [], bored: [], firmware: [] };
   for (const e of data.expressions) (byGroup[e.group] ||= []).push(e);
 
   for (const group of GROUP_ORDER) {
@@ -881,7 +890,7 @@ build();
 
 - [ ] **Step 2: Implement `studio/index.html`**
 
-Port the styling from `site/_preview-library.html` (dark room, `.grid`/`.cell`/`.orphan`/`.name`/`.desc`/`.badge`/`.err`, IBM Plex Mono). Add a `.badge.firmware` color. Include `<div id="root"></div>` and `<script type="module" src="./gallery.js"></script>`. Header: a short title + the orphan legend.
+Port the styling from `site/_preview-library.html` (dark room, `.grid`/`.cell`/`.orphan`/`.name`/`.desc`/`.badge`/`.err`, IBM Plex Mono). Add `.badge.firmware` AND `.badge.canned` colors (distinct from the existing wait/ask/bored badges). Include `<div id="root"></div>` and `<script type="module" src="./gallery.js"></script>`. Header: a short title + the orphan legend.
 
 - [ ] **Step 3: Controller smoke-check (Playwright MCP)**
 
