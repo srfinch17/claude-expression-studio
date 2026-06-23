@@ -157,21 +157,6 @@
   .install-note{font-size:.84rem; color:var(--faint); margin-top:24px; max-width:62ch;}
   .install-note b{color:var(--dim); font-weight:600;}
 
-  /* ── floating desk companion ─────────────────────────────── */
-  .companion{
-    position:fixed; right:22px; bottom:22px; z-index:50; padding:11px; border-radius:16px;
-    background:linear-gradient(160deg,#1a1a20,#0c0c10); border:1px solid #26262f;
-    box-shadow:0 18px 50px -18px rgba(0,0,0,.9); transition:opacity .4s, transform .4s; cursor:default;
-  }
-  .companion::before{content:""; position:absolute; inset:-30%; z-index:-1; border-radius:40px;
-    background:radial-gradient(closest-side,var(--glow,rgba(255,80,8,.5)),transparent 72%); filter:blur(10px); opacity:.6;}
-  .companion canvas{display:block; border-radius:8px; background:var(--panel-sub);}
-  .companion .lbl{font-family:var(--mono); font-size:.56rem; letter-spacing:.1em; text-transform:uppercase; color:var(--faint); text-align:center; margin-top:7px;}
-  .companion .x{position:absolute; top:-9px; right:-9px; width:22px; height:22px; border-radius:50%; border:1px solid #2c2c36; background:#15151b; color:var(--dim); font-size:.8rem; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;}
-  .companion .x:hover{color:var(--text);}
-  .companion.hidden{opacity:0; transform:translateY(20px) scale(.9); pointer-events:none;}
-  @media(max-width:560px){ .companion{display:none;} }
-
   /* ── footer ──────────────────────────────────────────────── */
   footer.site{padding:56px 0 64px; border-top:1px solid var(--hair); color:var(--faint); font-size:.82rem;}
   footer.site .wrap{display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; align-items:center;}
@@ -189,7 +174,7 @@
   }
   @media(max-width:440px){ .beats{grid-template-columns:1fr;} }
 
-  @media(prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} .device::before,.companion::before{transition:none;} }
+  @media(prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} .device::before{transition:none;} }
 </style>
 </head>
 <body>
@@ -284,6 +269,10 @@
         <div>
           <div class="expr-pad" id="exprPad"></div>
           <p class="play-hint">Nothing here is faked — each button feeds the same 8×8 frames, color map, and timing from the board's expression library.</p>
+          <p class="play-hint" style="margin-top:12px">
+            <a href="../studio/index.html" style="color:var(--emotion);text-decoration:none;font-weight:600;">Open Studio →</a>
+            <span style="color:var(--faint)"> — browse the full expression library, live.</span>
+          </p>
         </div>
       </div>
     </div>
@@ -383,212 +372,192 @@
   </div>
 </footer>
 
-<!-- floating desk companion -->
-<div class="companion hidden" id="companion" aria-hidden="true">
-  <button class="x" id="companionX" title="Dismiss">×</button>
-  <canvas id="companionPanel" width="160" height="160" style="width:80px;height:80px"></canvas>
-  <div class="lbl">on your desk</div>
-</div>
-
-<script>
+<script type="module">
 /* ============================================================
  * Matrix showcase — a faithful 8×8 LED simulation.
  * Frame data is the project's real expression library (char-art
  * + color map), rendered with additive bloom so it reads as a
  * physical panel emitting light. No board required.
+ *
+ * Bloom renderer + expression resolve + desk companion are all
+ * imported from the shared core (shared/render.js,
+ * shared/expressions.js, shared/desk-sim.js) — one copy in the
+ * repo, verified by grep for globalCompositeOperation.
  * ========================================================== */
-(() => {
-  const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ── The real expression vocabulary (ported from mcp_server/expressions) ──
-  // '.' = off; any other char → its hex in `colors`.
-  const A8 = r => [r,r,r,r,r,r,r,r];
-  const EXPR = {
-    mascot: { label:"Claude", kind:"emotion", frame_ms:200, colors:{R:"#ff5008"}, frames:[
-      ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
-      ["..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........","........"],
-      ["..RRRR..",".RRRRRR.",".RRRRRR.","RRRRRRRR",".RRRRRR.",".RR..RR.","........","........"],
-      ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"]]},
-    idle: { label:"Bored", kind:"emotion", frame_ms:250, colors:{R:"#ff5008"}, frames:[
-      ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
-      ["........","..RRRR..",".RRRRRR.","..RR.RR.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
-      ["........","..RRRR..",".RRRRRR.","..RR.RR.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
-      ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
-      ["........","..RRRR..",".RRRRRR.",".RR.RR..","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
-      ["........","..RRRR..",".RRRRRR.",".RR.RR..","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
-      ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
-      ["........",".RRRR...","RRRRRR..","R.RR.R..","RRRRRRR.","RRRRRR..","RR..RR..","........"],
-      ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
-      ["........","...RRRR.","..RRRRRR","..R.RR.R",".RRRRRRR","..RRRRRR","..RR..RR","........"],
-      ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
-      ["........","..RRRR..",".RRRRRR.",".RRRRRR.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"]]},
-    working: { label:"Working", kind:"status", frame_ms:80, colors:{A:"#c8e6ff",B:"#5a6773",C:"#2c3338"}, frames:[
-      ["AA......","AA......","BB......","BB......","CC......","CC......","........","........"],
-      ["BBAA....","BBAA....","CC......","CC......","........","........","........","........"],
-      ["CCBBAA..","CCBBAA..","........","........","........","........","........","........"],
-      ["..CCBBAA","..CCBBAA","........","........","........","........","........","........"],
-      ["....CCBB","....CCBB","......AA","......AA","........","........","........","........"],
-      ["......CC","......CC","......BB","......BB","......AA","......AA","........","........"],
-      ["........","........","......CC","......CC","......BB","......BB","......AA","......AA"],
-      ["........","........","........","........","......CC","......CC","....AABB","....AABB"],
-      ["........","........","........","........","........","........","..AABBCC","..AABBCC"],
-      ["........","........","........","........","........","........","AABBCC..","AABBCC.."],
-      ["........","........","........","........","AA......","AA......","BBCC....","BBCC...."],
-      ["........","........","AA......","AA......","BB......","BB......","CC......","CC......"]]},
-    done: { label:"Done", kind:"status", frame_ms:220, colors:{G:"#00c83c"}, frames:[
-      ["........",".......G","......GG","G....GG.","GG..GG..",".GGGG...","..GG....","........"],
-      ["GGGGGGGG","GGGGGGG.","GGGGGG..",".GGGG..G","..GG..GG","G....GGG","GG..GGGG","GGGGGGGG"],
-      ["........",".......G","......GG","G....GG.","GG..GG..",".GGGG...","..GG....","........"],
-      ["GGGGGGGG","GGGGGGG.","GGGGGG..",".GGGG..G","..GG..GG","G....GGG","GG..GGGG","GGGGGGGG"],
-      ["........",".......G","......GG","G....GG.","GG..GG..",".GGGG...","..GG....","........"]]},
-    alert: { label:"Needs you", kind:"emotion", frame_ms:230, colors:{A:"#ffa000"}, frames:[
-      ["...AA...","...AA...","...AA...","...AA...","...AA...","........","...AA...","...AA..."],
-      ["AAA..AAA","AAA..AAA","AAA..AAA","AAA..AAA","AAA..AAA","AAAAAAAA","AAA..AAA","AAA..AAA"],
-      ["...AA...","...AA...","...AA...","...AA...","...AA...","........","...AA...","...AA..."],
-      ["AAA..AAA","AAA..AAA","AAA..AAA","AAA..AAA","AAA..AAA","AAAAAAAA","AAA..AAA","AAA..AAA"],
-      ["...AA...","...AA...","...AA...","...AA...","...AA...","........","...AA...","...AA..."]]},
-    party: { label:"Party", kind:"emotion", frame_ms:130, colors:{M:"#ff28b4",C:"#28c8ff",Y:"#ffc800",G:"#00c83c",W:"#ffffff"}, frames:[
-      ["..W...C.","M...G...","...Y...W",".C...M..","..M...G.","Y...W...","...C...M",".G...Y.."],
-      [".G...Y..","..W...C.","M...G...","...Y...W",".C...M..","..M...G.","Y...W...","...C...M"],
-      ["...C...M",".G...Y..","..W...C.","M...G...","...Y...W",".C...M..","..M...G.","Y...W..."],
-      ["Y...W...","...C...M",".G...Y..","..W...C.","M...G...","...Y...W",".C...M..","..M...G."],
-      ["..M...G.","Y...W...","...C...M",".G...Y..","..W...C.","M...G...","...Y...W",".C...M.."],
-      [".C...M..","..M...G.","Y...W...","...C...M",".G...Y..","..W...C.","M...G...","...Y...W"],
-      ["...Y...W",".C...M..","..M...G.","Y...W...","...C...M",".G...Y..","..W...C.","M...G..."],
-      ["M...G...","...Y...W",".C...M..","..M...G.","Y...W...","...C...M",".G...Y..","..W...C."]]},
-    heart: { label:"Love it", kind:"emotion", frame_ms:520, colors:{R:"#ff1432"}, frames:[
-      [".RR..RR.","RRRRRRRR","RRRRRRRR","RRRRRRRR",".RRRRRR.","..RRRR..","...RR...","........"],
-      ["........",".RR..RR.","RRRRRRRR","RRRRRRRR",".RRRRRR.","..RRRR..","...RR...","........"]]},
-    spaceship: { label:"Liftoff", kind:"emotion", frame_ms:160, colors:{R:"#ff2828",O:"#ff8c00",W:"#ffffff",B:"#2060ff"}, frames:[
-      ["...RR...","..RWWR..","..WBBW..",".RWWWWR.",".R.WW.R.","...RR...","...OO...","...OO..."],
-      ["...RR...","..RWWR..","..WBBW..",".RWWWWR.",".R.WW.R.","...OO...","...RR...","...OO..."],
-      ["...RR...","..RWWR..","..WBBW..",".RWWWWR.",".R.WW.R.","...OO...","...OO...","...RR..."]]},
-    smiley: { label:"All good", kind:"emotion", frame_ms:150, colors:{Y:"#ffc800"}, frames:[
-      ["..YYYY..",".YYYYYY.","YY.YY.YY","YYYYYYYY","Y.YYYY.Y","YY....YY",".YYYYYY.","..YYYY.."]]},
-    sleep: { label:"Resting", kind:"emotion", frame_ms:600, colors:{W:"#b4c8e6",B:"#32509b"}, frames:[
-      ["WWWW....","..WW....",".WW.....","WWWW....",".....BBB","......B.",".....B..",".....BBB"],
-      ["WWWW....","..WW....",".WW.....","WWWW....","........","........","........","........"]]},
-    cross: { label:"Failed", kind:"status", frame_ms:520, colors:{R:"#ff2814"}, frames:[
-      ["RR....RR",".RR..RR.","..RRRR..","...RR...","..RRRR..",".RR..RR.","RR....RR","........"]]},
+import { Panel } from "../shared/render.js";
+import { resolveExpression } from "../shared/expressions.js";
+import { mountDeskSim } from "../shared/desk-sim.js";
+
+const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ── The real expression vocabulary (ported from mcp_server/expressions) ──
+// '.' = off; any other char → its hex in `colors`.
+const EXPR = {
+  mascot: { label:"Claude", kind:"emotion", frame_ms:200, colors:{R:"#ff5008"}, frames:[
+    ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+    ["..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........","........"],
+    ["..RRRR..",".RRRRRR.",".RRRRRR.","RRRRRRRR",".RRRRRR.",".RR..RR.","........","........"],
+    ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"]]},
+  idle: { label:"Bored", kind:"emotion", frame_ms:250, colors:{R:"#ff5008"}, frames:[
+    ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+    ["........","..RRRR..",".RRRRRR.","..RR.RR.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+    ["........","..RRRR..",".RRRRRR.","..RR.RR.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+    ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+    ["........","..RRRR..",".RRRRRR.",".RR.RR..","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+    ["........","..RRRR..",".RRRRRR.",".RR.RR..","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+    ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+    ["........",".RRRR...","RRRRRR..","R.RR.R..","RRRRRRR.","RRRRRR..","RR..RR..","........"],
+    ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+    ["........","...RRRR.","..RRRRRR","..R.RR.R",".RRRRRRR","..RRRRRR","..RR..RR","........"],
+    ["........","..RRRR..",".RRRRRR.",".R.RR.R.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"],
+    ["........","..RRRR..",".RRRRRR.",".RRRRRR.","RRRRRRRR",".RRRRRR.",".RR..RR.","........"]]},
+  working: { label:"Working", kind:"status", frame_ms:80, colors:{A:"#c8e6ff",B:"#5a6773",C:"#2c3338"}, frames:[
+    ["AA......","AA......","BB......","BB......","CC......","CC......","........","........"],
+    ["BBAA....","BBAA....","CC......","CC......","........","........","........","........"],
+    ["CCBBAA..","CCBBAA..","........","........","........","........","........","........"],
+    ["..CCBBAA","..CCBBAA","........","........","........","........","........","........"],
+    ["....CCBB","....CCBB","......AA","......AA","........","........","........","........"],
+    ["......CC","......CC","......BB","......BB","......AA","......AA","........","........"],
+    ["........","........","......CC","......CC","......BB","......BB","......AA","......AA"],
+    ["........","........","........","........","......CC","......CC","....AABB","....AABB"],
+    ["........","........","........","........","........","........","..AABBCC","..AABBCC"],
+    ["........","........","........","........","........","........","AABBCC..","AABBCC.."],
+    ["........","........","........","........","AA......","AA......","BBCC....","BBCC...."],
+    ["........","........","AA......","AA......","BB......","BB......","CC......","CC......"]]},
+  done: { label:"Done", kind:"status", frame_ms:220, colors:{G:"#00c83c"}, frames:[
+    ["........",".......G","......GG","G....GG.","GG..GG..",".GGGG...","..GG....","........"],
+    ["GGGGGGGG","GGGGGGG.","GGGGGG..",".GGGG..G","..GG..GG","G....GGG","GG..GGGG","GGGGGGGG"],
+    ["........",".......G","......GG","G....GG.","GG..GG..",".GGGG...","..GG....","........"],
+    ["GGGGGGGG","GGGGGGG.","GGGGGG..",".GGGG..G","..GG..GG","G....GGG","GG..GGGG","GGGGGGGG"],
+    ["........",".......G","......GG","G....GG.","GG..GG..",".GGGG...","..GG....","........"]]},
+  alert: { label:"Needs you", kind:"emotion", frame_ms:230, colors:{A:"#ffa000"}, frames:[
+    ["...AA...","...AA...","...AA...","...AA...","...AA...","........","...AA...","...AA..."],
+    ["AAA..AAA","AAA..AAA","AAA..AAA","AAA..AAA","AAA..AAA","AAAAAAAA","AAA..AAA","AAA..AAA"],
+    ["...AA...","...AA...","...AA...","...AA...","...AA...","........","...AA...","...AA..."],
+    ["AAA..AAA","AAA..AAA","AAA..AAA","AAA..AAA","AAA..AAA","AAAAAAAA","AAA..AAA","AAA..AAA"],
+    ["...AA...","...AA...","...AA...","...AA...","...AA...","........","...AA...","...AA..."]]},
+  party: { label:"Party", kind:"emotion", frame_ms:130, colors:{M:"#ff28b4",C:"#28c8ff",Y:"#ffc800",G:"#00c83c",W:"#ffffff"}, frames:[
+    ["..W...C.","M...G...","...Y...W",".C...M..","..M...G.","Y...W...","...C...M",".G...Y.."],
+    [".G...Y..","..W...C.","M...G...","...Y...W",".C...M..","..M...G.","Y...W...","...C...M"],
+    ["...C...M",".G...Y..","..W...C.","M...G...","...Y...W",".C...M..","..M...G.","Y...W..."],
+    ["Y...W...","...C...M",".G...Y..","..W...C.","M...G...","...Y...W",".C...M..","..M...G."],
+    ["..M...G.","Y...W...","...C...M",".G...Y..","..W...C.","M...G...","...Y...W",".C...M.."],
+    [".C...M..","..M...G.","Y...W...","...C...M",".G...Y..","..W...C.","M...G...","...Y...W"],
+    ["...Y...W",".C...M..","..M...G.","Y...W...","...C...M",".G...Y..","..W...C.","M...G..."],
+    ["M...G...","...Y...W",".C...M..","..M...G.","Y...W...","...C...M",".G...Y..","..W...C."]]},
+  heart: { label:"Love it", kind:"emotion", frame_ms:520, colors:{R:"#ff1432"}, frames:[
+    [".RR..RR.","RRRRRRRR","RRRRRRRR","RRRRRRRR",".RRRRRR.","..RRRR..","...RR...","........"],
+    ["........",".RR..RR.","RRRRRRRR","RRRRRRRR",".RRRRRR.","..RRRR..","...RR...","........"]]},
+  spaceship: { label:"Liftoff", kind:"emotion", frame_ms:160, colors:{R:"#ff2828",O:"#ff8c00",W:"#ffffff",B:"#2060ff"}, frames:[
+    ["...RR...","..RWWR..","..WBBW..",".RWWWWR.",".R.WW.R.","...RR...","...OO...","...OO..."],
+    ["...RR...","..RWWR..","..WBBW..",".RWWWWR.",".R.WW.R.","...OO...","...RR...","...OO..."],
+    ["...RR...","..RWWR..","..WBBW..",".RWWWWR.",".R.WW.R.","...OO...","...OO...","...RR..."]]},
+  smiley: { label:"All good", kind:"emotion", frame_ms:150, colors:{Y:"#ffc800"}, frames:[
+    ["..YYYY..",".YYYYYY.","YY.YY.YY","YYYYYYYY","Y.YYYY.Y","YY....YY",".YYYYYY.","..YYYY.."]]},
+  sleep: { label:"Resting", kind:"emotion", frame_ms:600, colors:{W:"#b4c8e6",B:"#32509b"}, frames:[
+    ["WWWW....","..WW....",".WW.....","WWWW....",".....BBB","......B.",".....B..",".....BBB"],
+    ["WWWW....","..WW....",".WW.....","WWWW....","........","........","........","........"]]},
+  cross: { label:"Failed", kind:"status", frame_ms:520, colors:{R:"#ff2814"}, frames:[
+    ["RR....RR",".RR..RR.","..RRRR..","...RR...","..RRRR..",".RR..RR.","RR....RR","........"]]},
+};
+
+// ── Pre-resolve char-art → flat [{x,y,r,g,b}] per frame using shared core ──
+const RESOLVED = {};
+for (const [name, e] of Object.entries(EXPR)) {
+  RESOLVED[name] = resolveExpression(e);
+}
+
+// ── Synthetic data generators (the informational side) ──
+const GEN = {
+  progress(t){ // 0..1 sawtooth fill, cyan
+    const p = (t/3200)%1, lit = Math.round(p*8), px=[];
+    for(let y=0;y<8;y++){ if(8-1-y < lit){ const k=0.55+0.45*((8-1-y)/Math.max(lit,1)); for(let x=0;x<8;x++) px.push({x,y,r:0|34*k,g:0|221*k,b:0|255*k}); } }
+    return px;
+  },
+  spark(t){ // moving column chart
+    const px=[]; for(let x=0;x<8;x++){ const h=1+Math.round(3.5+3.4*Math.sin(t/360 + x*0.85)); for(let y=0;y<8;y++){ if(y>=8-h){ const k=0.5+0.5*((y-(8-h))/Math.max(h-1,1)); px.push({x,y,r:0|34*k,g:0|221*k,b:0|255*k}); } } }
+    return px;
+  },
+};
+
+// ── Panel factory — wraps the shared Panel ──
+const panels = [];
+function mk(canvas, deviceEl) {
+  const p = new Panel(canvas, { device: deviceEl });
+  panels.push(p);
+  return p;
+}
+
+// Helper: set a named expression on a panel
+function setPanelExpr(panel, name, deviceEl) {
+  const r = RESOLVED[name];
+  if (!r) return;
+  panel.setFrames(r.frames, r.frame_ms);
+  if (deviceEl) {
+    const el = deviceEl.querySelector('.now');
+    if (el) el.innerHTML = 'showing <b>' + EXPR[name].label + '</b>';
+  }
+}
+
+// ── Wire up panels ──
+const hero = mk(document.getElementById('heroPanel'), document.getElementById('heroDevice'));
+const play = mk(document.getElementById('playPanel'), document.getElementById('playDevice'));
+
+document.querySelectorAll('.beat canvas[data-expr]').forEach(cv => {
+  const p = mk(cv, null);
+  const r = RESOLVED[cv.dataset.expr];
+  if (r) p.setFrames(r.frames, r.frame_ms);
+});
+
+document.querySelectorAll('canvas[data-gen]').forEach(cv => {
+  const p = mk(cv, null);
+  const fn = GEN[cv.dataset.gen];
+  if (fn) p.setGenerator(fn);
+});
+
+// ── Desk companion — shared component from shared/desk-sim.js ──
+let compHandle = null;
+function showCompanion() {
+  if (compHandle) return;
+  compHandle = mountDeskSim({ expression: EXPR.idle, dismissible: true });
+}
+
+// ── Playground buttons ──
+const ORDER = ['mascot','working','done','alert','party','heart','spaceship','smiley','sleep','cross','idle'];
+const pad = document.getElementById('exprPad');
+ORDER.forEach((name, i) => {
+  const e = EXPR[name], b = document.createElement('button');
+  b.className = 'chip'; b.dataset.kind = e.kind;
+  b.innerHTML = '<span class="dot"></span>' + e.label;
+  b.onclick = () => {
+    setPanelExpr(play, name, document.getElementById('playDevice'));
+    pad.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    b.classList.add('active');
   };
+  pad.appendChild(b);
+  if (i === 0) b.classList.add('active');
+});
+setPanelExpr(play, 'mascot', document.getElementById('playDevice'));
 
-  // ── Pre-resolve char-art → flat [{x,y,r,g,b}] per frame ──
-  const hexRGB = h => { h=h.replace('#',''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; };
-  for (const e of Object.values(EXPR)) {
-    e._f = e.frames.map(rows => {
-      const px = [];
-      for (let y=0;y<8;y++) for (let x=0;x<8;x++){ const ch=rows[y][x]; if(ch==='.')continue; const c=e.colors[ch]; if(!c)continue; const [r,g,b]=hexRGB(c); px.push({x,y,r,g,b}); }
-      return px;
-    });
-  }
+// ── Hero auto-reel ──
+const REEL = ['mascot','working','done','party','spaceship','heart','idle'];
+let ri = 0;
+setPanelExpr(hero, REEL[0], document.getElementById('heroDevice'));
+function advanceReel() { ri = (ri+1)%REEL.length; setPanelExpr(hero, REEL[ri], document.getElementById('heroDevice')); }
+if (!REDUCE) setInterval(advanceReel, 3400);
 
-  // ── Synthetic data generators (the informational side) ──
-  const GEN = {
-    progress(t){ // 0..1 sawtooth fill, cyan
-      const p = (t/3200)%1, lit = Math.round(p*8), px=[];
-      for(let y=0;y<8;y++){ if(8-1-y < lit){ const k=0.55+0.45*((8-1-y)/Math.max(lit,1)); for(let x=0;x<8;x++) px.push({x,y,r:0|34*k,g:0|221*k,b:0|255*k}); } }
-      return px;
-    },
-    spark(t){ // moving column chart
-      const px=[]; for(let x=0;x<8;x++){ const h=1+Math.round(3.5+3.4*Math.sin(t/360 + x*0.85)); for(let y=0;y<8;y++){ if(y>=8-h){ const k=0.5+0.5*((y-(8-h))/Math.max(h-1,1)); px.push({x,y,r:0|34*k,g:0|221*k,b:0|255*k}); } } }
-      return px;
-    },
-  };
-
-  // ── Panel: renders frames/generator on a canvas with bloom + glow bleed ──
-  const panels = [];
-  class Panel {
-    constructor(canvas, device){
-      this.cv=canvas; this.ctx=canvas.getContext('2d'); this.device=device;
-      this.S=canvas.width; this.cell=this.S/8; this.acc=0; this.fi=0;
-      this.expr=null; this.gen=null;
-    }
-    set(name){ this.expr=EXPR[name]; this.gen=null; this.fi=0; this.acc=0; this.name=name; if(this.device) this._label(this.expr.label); this.draw(0); }
-    setGen(fn){ this.gen=GEN[fn]; this.expr=null; this.draw(0); }
-    _label(t){ const el=this.device.querySelector?.('.now'); if(el) el.innerHTML='showing <b>'+t+'</b>'; }
-    tick(dt, now){
-      if(this.gen){ this.draw(now); return; }
-      if(!this.expr) return;
-      this.acc+=dt; const fm=this.expr.frame_ms||150;
-      while(this.acc>=fm){ this.acc-=fm; this.fi=(this.fi+1)%this.expr._f.length; this._dirty=true; }
-      if(this._dirty){ this._dirty=false; this.draw(now); }
-    }
-    pixels(now){ return this.gen ? this.gen(now) : (this.expr? this.expr._f[this.fi] : []); }
-    draw(now){
-      const ctx=this.ctx, S=this.S, c=this.cell, px=this.pixels(now);
-      // substrate + unlit dots
-      ctx.globalCompositeOperation='source-over';
-      ctx.clearRect(0,0,S,S);
-      ctx.fillStyle='#060608'; ctx.fillRect(0,0,S,S);
-      ctx.fillStyle='rgba(255,255,255,.022)';
-      for(let y=0;y<8;y++)for(let x=0;x<8;x++){ ctx.beginPath(); ctx.arc(x*c+c/2,y*c+c/2,c*0.13,0,7); ctx.fill(); }
-      // lit pixels — additive bloom
-      ctx.globalCompositeOperation='lighter';
-      let R=0,G=0,B=0,n=0;
-      for(const p of px){
-        const cx=p.x*c+c/2, cy=p.y*c+c/2;
-        const halo=ctx.createRadialGradient(cx,cy,0,cx,cy,c*0.92);
-        halo.addColorStop(0,`rgba(${p.r},${p.g},${p.b},.85)`);
-        halo.addColorStop(.45,`rgba(${p.r},${p.g},${p.b},.34)`);
-        halo.addColorStop(1,`rgba(${p.r},${p.g},${p.b},0)`);
-        ctx.fillStyle=halo; ctx.fillRect(cx-c,cy-c,c*2,c*2);
-        // hot core
-        const core=ctx.createRadialGradient(cx,cy,0,cx,cy,c*0.34);
-        core.addColorStop(0,`rgba(${Math.min(255,p.r+90)},${Math.min(255,p.g+90)},${Math.min(255,p.b+90)},1)`);
-        core.addColorStop(1,`rgba(${p.r},${p.g},${p.b},.15)`);
-        ctx.fillStyle=core; ctx.beginPath(); ctx.arc(cx,cy,c*0.34,0,7); ctx.fill();
-        R+=p.r;G+=p.g;B+=p.b;n++;
-      }
-      ctx.globalCompositeOperation='source-over';
-      // ambient glow bleed → CSS var on the device
-      if(this.device && n){ const k=1.1; this.device.style.setProperty('--glow',`rgba(${Math.min(255,0|R/n*k)},${Math.min(255,0|G/n*k)},${Math.min(255,0|B/n*k)},.55)`); }
-    }
-  }
-
-  function mk(canvas, device){ const p=new Panel(canvas, device); panels.push(p); return p; }
-
-  // ── Wire up panels ──
-  const hero = mk(document.getElementById('heroPanel'), document.getElementById('heroDevice'));
-  const play = mk(document.getElementById('playPanel'), document.getElementById('playDevice'));
-  document.querySelectorAll('.beat canvas[data-expr]').forEach(cv => mk(cv, null).set(cv.dataset.expr));
-  document.querySelectorAll('canvas[data-gen]').forEach(cv => mk(cv, null).setGen(cv.dataset.gen));
-
-  // companion
-  const comp = document.getElementById('companion');
-  const compPanel = mk(document.getElementById('companionPanel'), comp).set('idle');
-  document.getElementById('companionX').onclick = () => comp.classList.add('hidden');
-
-  // ── Playground buttons ──
-  const ORDER = ['mascot','working','done','alert','party','heart','spaceship','smiley','sleep','cross','idle'];
-  const pad = document.getElementById('exprPad');
-  ORDER.forEach((name,i) => {
-    const e=EXPR[name], b=document.createElement('button');
-    b.className='chip'; b.dataset.kind=e.kind; b.innerHTML='<span class="dot"></span>'+e.label;
-    b.onclick=() => { play.set(name); pad.querySelectorAll('.chip').forEach(c=>c.classList.remove('active')); b.classList.add('active'); };
-    pad.appendChild(b); if(i===0){ b.classList.add('active'); }
-  });
-  play.set('mascot');
-
-  // ── Hero auto-reel ──
-  const REEL=['mascot','working','done','party','spaceship','heart','idle'];
-  let ri=0;
-  hero.set(REEL[0]);
-  function advanceReel(){ ri=(ri+1)%REEL.length; hero.set(REEL[ri]); }
-  if(!REDUCE) setInterval(advanceReel, 3400);
-
-  // ── Single shared animation loop ──
-  if(REDUCE){
-    // static: draw one resting frame each; show companion without motion
-    panels.forEach(p=>p.draw(0));
-    comp.classList.remove('hidden');
-  } else {
-    let last=performance.now();
-    function loop(now){ const dt=now-last; last=now; for(const p of panels) p.tick(dt, now); requestAnimationFrame(loop); }
-    requestAnimationFrame(loop);
-    // reveal companion after a beat (the desk-buddy showing up)
-    setTimeout(()=>comp.classList.remove('hidden'), 2600);
-  }
-})();
+// ── Single shared animation loop ──
+if (REDUCE) {
+  panels.forEach(p => p.draw(0));
+  showCompanion();
+} else {
+  let last = performance.now();
+  function loop(now) { const dt = now-last; last = now; for (const p of panels) p.tick(dt, now); requestAnimationFrame(loop); }
+  requestAnimationFrame(loop);
+  // reveal companion after a beat (the desk-buddy showing up)
+  setTimeout(showCompanion, 2600);
+}
 </script>
 </body>
 </html>
