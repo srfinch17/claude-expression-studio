@@ -727,20 +727,10 @@ function dfShuffle(perm) {
   }
 }
 
-// FastLED blend() equivalent: linear lerp between two [r,g,b] at t in 0..255
-function dfBlend(a, b, t) {
-  const u = t / 255;
-  return [
-    Math.round(a[0] + (b[0] - a[0]) * u),
-    Math.round(a[1] + (b[1] - a[1]) * u),
-    Math.round(a[2] + (b[2] - a[2]) * u),
-  ];
-}
-
 function makeDancefloor(opts = {}) {
   const palette   = Math.max(0, Math.min(63, opts.palette ?? 0));
-  // hold maps to dfHoldMin (firmware default 12 when not provided; gallery uses 6)
-  const holdMin   = Math.max(4, Math.min(40, opts.hold ?? 12));
+  // hold maps to dfHoldMin (spec default 6; clamp 4..40)
+  const holdMin   = Math.max(4, Math.min(40, opts.hold ?? 6));
   const pal       = DF_PALETTES[palette];
 
   // 4 color slots, current + next
@@ -793,12 +783,9 @@ function makeDancefloor(opts = {}) {
         const tx   = i % 4;
         const ty   = (i / 4) | 0;
         const slot = (tx % 2) + (ty % 2) * 2;
-        const c    = dfBlend(slotCur[slot], slotNxt[slot], blend_t);
-        // nscale8: (channel * brightness) >> 8 — matches firmware c.nscale8(dfBrightness[i])
-        const bri  = brightness[i];
-        const r    = (c[0] * bri) >> 8;
-        const g    = (c[1] * bri) >> 8;
-        const b    = (c[2] * bri) >> 8;
+        const c    = blendRGB(slotCur[slot], slotNxt[slot], blend_t);
+        // nscale8: matches firmware c.nscale8(dfBrightness[i])
+        const [r, g, b] = nscale8(c, brightness[i]);
         const px0  = tx * 2, py0 = ty * 2;
         px.push({ x: px0,   y: py0,   r, g, b });
         px.push({ x: px0+1, y: py0,   r, g, b });

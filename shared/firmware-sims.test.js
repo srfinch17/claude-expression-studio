@@ -86,9 +86,22 @@ test("fireworks sim yields in-bounds frames and a burst occurs in a 100-frame wi
 test("dancefloor sim yields in-bounds frames and many pixels lit every frame", () => {
   const sim = FIRMWARE_SIMS.dancefloor({ palette: 0, hold: 6 });
   assert.equal(typeof sim.frame_ms, "number");
-  for (let i = 0; i < 50; i++) {
-    const px = sim.frame();
-    assertInBounds(px);
-    assert.ok(px.length >= 16, `tiled floor: at least 16 pixels lit (got ${px.length})`);
+
+  // Capture early-frame pixel colors
+  const earlyPx = sim.frame();
+  assertInBounds(earlyPx);
+  assert.equal(earlyPx.length, 64, `tiled floor always emits exactly 64 pixels (got ${earlyPx.length})`);
+  const earlyColors = earlyPx.map((p) => `${p.r},${p.g},${p.b}`).join("|");
+
+  // Run ~40 more frames, checking bounds and pixel count each time
+  let laterPx;
+  for (let i = 0; i < 40; i++) {
+    laterPx = sim.frame();
+    assertInBounds(laterPx);
+    assert.equal(laterPx.length, 64, `tiled floor always emits exactly 64 pixels (frame ${i + 2})`);
   }
+
+  // State machine must cycle: colors after ~40 frames must not be identical to the first frame
+  const laterColors = laterPx.map((p) => `${p.r},${p.g},${p.b}`).join("|");
+  assert.notEqual(laterColors, earlyColors, "dancefloor colors must change over time (state machine cycled)");
 });
