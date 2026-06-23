@@ -213,5 +213,18 @@
 <div id="root"></div>
 
 <script type="module" src="./gallery.js"></script>
+
+<!-- Desk companion: claude-idle mascot (the orange alien), dismissible -->
+<script type="module">
+import { mountDeskSim } from "../shared/desk-sim.js";
+try {
+  const data = await (await fetch("./gallery-data.json")).json();
+  const entry = data.expressions.find(e => e.name === "claude-idle");
+  if (entry) mountDeskSim({ expression: entry, dismissible: true });
+} catch (err) {
+  // gallery-data.json not available — companion just doesn't show
+  console.warn("[desk-sim] could not load gallery-data.json:", err.message);
+}
+</script>
 </body>
 </html>
