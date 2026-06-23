@@ -29,3 +29,16 @@ test("frostbite sim yields 64 in-bounds mist pixels every frame", () => {
     assert.ok(px.length >= 64, "all 64 mist pixels lit");
   }
 });
+
+test("fire sim yields in-bounds frames and is not all-black after warm-up", () => {
+  const sim = FIRMWARE_SIMS.fire({ palette: "classic", intensity: 6 });
+  assert.equal(typeof sim.frame_ms, "number");
+  // run 10 warm-up frames
+  for (let i = 0; i < 10; i++) sim.frame();
+  // run 50 more frames and check bounds + at least one lit pixel
+  for (let i = 0; i < 50; i++) {
+    const px = sim.frame();
+    assertInBounds(px);
+    assert.ok(px.length > 0, "not all-black after warm-up");
+  }
+});
