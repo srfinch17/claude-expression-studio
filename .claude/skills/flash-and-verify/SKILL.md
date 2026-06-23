@@ -95,7 +95,7 @@ Upload speed 921600. (Board is 4MB — verified via esptool.)
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | `'X.h' No such file` / undefined ref to a lib | library not installed | Install via Manage Libraries (FastLED, ArduinoJson, PNGdec, **WiFiManager by tzapu**) |
-| `Sketch too big` / won't link | wrong partition scheme | Set partition to `8MB with spiffs (3MB APP, 5MB SPIFFS)` |
+| `Sketch too big` / won't link | wrong partition scheme | This board is **4MB** → use **Huge APP (3MB No OTA / 1MB SPIFFS)** (an 8MB scheme won't fit — only 4MB flash) |
 | Web page is stale / 404 after editing `data/` | forgot LittleFS data upload | Run **ESP32 LittleFS Data Upload** (and beware the browser stale-cache trap above — verify the LOADED code) |
 | Board freezes/reboots while Claude HTTP-drives it (NOT under bright patterns) | `/api/display/matrix` full-fill can FREEZE; repeated `/api/display/animation` can REBOOT — even with PSRAM on. 64-burst grid-test is stable | While driving for tests, prefer grid-test endpoints + `solid` sparingly; AVOID `/api/display/matrix`. See `bug-render-crash-matrix-solid` memory |
 | Upload fails / port busy | Serial Monitor holding the port, or no boot mode | Close Serial Monitor; retry; if stuck, hold BOOT during connect |
@@ -135,3 +135,24 @@ connected). Then read Serial (115200; needs USB CDC On Boot: Enabled):
 - `.local` fails but the raw IP works → it's mDNS, not WiFi. Use the IP.
 
 Full history of these in `docs/PITFALLS.md` (WiFi-drop + credential-loss entries).
+
+## 7. Cutting an end-user RELEASE (distribution — NOT the dev loop)
+End users never do the two-step upload above — they flash ONE merged binary and
+double-click a `.mcpb`. Maintainer-side, produce those artifacts:
+- **`npm run build:mcpb`** → `release/esp32-matrix.mcpb` (the Claude Desktop extension —
+  double-click install, no JSON/Node). After a TS edit, **`/mcp` reconnect FIRST** so the
+  live server releases the old native binary (a Windows file lock otherwise leaves
+  `@napi-rs/canvas` in the bundle).
+- ⛔ **Export Compiled Binary with `secrets.h` ABSENT** for anything you DISTRIBUTE — a local
+  `secrets.h` bakes your WiFi creds into the app AND removes the setup portal (the `.bin`
+  leaks your password via `strings` and can't onboard anyone else). **`npm run build:release`
+  REFUSES if `secrets.h` is present** (`--allow-secrets` = a personal build of your own
+  board). See `docs/PITFALLS.md` 2026-06-23 + the `project-distribution` memory.
+- **`npm run build:release`** assembles a self-contained `release/` (merged.bin + esptool.exe
+  + flash.bat/.sh + install page + .mcpb). End-user flash = `release\flash.bat` (or the ESP Web
+  Tools browser button once GitHub Pages is wired). The merged image is a **factory image**:
+  it 0xFF-pads the NVS gap → wipes WiFi/settings → the authentic fresh-install flow (captive
+  portal on first boot). NOTE: a `secrets.h` build skips that portal (see PITFALLS).
+- Before crowning a version, confirm **zero drift across all FOUR artifacts** (firmware / web /
+  mcp / **mcp-bundle**) with `npm run check` or `matrix_version`. The public showcase/landing
+  page is `site/` (self-contained, Pages-deployable; not a board artifact).

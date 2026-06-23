@@ -30,6 +30,12 @@ pre-merged binary (app + web UI) from `install/` — no LittleFS upload step.
 That binary is produced by `npm run build:release` (`scripts/build-release.mjs`).
 The MCP extension for Claude Desktop is packed by `npm run build:mcpb`.
 
+**`site/`** = the public **showcase / landing page** (`site/index.html`, self-contained,
+GitHub-Pages-deployable): a live in-browser 8×8 LED simulation that plays the real
+expression frames + an interactive playground + the presence-protocol pitch. No build
+step, no hardware. See `site/README.md` for Pages deployment. `install/` = the actual
+flasher (ESP Web Tools browser button + offline `flash.bat`/`flash.sh`).
+
 **Never claim a change "works" until you've confirmed it on hardware.** I can
 reason about correctness, but "compiles in my head" ≠ "runs on the board."
 
