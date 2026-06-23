@@ -25,6 +25,11 @@ compile + flash in the Arduino IDE and report back. So:
 3. You paste the **Serial Monitor** output and/or describe the LED behavior.
 4. We iterate.
 
+**This two-step upload is the developer path only.** End users flash a single
+pre-merged binary (app + web UI) from `install/` — no LittleFS upload step.
+That binary is produced by `npm run build:release` (`scripts/build-release.mjs`).
+The MCP extension for Claude Desktop is packed by `npm run build:mcpb`.
+
 **Never claim a change "works" until you've confirmed it on hardware.** I can
 reason about correctness, but "compiles in my head" ≠ "runs on the board."
 
@@ -70,7 +75,7 @@ Library Manager is unrelated — it adds no upload command. See `docs/PITFALLS.m
 - Flash Size: `4MB (32Mb)` (this board is 4MB — verified via esptool)
 - Partition Scheme: `Huge APP (3MB No OTA / 1MB SPIFFS)` — LittleFS data folder is
   small (~hundreds of KB) so it fits the 1MB region. Watch this if the data
-  folder ever grows (emoji/sketch image assets).
+  folder ever grows (sketch/image assets).
 
 ---
 
@@ -239,18 +244,28 @@ carries `data`, the board renders it NATIVELY (v0.5) — progress as a bottom-up
 
 ## Versioning (know what's actually deployed)
 
-One canonical version in the repo-root **`VERSION`** file (SemVer, started 0.1.0),
-stamped into all three independently-deployed artifacts so each self-reports:
+One canonical version in the repo-root **`VERSION`** file (SemVer, currently **0.12.0**),
+stamped into all four independently-deployed artifacts so each self-reports:
 - **firmware** → `version.h` `#define FW_VERSION`; `GET /api/status` returns
   `fw_version` + `fw_built` (the compiler's `__DATE__ __TIME__`, auto-updates every
   reflash even without a bump).
 - **web bundle** → `data/version.json`, read at boot, reported as `web_version`.
 - **MCP server** → `mcp_server/package.json`, read at runtime (no longer hardcoded).
+- **`.mcpb` bundle** → `mcp_server/manifest.json` `version` field, checked by `npm run check`.
+
+> **Version reset note:** the repo was reset from 1.1.0 → 0.12.0 because 1.1.0 was tagged
+> before the project was genuinely end-user installable. **The real 1.0.0 is the first
+> properly installable release** (merged firmware binary + `.mcpb`, hardware-verified
+> end-to-end). Do not bump to 1.0.0 until that milestone is reached.
 
 **Bump deliberately:** `npm run bump:patch|minor|major` (root `package.json`) → rewrites
-`VERSION`, stamps all three, commits `chore: bump vX.Y.Z`. Then **deploy each artifact to
-make it live**: flash (firmware), LittleFS-upload (web), rebuild+reconnect (MCP) — a bump
-is *not* live until its artifact is redeployed.
+`VERSION`, stamps all four artifacts, commits `chore: bump vX.Y.Z`. Then **deploy each
+artifact to make it live**: flash (firmware), LittleFS-upload (web), rebuild+reconnect
+(MCP) — a bump is *not* live until its artifact is redeployed.
+
+**For end-user releases:** `npm run build:release` merges firmware + web into
+`release/esp32matrix-<version>-merged.bin` + `release/manifest.json` + copies the
+`.mcpb` into `release/`. Use `npm run build:mcpb` to rebuild the extension alone.
 
 **Check drift:** `npm run check` (terminal) or the **`matrix_version`** MCP tool — both
 compare repo `VERSION` to what each artifact reports and flag `⚠ DRIFT`. The general,
@@ -353,15 +368,11 @@ Plan: `docs/superpowers/plans/2026-06-21-calibration-phase3-correction-layer.md`
 > applied `gamma=1.0`, measured ~2.0 kept in `gamma_measured` for future gradient-generation
 > code. **White-balance (pure attenuation) is the active correction** — it never crushes.
 
-**⭐ v1.0.0 = Phase 4: apply the correction lessons across the ENTIRE board-app suite** —
-re-review every animation/expression/app with correction on, apply the verified `palette`
-as new defaults, delete now-redundant hand-tuned floors (e.g. claudesweep's manual amber),
-then `npm run bump:major` to 1.0.0 (the version bump was DEFERRED here — Phase 4 re-flashes
-anyway; repo+artifacts read 0.9.0, no drift). This is the deliberate stop BEFORE the
-docs/RAG buildout. **Phases:** (1) ✅ Lab built (2) ✅ battery run (3) ✅ correction layer
-(4) ▶ full-suite re-review → 1.0.0. Status + measured values in auto-memory
-`color-threshold-calibration`. Calibration can drive the panel to 255 — restore a
-comfortable brightness when done (persists to NVS).
+**⭐ Calibration phases:** (1) ✅ Lab built (2) ✅ battery run (3) ✅ correction layer
+(4) ✅ full-suite re-review — all phases complete. Correction lessons applied;
+white-balance active; gamma dropped as global stage. Status + measured values in
+auto-memory `color-threshold-calibration`. Calibration can drive the panel to 255 —
+restore a comfortable brightness when done (persists to NVS).
 
 ## Board discovery
 

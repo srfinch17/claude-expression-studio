@@ -33,8 +33,8 @@ You talk to Claude in plain English — *"show a purple matrix rain animation"* 
 ### Settings & Idle Screensaver
 NVS-backed board configuration (`GET`/`POST /api/settings`) with a web control page and two MCP tools (`matrix_get_settings` / `matrix_set_settings`). Includes an idle screensaver that auto-starts after a configurable period of inactivity and rotates through ambient apps (fire, matrix rain, clock, etc.) at low brightness. Armed automatically by Claude Code hooks; any real command disarms it.
 
-### Sketch & Emoji
-Paint pixel-by-pixel on an 8×8 grid (Sketch) or render any emoji down to 8×8 with a vibrance control (Emoji), then push to the board.
+### Sketch
+Paint pixel-by-pixel on an 8×8 grid, then push to the board.
 
 ### Text Scrolling
 Scrolling text in three font sizes (5×7, 3×5, 3×3), with solid or two-color gradient support.
@@ -100,7 +100,43 @@ mcp_server/                 # Node.js MCP server
 └── tsconfig.json
 ```
 
-## Setup
+## Install (end users)
+
+If you have a board and want to get it running — no Arduino IDE or Node.js required.
+
+**Requirements:** A Waveshare ESP32-S3-Matrix, a USB cable, and Google Chrome or Microsoft Edge (for the browser flasher). Your computer and the board must be on the **same local network** after setup; the board is reachable at `http://esp32matrix.local`.
+
+### 1. Flash the firmware
+
+**Browser (Chrome or Edge):**
+Open `install/index.html` from the release package, plug the board into USB, and follow the on-screen prompt. ESP Web Tools handles the flash in one click.
+
+**Offline (any browser / OS):**
+Download the release zip, plug in the board, and run the script for your OS:
+- Windows: double-click `install/flash.bat`
+- macOS / Linux: run `install/flash.sh` in a terminal
+
+Both scripts flash the pre-merged binary (`release/esp32matrix-<version>-merged.bin`) — firmware and web UI together, no separate LittleFS upload step.
+
+### 2. First-time WiFi setup
+
+After flashing, the board opens a setup hotspot (LEDs **amber**):
+
+1. Join the `ESP32-Matrix-Setup` WiFi network on your phone or laptop.
+2. A captive portal opens (or browse to `192.168.4.1`).
+3. Tap **Configure WiFi**, choose your network, enter the password, save.
+4. The board reboots and joins your network. LEDs turn **blue** while connecting.
+5. Once joined, it is reachable at `http://esp32matrix.local`.
+
+### 3. Add the MCP extension to Claude Desktop
+
+Double-click `install/esp32-matrix.mcpb` (or `release/esp32-matrix.mcpb` from the release zip). Claude Desktop installs the extension automatically — no JSON editing or Node.js install needed. The extension connects to the board at `http://esp32matrix.local`.
+
+---
+
+## Developing / building from source
+
+The steps below are for contributors and maintainers building from the Arduino sketch and TypeScript source. **End users should use the Install steps above instead.**
 
 ### 1. Firmware
 
