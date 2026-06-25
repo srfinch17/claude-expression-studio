@@ -57,3 +57,8 @@ test("noRepeat remembers the last pick via ctx.last", () => {
   assert.equal(first.value, "a");
   assert.equal(second.value, "b");
 });
+
+test("resolve degrades to null (never throws) on a null manifest or opts", () => {
+  assert.equal(resolve(null, { renderer: "r", intent: "idle" }), null);
+  assert.equal(resolve({ intents: {}, renderers: {} }, null), null);
+});

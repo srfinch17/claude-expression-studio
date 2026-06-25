@@ -62,6 +62,7 @@ export function pickWeighted(weights, rng = Math.random, exclude = null) {
 // (the fallback-RESOLVED intent, not the raw input intent) giving noRepeat its
 // memory. Returns { intent, value } or null (degrade to nothing).
 export function resolve(manifest, opts, ctx = {}) {
+  if (!manifest || !opts) return null; // lenient at runtime: degrade, never throw
   const rng = ctx.rng || Math.random;
   const intent = opts.intent != null
     ? opts.intent

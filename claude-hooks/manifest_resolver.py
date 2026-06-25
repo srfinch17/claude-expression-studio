@@ -65,6 +65,8 @@ def pick_weighted(weights, rng=random.random, exclude=None):
 def resolve(manifest, opts, ctx=None):
     if ctx is None:
         ctx = {}
+    if not manifest or not opts:  # lenient at runtime: degrade, never throw
+        return None
     rng = ctx.get("rng") or random.random
     intent = opts.get("intent")
     if intent is None:
