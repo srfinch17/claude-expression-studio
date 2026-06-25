@@ -55,7 +55,7 @@ export function buildGalleryData({ canned, savedDir, manifestPath, boredDir }) {
   for (const [name, data] of readDir(savedDir, "saved")) byName.set(name, data);
 
   // Classify every unique name by manifest-derived rotation role. Orphan = saved AND
-  // unbound by the manifest (the unwired v1 library + {claude-idle, idea}).
+  // unbound by the manifest (the unwired v1 library + the saved-but-unbound glyphs).
   const expressions = [];
   const groups = { wait: [], ask: [], bored: [], wired: [], canned: [], orphan: [] };
   const ctx = { roles, boredNames, cannedNames };

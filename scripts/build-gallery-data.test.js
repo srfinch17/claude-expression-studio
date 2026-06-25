@@ -32,6 +32,18 @@ test("buildGalleryData merges canned + saved, classifies, lists firmware", async
   assert.equal(groupOf("sparkle"), "canned", "canned + unbound -> canned");
   assert.equal(groupOf("pacman"), "bored", "host bored-watcher dir -> bored");
 
+  // Builder-level data-completeness: a bored-ONLY animation (in claude-hooks/bored_animations/
+  // but neither saved nor canned — verified: `rocket`) must survive the saved>canned>bored merge
+  // and land grouped `bored`. The catalog unit tests can't catch this — it's the builder's merge.
+  assert.ok(data.expressions.find((e) => e.name === "rocket"), "bored-only entry `rocket` not dropped by the merge");
+  assert.equal(groupOf("rocket"), "bored", "bored-only `rocket` grouped bored");
+
+  // Builder-level priority crossover: `heart` is in BOTH the canned glyphs AND the bored dir,
+  // with no manifest binding. The builder must pass boredNames into ctx so it resolves to its
+  // rotation tier (bored), NOT canned — if boredNames weren't wired through, heart would fall
+  // through to the canned tier. Discriminates the ctx assembly in build-gallery-data.mjs.
+  assert.equal(groupOf("heart"), "bored", "canned+bored `heart` resolves to bored, not canned");
+
   for (const e of data.expressions) {
     assert.ok(Array.isArray(e.frames) && e.frames.length > 0, `${e.name} has frames`);
     assert.ok(["wait","ask","bored","wired","orphan","canned"].includes(e.group), `${e.name} grouped`);
