@@ -56,7 +56,7 @@
                     "noRepeat": { "type": "boolean" }
                   },
                   "additionalProperties": false },
-                { "type": "object" }
+                { "type": "object", "not": { "required": ["pool"] } }
               ]
             }
           }
