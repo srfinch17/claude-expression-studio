@@ -26,6 +26,9 @@
           "info": "a-info", "working": "a-work", "done": "a-done",
           "attention": "a-att", "fail": "a-fail",
           "idle": { "pool": { "x": 1, "y": 3 } }
+        } },
+        "norep": { "bindings": {
+          "idle": { "noRepeat": true, "pool": { "x": 1, "y": 1 } }
         } }
       }
     }
@@ -51,6 +54,12 @@
       "intent": "idle", "rngSeq": [0.9], "expect": { "intent": "idle", "value": "y" } },
     { "name": "pool pick: rng 0.1 over weights x:1,y:3 -> x",
       "manifest": "basic", "renderer": "pooler",
-      "intent": "idle", "rngSeq": [0.1], "expect": { "intent": "idle", "value": "x" } }
+      "intent": "idle", "rngSeq": [0.1], "expect": { "intent": "idle", "value": "x" } },
+    { "name": "noRepeat avoids the immediate repeat across two calls",
+      "manifest": "basic", "renderer": "norep", "rngSeq": [0, 0],
+      "steps": [
+        { "intent": "idle", "expect": { "intent": "idle", "value": "x" } },
+        { "intent": "idle", "expect": { "intent": "idle", "value": "y" } }
+      ] }
   ]
 }

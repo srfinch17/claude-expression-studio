@@ -27,10 +27,24 @@ def main():
     for c in data["cases"]:
         manifest = data["manifests"][c["manifest"]]
         ctx = {"rng": seq(c.get("rngSeq")), "last": {}}
-        got = resolve(manifest, {"harness": c.get("harness"), "renderer": c["renderer"],
-                                 "moment": c.get("moment"), "intent": c.get("intent")}, ctx)
-        if got != c["expect"]:
-            failures.append(f'{c["name"]}: got {got!r} want {c["expect"]!r}')
+        if "steps" in c:
+            for step in c["steps"]:
+                got = resolve(manifest, {
+                    "harness": step.get("harness", c.get("harness")),
+                    "renderer": step.get("renderer", c.get("renderer")),
+                    "moment": step.get("moment", c.get("moment")),
+                    "intent": step.get("intent", c.get("intent")),
+                }, ctx)
+                if got != step["expect"]:
+                    failures.append(
+                        f'{c["name"]} (step intent={step.get("intent")}): '
+                        f'got {got!r} want {step["expect"]!r}'
+                    )
+        else:
+            got = resolve(manifest, {"harness": c.get("harness"), "renderer": c["renderer"],
+                                     "moment": c.get("moment"), "intent": c.get("intent")}, ctx)
+            if got != c["expect"]:
+                failures.append(f'{c["name"]}: got {got!r} want {c["expect"]!r}')
     if failures:
         print("PARITY FAIL:")
         for f in failures:

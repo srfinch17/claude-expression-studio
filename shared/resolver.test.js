@@ -16,10 +16,19 @@ const seq = (values) => { let i = 0; return () => values[(i++) % values.length];
 test("resolver matches every shared fixture case", () => {
   for (const c of FIX.cases) {
     const manifest = FIX.manifests[c.manifest];
-    const ctx = { rng: seq(c.rngSeq && c.rngSeq.length ? c.rngSeq : [0]) , last: {} };
-    const got = resolve(manifest, { harness: c.harness, renderer: c.renderer,
-      moment: c.moment, intent: c.intent }, ctx);
-    assert.deepEqual(got, c.expect, c.name);
+    const ctx = { rng: seq(c.rngSeq && c.rngSeq.length ? c.rngSeq : [0]), last: {} };
+    if (c.steps) {
+      for (const step of c.steps) {
+        const got = resolve(manifest, { harness: step.harness ?? c.harness,
+          renderer: step.renderer ?? c.renderer,
+          moment: step.moment ?? c.moment, intent: step.intent ?? c.intent }, ctx);
+        assert.deepEqual(got, step.expect, `${c.name} (step intent=${step.intent})`);
+      }
+    } else {
+      const got = resolve(manifest, { harness: c.harness, renderer: c.renderer,
+        moment: c.moment, intent: c.intent }, ctx);
+      assert.deepEqual(got, c.expect, c.name);
+    }
   }
 });
 
