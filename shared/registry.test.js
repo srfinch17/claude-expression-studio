@@ -90,9 +90,10 @@ test("fire re-pick surfaces the re-picked entry's params and honors noRepeat", a
   const got = [];
   const reg = createRegistry();
   reg.register({ id: "r", render: (v, meta) => { got.push({ v, meta }); } });
-  const out = await fire(manifest, { intent: "idle", renderers: ["r"] }, reg,
-    { rng: () => 0, exists: (n) => n !== "missing", last: {} });
+  const ctx = { rng: () => 0, exists: (n) => n !== "missing", last: {} };
+  const out = await fire(manifest, { intent: "idle", renderers: ["r"] }, reg, ctx);
   assert.equal(got[0].v, "real");
   assert.deepEqual(got[0].meta, { params: { b: 2 }, label: "real" });
   assert.equal(out[0].value, "real");
+  assert.equal(ctx.last["r:idle"], "real", "ctx.last should record the re-pick");
 });
