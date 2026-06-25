@@ -57,3 +57,42 @@ test("fire re-picks when a pool value names a missing animation", async () => {
   assert.equal(p.calls[0], "real");
   assert.equal(out[0].value, "real");
 });
+
+test("fire passes meta (params/label/brightness) as the 2nd arg to render", async () => {
+  const manifest = {
+    intents: { idle: { fallback: null, root: true } },
+    harnesses: {},
+    renderers: { r: { bindings: { idle: {
+      brightness: 5, pool: { fire: { weight: 1, params: { speed: 50 }, label: "fire" } },
+    } } } },
+  };
+  const got = [];
+  const reg = createRegistry();
+  reg.register({ id: "r", render: (v, meta) => { got.push({ v, meta }); } });
+  const out = await fire(manifest, { intent: "idle", renderers: ["r"] }, reg, { rng: () => 0 });
+  assert.equal(got[0].v, "fire");
+  assert.deepEqual(got[0].meta, { params: { speed: 50 }, label: "fire", brightness: 5 });
+  assert.equal(out[0].value, "fire");
+  assert.equal(out[0].brightness, 5);
+});
+
+test("fire re-pick surfaces the re-picked entry's params and honors noRepeat", async () => {
+  // pool: missing (rich) is absent on disk; real (rich) exists. rng=0 would pick "missing"
+  // first; fire must exclude it, re-pick "real", and surface real's params.
+  const manifest = {
+    intents: { idle: { fallback: null, root: true } },
+    harnesses: {},
+    renderers: { r: { bindings: { idle: {
+      noRepeat: true,
+      pool: { missing: { weight: 5, params: { a: 1 } }, real: { weight: 1, params: { b: 2 }, label: "real" } },
+    } } } },
+  };
+  const got = [];
+  const reg = createRegistry();
+  reg.register({ id: "r", render: (v, meta) => { got.push({ v, meta }); } });
+  const out = await fire(manifest, { intent: "idle", renderers: ["r"] }, reg,
+    { rng: () => 0, exists: (n) => n !== "missing", last: {} });
+  assert.equal(got[0].v, "real");
+  assert.deepEqual(got[0].meta, { params: { b: 2 }, label: "real" });
+  assert.equal(out[0].value, "real");
+});

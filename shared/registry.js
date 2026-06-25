@@ -22,14 +22,24 @@ function resolveExisting(manifest, rendererId, opts, ctx) {
   const base = resolve(manifest, { ...opts, renderer: rendererId }, ctx);
   if (!base || !ctx || typeof ctx.exists !== "function") return base;
   if (ctx.exists(base.value)) return base;
-  // The pick was a missing animation. Re-pick from the same pool excluding misses.
+  // The pick named a missing animation. Re-pick from the same pool, excluding misses.
   const binding = effectiveBindings(manifest, rendererId)[base.intent];
-  if (!binding || typeof binding !== "object" || !binding.pool) return base; // not a pool; nothing to re-pick
+  if (!binding || typeof binding !== "object" || !binding.pool) return base; // not a pool
   const remaining = Object.fromEntries(
     Object.entries(binding.pool).filter(([name]) => ctx.exists(name)));
-  if (Object.keys(remaining).length === 0) return base; // all missing; let caller no-op on it
-  const value = pickWeighted(remaining, ctx.rng || Math.random);
-  return { intent: base.intent, value };
+  if (Object.keys(remaining).length === 0) return base; // all missing; caller no-ops
+  const key = `${rendererId}:${base.intent}`;
+  const exclude = binding.noRepeat && ctx.last ? (ctx.last[key] ?? null) : null;
+  const value = pickWeighted(remaining, ctx.rng || Math.random, exclude);
+  if (ctx.last && value != null) ctx.last[key] = value;
+  const out = { intent: base.intent, value };
+  const entry = value != null ? remaining[value] : null;
+  if (entry && typeof entry === "object") {
+    if (entry.params != null) out.params = entry.params;
+    if (entry.label != null) out.label = entry.label;
+  }
+  if (binding.brightness != null) out.brightness = binding.brightness;
+  return out;
 }
 
 export async function fire(manifest, opts, registry, ctx = {}) {
@@ -38,7 +48,11 @@ export async function fire(manifest, opts, registry, ctx = {}) {
   for (const id of ids) {
     const renderer = registry.get(id);
     const res = renderer ? resolveExisting(manifest, id, opts, ctx) : null;
-    if (renderer && res) { await renderer.render(res.value); out.push({ renderer: id, ...res }); }
+    if (renderer && res) {
+      const { intent, value, ...meta } = res;     // meta = params?/label?/brightness?
+      await renderer.render(value, meta);
+      out.push({ renderer: id, ...res });
+    }
     else out.push(null);
   }
   return out;
