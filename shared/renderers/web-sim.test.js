@@ -47,3 +47,11 @@ test("an unknown name no-ops (panel untouched)", async () => {
   assert.equal(f.calls.frames.length, 0);
   assert.equal(f.calls.steppers.length, 0);
 });
+
+test("render tolerates a meta 2nd arg (ignored) and still drives the firmware sim", async () => {
+  const f = fakePanel();
+  await makeWebSimRenderer({ panel: f.panel, loadExpression, firmwareSims })
+    .render("claudesweep", { brightness: 5, params: { speed: 90 } });
+  assert.equal(f.calls.steppers.length, 1);
+  assert.equal(f.calls.frames.length, 0);
+});

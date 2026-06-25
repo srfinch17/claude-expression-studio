@@ -11,7 +11,12 @@ import { resolveExpression } from "../expressions.js";
 export function makeWebSimRenderer({ panel, loadExpression, firmwareSims }) {
   return {
     id: "web-sim",
-    render(name) {
+    render(name, _meta) {
+      // _meta (params/brightness/label) is intentionally ignored: brightness is a
+      // physical-panel setting and firmware params tune the board firmware, neither of
+      // which applies to the in-browser canvas sim. Kept in the signature so the
+      // uniform fire() render(value, meta) call is explicit. label could drive a future
+      // caption but is not rendered here in v1.
       if (typeof name !== "string") return;
       const make = firmwareSims && firmwareSims[name];
       if (make) { const sim = make(); panel.setStepper(sim.frame, sim.frame_ms); return; }
