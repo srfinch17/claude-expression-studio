@@ -48,7 +48,12 @@ export function pickWeighted(weights, rng = Math.random, exclude = null) {
     if (filtered.length) names = filtered;
   }
   let entries = names
-    .map((n) => [n, Math.max(0, typeof weights[n] === "number" ? weights[n] : 1)])
+    .map((n) => {
+      const wv = weights[n];
+      const w = typeof wv === "number" ? wv
+        : (wv && typeof wv === "object" && typeof wv.weight === "number" ? wv.weight : 1);
+      return [n, Math.max(0, w)];
+    })
     .filter(([, w]) => w > 0);
   if (entries.length === 0) entries = names.map((n) => [n, 1]); // all zero -> uniform
   const total = entries.reduce((s, [, w]) => s + w, 0);
@@ -76,7 +81,14 @@ export function resolve(manifest, opts, ctx = {}) {
     const exclude = binding.noRepeat && ctx.last ? (ctx.last[key] ?? null) : null;
     const picked = pickWeighted(binding.pool, rng, exclude);
     if (ctx.last && picked != null) ctx.last[key] = picked;
-    return { intent: bound, value: picked };
+    const out = { intent: bound, value: picked };
+    const entry = picked != null ? binding.pool[picked] : null;
+    if (entry && typeof entry === "object") {
+      if (entry.params != null) out.params = entry.params;
+      if (entry.label != null) out.label = entry.label;
+    }
+    if (binding.brightness != null) out.brightness = binding.brightness;
+    return out;
   }
   return { intent: bound, value: binding };
 }

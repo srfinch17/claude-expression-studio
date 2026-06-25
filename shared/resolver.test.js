@@ -62,3 +62,35 @@ test("resolve degrades to null (never throws) on a null manifest or opts", () =>
   assert.equal(resolve(null, { renderer: "r", intent: "idle" }), null);
   assert.equal(resolve({ intents: {}, renderers: {} }, null), null);
 });
+
+test("pickWeighted reads weight from an object entry (rng 0.9 over x:{weight:1}, y:{weight:3} -> y)", () => {
+  const picked = pickWeighted({ x: { weight: 1 }, y: { weight: 3 } }, () => 0.9);
+  assert.equal(picked, "y");
+});
+
+test("pickWeighted: object entry with no weight defaults to 1", () => {
+  // x:{} (=>1) vs y:1 : equal halves; rng 0.4 -> x, rng 0.6 -> y
+  assert.equal(pickWeighted({ x: {}, y: 1 }, () => 0.4), "x");
+  assert.equal(pickWeighted({ x: {}, y: 1 }, () => 0.6), "y");
+});
+
+test("resolve surfaces params + label from the picked rich pool entry, and pool brightness", () => {
+  const manifest = {
+    intents: { idle: { fallback: null, root: true } },
+    renderers: { r: { bindings: { idle: {
+      brightness: 5, noRepeat: false,
+      pool: { fire: { weight: 1, params: { speed: 50 }, label: "fire" } },
+    } } } },
+  };
+  const res = resolve(manifest, { renderer: "r", intent: "idle" }, { rng: () => 0 });
+  assert.deepEqual(res, { intent: "idle", value: "fire", params: { speed: 50 }, label: "fire", brightness: 5 });
+});
+
+test("resolve on a number-weighted pool with no brightness stays {intent,value} (no new keys)", () => {
+  const manifest = {
+    intents: { idle: { fallback: null, root: true } },
+    renderers: { r: { bindings: { idle: { pool: { x: 1, y: 3 } } } } },
+  };
+  const res = resolve(manifest, { renderer: "r", intent: "idle" }, { rng: () => 0.1 });
+  assert.deepEqual(res, { intent: "idle", value: "x" });
+});
