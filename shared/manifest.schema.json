@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Expression Trigger Manifest",
+  "type": "object",
+  "required": ["version", "intents", "harnesses", "renderers"],
+  "properties": {
+    "version": { "type": "string" },
+    "intents": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["fallback"],
+        "properties": {
+          "fallback": { "type": ["string", "null"] },
+          "root": { "type": "boolean" },
+          "doc": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "harnesses": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["moments"],
+        "properties": {
+          "moments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["on", "intent"],
+              "properties": { "on": { "type": "string" }, "intent": { "type": "string" } },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "renderers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "doc": { "type": "string" },
+          "inherits": { "type": "string" },
+          "bindings": {
+            "type": "object",
+            "additionalProperties": {
+              "oneOf": [
+                { "type": "string" },
+                { "type": "object",
+                  "required": ["pool"],
+                  "properties": {
+                    "pool": { "type": "object", "additionalProperties": { "type": "number" } },
+                    "noRepeat": { "type": "boolean" }
+                  },
+                  "additionalProperties": false },
+                { "type": "object" }
+              ]
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
