@@ -1,0 +1,94 @@
+{
+  "description": "A bone-white skull \u2014 rounded cranium, close-set purple eye sockets that glow up and down, a 1px nose hole and a toothy jaw. Spooky/fatal emote.",
+  "frames": [
+    [
+      ".BBBBB..",
+      "BBBBBBB.",
+      "BeeBeeB.",
+      "BeeBeeB.",
+      "BBBBBBB.",
+      ".BB.BB..",
+      ".BBBBB..",
+      ".B.B.B.."
+    ],
+    [
+      ".BBBBB..",
+      "BBBBBBB.",
+      "BffBffB.",
+      "BffBffB.",
+      "BBBBBBB.",
+      ".BB.BB..",
+      ".BBBBB..",
+      ".B.B.B.."
+    ],
+    [
+      ".BBBBB..",
+      "BBBBBBB.",
+      "BggBggB.",
+      "BggBggB.",
+      "BBBBBBB.",
+      ".BB.BB..",
+      ".BBBBB..",
+      ".B.B.B.."
+    ],
+    [
+      ".BBBBB..",
+      "BBBBBBB.",
+      "BhhBhhB.",
+      "BhhBhhB.",
+      "BBBBBBB.",
+      ".BB.BB..",
+      ".BBBBB..",
+      ".B.B.B.."
+    ],
+    [
+      ".BBBBB..",
+      "BBBBBBB.",
+      "BhhBhhB.",
+      "BhhBhhB.",
+      "BBBBBBB.",
+      ".BB.BB..",
+      ".BBBBB..",
+      ".B.B.B.."
+    ],
+    [
+      ".BBBBB..",
+      "BBBBBBB.",
+      "BggBggB.",
+      "BggBggB.",
+      "BBBBBBB.",
+      ".BB.BB..",
+      ".BBBBB..",
+      ".B.B.B.."
+    ],
+    [
+      ".BBBBB..",
+      "BBBBBBB.",
+      "BffBffB.",
+      "BffBffB.",
+      "BBBBBBB.",
+      ".BB.BB..",
+      ".BBBBB..",
+      ".B.B.B.."
+    ],
+    [
+      ".BBBBB..",
+      "BBBBBBB.",
+      "BeeBeeB.",
+      "BeeBeeB.",
+      "BBBBBBB.",
+      ".BB.BB..",
+      ".BBBBB..",
+      ".B.B.B.."
+    ]
+  ],
+  "colors": {
+    "B": "#ece8dc",
+    "e": "#2a0c4e",
+    "f": "#5e1a9e",
+    "g": "#9a34dc",
+    "h": "#cf52ff"
+  },
+  "frame_ms": 160,
+  "loop": 0
+}

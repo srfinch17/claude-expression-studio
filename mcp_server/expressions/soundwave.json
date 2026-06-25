@@ -1,0 +1,185 @@
+{
+  "description": "rainbow equalizer: 8 hue-coded bars bouncing bottom-up like a spectrum analyzer - the 'heard you, taking in your prompt' beat",
+  "frames": [
+    [
+      "........",
+      ".B......",
+      ".bC.....",
+      "AbcDE...",
+      "abcde...",
+      "abcdeF.H",
+      "abcdef.h",
+      "abcdefGh"
+    ],
+    [
+      "........",
+      ".B......",
+      "AbC.....",
+      "abcDE...",
+      "abcde..H",
+      "abcde..h",
+      "abcdeF.h",
+      "abcdefGh"
+    ],
+    [
+      "........",
+      "AB......",
+      "ab.....H",
+      "abCD...h",
+      "abcd...h",
+      "abcdE.Gh",
+      "abcde.gh",
+      "abcdeFgh"
+    ],
+    [
+      "........",
+      "A.......",
+      "aB.....H",
+      "abCD...h",
+      "abcd..Gh",
+      "abcd..gh",
+      "abcdE.gh",
+      "abcdeFgh"
+    ],
+    [
+      "........",
+      "A.......",
+      "a.....GH",
+      "aBC...gh",
+      "abcD..gh",
+      "abcd..gh",
+      "abcd.Fgh",
+      "abcdEfgh"
+    ],
+    [
+      "........",
+      "........",
+      "A.....GH",
+      "aBC...gh",
+      "abc..Fgh",
+      "abc..fgh",
+      "abcD.fgh",
+      "abcdEfgh"
+    ],
+    [
+      "........",
+      "........",
+      ".....FGH",
+      "AB...fgh",
+      "abC..fgh",
+      "abc..fgh",
+      "abc.Efgh",
+      "abcDefgh"
+    ],
+    [
+      "........",
+      "........",
+      ".....FGH",
+      "AB...fgh",
+      "ab..Efgh",
+      "abC.efgh",
+      "abc.efgh",
+      "abcDefgh"
+    ],
+    [
+      "........",
+      ".....F..",
+      ".....fGH",
+      "A...Efgh",
+      "aB..efgh",
+      "ab..efgh",
+      "abCDefgh",
+      "abcdefgh"
+    ],
+    [
+      "........",
+      "........",
+      "....EFGH",
+      "....efgh",
+      "A...efgh",
+      "aB.Defgh",
+      "ab.defgh",
+      "abCdefgh"
+    ],
+    [
+      "........",
+      "....E...",
+      "....eFGH",
+      "...Defgh",
+      "A..defgh",
+      "a..defgh",
+      "aBCdefgh",
+      "abcdefgh"
+    ],
+    [
+      "........",
+      "...DE...",
+      "...deFG.",
+      "...defg.",
+      "...defgH",
+      "A.Cdefgh",
+      "a.cdefgh",
+      "aBcdefgh"
+    ],
+    [
+      "........",
+      "...D....",
+      "...dEFG.",
+      "..Cdefg.",
+      "..cdefg.",
+      "..cdefgH",
+      "ABcdefgh",
+      "abcdefgh"
+    ],
+    [
+      "........",
+      "...D....",
+      "..CdEF..",
+      "..cdef..",
+      "..cdefG.",
+      ".Bcdefg.",
+      "Abcdefg.",
+      "abcdefgH"
+    ],
+    [
+      "........",
+      "..C.....",
+      "..cDEF..",
+      ".Bcdef..",
+      ".bcdef..",
+      ".bcdefG.",
+      "Abcdefg.",
+      "abcdefgH"
+    ],
+    [
+      "........",
+      "..C.....",
+      ".BcDE...",
+      ".bcdeF..",
+      ".bcdef..",
+      "Abcdef..",
+      "abcdefGH",
+      "abcdefgh"
+    ]
+  ],
+  "colors": {
+    "A": "#ff2020",
+    "a": "#6b0808",
+    "B": "#ff7a00",
+    "b": "#6b3000",
+    "C": "#ffe000",
+    "c": "#6b5a00",
+    "D": "#28ff28",
+    "d": "#086b08",
+    "E": "#00e0ff",
+    "e": "#005a6b",
+    "F": "#3070ff",
+    "f": "#0a2a6b",
+    "G": "#a030ff",
+    "g": "#3a0a6b",
+    "H": "#ff30d0",
+    "h": "#6b0a55"
+  },
+  "frame_ms": 90,
+  "loop": 0
+}

@@ -1,0 +1,112 @@
+{
+  "description": "Hourglass with a cyan glass silhouette and orange sand, narrowed to a 1-pixel throat. Grains trickle one at a time through the single hole; the top surface sinks funnel-first while the bottom builds a spreading mound (base widens, then peaks) like real sand \u2014 not uniform rows. When the top empties the sand resets to the top and trickles again. Endless clean loop.",
+  "frames": [
+    [
+      "FFFFFFF.",
+      "FSSSSSF.",
+      ".FSSSF..",
+      "..FSF...",
+      "..F.F...",
+      ".F...F..",
+      "F.....F.",
+      "FFFFFFF."
+    ],
+    [
+      "FFFFFFF.",
+      "FSS.SSF.",
+      ".FSSSF..",
+      "..FSF...",
+      "..FsF...",
+      ".F...F..",
+      "F..S..F.",
+      "FFFFFFF."
+    ],
+    [
+      "FFFFFFF.",
+      "FS..SSF.",
+      ".FSSSF..",
+      "..FSF...",
+      "..FsF...",
+      ".F...F..",
+      "F.SS..F.",
+      "FFFFFFF."
+    ],
+    [
+      "FFFFFFF.",
+      "FS...SF.",
+      ".FSSSF..",
+      "..FSF...",
+      "..FsF...",
+      ".F...F..",
+      "F.SSS.F.",
+      "FFFFFFF."
+    ],
+    [
+      "FFFFFFF.",
+      "F....SF.",
+      ".FSSSF..",
+      "..FSF...",
+      "..FsF...",
+      ".F...F..",
+      "FSSSS.F.",
+      "FFFFFFF."
+    ],
+    [
+      "FFFFFFF.",
+      "F.....F.",
+      ".FSSSF..",
+      "..FSF...",
+      "..FsF...",
+      ".F...F..",
+      "FSSSSSF.",
+      "FFFFFFF."
+    ],
+    [
+      "FFFFFFF.",
+      "F.....F.",
+      ".FS.SF..",
+      "..FSF...",
+      "..FsF...",
+      ".F.S.F..",
+      "FSSSSSF.",
+      "FFFFFFF."
+    ],
+    [
+      "FFFFFFF.",
+      "F.....F.",
+      ".F..SF..",
+      "..FSF...",
+      "..FsF...",
+      ".FSS.F..",
+      "FSSSSSF.",
+      "FFFFFFF."
+    ],
+    [
+      "FFFFFFF.",
+      "F.....F.",
+      ".F...F..",
+      "..FSF...",
+      "..FsF...",
+      ".FSSSF..",
+      "FSSSSSF.",
+      "FFFFFFF."
+    ],
+    [
+      "FFFFFFF.",
+      "F.....F.",
+      ".F...F..",
+      "..F.F...",
+      "..FSF...",
+      ".FSSSF..",
+      "FSSSSSF.",
+      "FFFFFFF."
+    ]
+  ],
+  "colors": {
+    "F": "#1aa0ff",
+    "S": "#ff6000",
+    "s": "#ff8c2a"
+  },
+  "frame_ms": 200,
+  "loop": 0
+}

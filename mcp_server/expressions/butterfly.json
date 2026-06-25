@@ -1,0 +1,56 @@
+{
+  "description": "colorful butterfly flapping wings open and closed, magenta/cyan wings with yellow spots, dark body, gentle flutter bob, seamless loop",
+  "frames": [
+    [
+      "........",
+      "...HH...",
+      "mMMBBMMm",
+      ".MYBBYM.",
+      "...BB...",
+      ".CCBBCC.",
+      "cCCBBCCc",
+      "........"
+    ],
+    [
+      "...HH...",
+      ".mMBBMm.",
+      ".mYBBYm.",
+      "...BB...",
+      ".cCBBCc.",
+      ".cCBBCc.",
+      "........",
+      "........"
+    ],
+    [
+      "...HH...",
+      "..mBBm..",
+      "..mBBm..",
+      "...BB...",
+      "..cBBc..",
+      "..cBBc..",
+      "........",
+      "........"
+    ],
+    [
+      "........",
+      "...HH...",
+      ".mMBBMm.",
+      ".mYBBYm.",
+      "...BB...",
+      ".cCBBCc.",
+      ".cCBBCc.",
+      "........"
+    ]
+  ],
+  "colors": {
+    "M": "#d000d0",
+    "m": "#700070",
+    "C": "#00d0d0",
+    "c": "#007070",
+    "Y": "#ffff00",
+    "B": "#281014",
+    "H": "#806070"
+  },
+  "frame_ms": 150,
+  "loop": 0
+}

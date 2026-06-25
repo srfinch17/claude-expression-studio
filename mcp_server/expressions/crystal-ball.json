@@ -1,0 +1,138 @@
+{
+  "description": "crystal ball thinking it through - violet orb with swirling teal mist and a white glint when the answer lands",
+  "frames": [
+    [
+      "..oooo..",
+      ".ohhooo.",
+      "oohooodd",
+      "oooooddd",
+      "oooodmdd",
+      ".ooddmd.",
+      "..dddd..",
+      "..ssss.."
+    ],
+    [
+      "..oooo..",
+      ".ohhooo.",
+      "oohooodd",
+      "oooooddd",
+      "oooodddd",
+      ".oodmmd.",
+      "..dddd..",
+      "..ssss.."
+    ],
+    [
+      "..oooo..",
+      ".ohhooo.",
+      "oohooodd",
+      "oooooddd",
+      "oooodddd",
+      ".oommdd.",
+      "..dddd..",
+      "..ssss.."
+    ],
+    [
+      "..oooo..",
+      ".ohhooo.",
+      "oohooodd",
+      "oooooddd",
+      "oooodddd",
+      ".omdmdd.",
+      "..dddd..",
+      "..ssss.."
+    ],
+    [
+      "..oooo..",
+      ".ohhooo.",
+      "oohooodd",
+      "oooooddd",
+      "oomodddd",
+      ".oomddd.",
+      "..dddd..",
+      "..ssss.."
+    ],
+    [
+      "..oooo..",
+      ".ohhooo.",
+      "oohooedd",
+      "oooooddd",
+      "oomodddd",
+      ".omdddd.",
+      "..dddd..",
+      "..ssss.."
+    ],
+    [
+      "..oooo..",
+      ".ohhooo.",
+      "oohoofdd",
+      "oomooddd",
+      "oomodddd",
+      ".oodddd.",
+      "..dddd..",
+      "..ssss.."
+    ],
+    [
+      "..oooo..",
+      ".ohhoGo.",
+      "oohoGgGd",
+      "oommoGdd",
+      "oooodddd",
+      ".oodddd.",
+      "..dddd..",
+      "..ssss.."
+    ],
+    [
+      "..oooo..",
+      ".ohhofo.",
+      "oohofGfd",
+      "ooommfdd",
+      "oooodddd",
+      ".oodddd.",
+      "..dddd..",
+      "..ssss.."
+    ],
+    [
+      "..oooo..",
+      ".ohhooo.",
+      "oohoofdd",
+      "ooomomdd",
+      "oooodddd",
+      ".oodddd.",
+      "..dddd..",
+      "..ssss.."
+    ],
+    [
+      "..oooo..",
+      ".ohhooo.",
+      "oohooedd",
+      "oooomddd",
+      "oooodmdd",
+      ".oodddd.",
+      "..dddd..",
+      "..ssss.."
+    ],
+    [
+      "..oooo..",
+      ".ohhooo.",
+      "oohooodd",
+      "ooooomdd",
+      "oooodmdd",
+      ".oodddd.",
+      "..dddd..",
+      "..ssss.."
+    ]
+  ],
+  "colors": {
+    "o": "#7a20e0",
+    "d": "#280a70",
+    "h": "#e8d8ff",
+    "m": "#08e0c8",
+    "g": "#ffffff",
+    "G": "#ebebeb",
+    "f": "#959595",
+    "e": "#404040",
+    "s": "#201828"
+  },
+  "frame_ms": 150,
+  "loop": 0
+}

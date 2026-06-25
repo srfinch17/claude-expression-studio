@@ -1,0 +1,135 @@
+{
+  "description": "bioluminescent jellyfish pulsing upward through dark water; a rounded cyan bell with a white highlight contracts and expands, a purple underglow at the rim, and magenta tentacles undulating below",
+  "frames": [
+    [
+      "........",
+      "...Wc...",
+      "...CC...",
+      "..CCCc..",
+      "..pp.p..",
+      "...pp...",
+      "...mm...",
+      "...mm..."
+    ],
+    [
+      "........",
+      "...Wc...",
+      "...CC...",
+      "..CCCc..",
+      "...p.p..",
+      "...pp...",
+      "...mm...",
+      "..mm...."
+    ],
+    [
+      "........",
+      "...Wc...",
+      "..CCCc..",
+      "..CCCc..",
+      "..pp.p..",
+      "...pp...",
+      "..mmm...",
+      "..m.m..."
+    ],
+    [
+      "........",
+      "...Wc...",
+      "..CCCc..",
+      "..CCCc..",
+      "..CCCC..",
+      "..pp.p..",
+      "..ppp...",
+      "..m.m..."
+    ],
+    [
+      "...Wc...",
+      "..CCCc..",
+      "..CCCC..",
+      ".CCCCCc.",
+      "..pp.p..",
+      "..p..p..",
+      ".mm..m..",
+      "m.m...m."
+    ],
+    [
+      "...Wc...",
+      "..CCCc..",
+      ".CCCCCc.",
+      ".CCCCCc.",
+      ".p.p.p..",
+      ".pp...p.",
+      "m.m...m.",
+      "m..m...m"
+    ],
+    [
+      "...Wc...",
+      "..CCCC..",
+      ".CCCCCc.",
+      ".CCCCCc.",
+      ".p.p..p.",
+      ".pp...p.",
+      "m..m...m",
+      "m..m...m"
+    ],
+    [
+      "...Wc...",
+      "..CCCc..",
+      ".CCCCCc.",
+      ".CCCCCc.",
+      ".p.p..p.",
+      "p..p..p.",
+      "m..m...m",
+      "m...m..m"
+    ],
+    [
+      "...Wc...",
+      "..CCCc..",
+      "..CCCC..",
+      ".CCCCCc.",
+      ".p.p..p.",
+      ".p.p..p.",
+      ".m..m..m",
+      ".m..m.m."
+    ],
+    [
+      "........",
+      "...Wc...",
+      "..CCCc..",
+      "..CCCc..",
+      "..CCCC..",
+      ".p.p..p.",
+      ".p.p..p.",
+      "..m.m.m."
+    ],
+    [
+      "........",
+      "...Wc...",
+      "..CCCc..",
+      "..CCCc..",
+      "..pp.p..",
+      "..p.pp..",
+      "...mmm..",
+      "...mm..."
+    ],
+    [
+      "........",
+      "...Wc...",
+      "...CC...",
+      "..CCCc..",
+      "..pp.p..",
+      "...ppp..",
+      "...mm...",
+      "...mm..."
+    ]
+  ],
+  "colors": {
+    "W": "#e6ffff",
+    "C": "#10d8ea",
+    "c": "#0a7f9c",
+    "P": "#bd6bff",
+    "p": "#7a36c0",
+    "m": "#4d1c80"
+  },
+  "frame_ms": 130,
+  "loop": 0
+}

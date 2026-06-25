@@ -1,0 +1,93 @@
+{
+  "description": "Blooming flower: a gold bud unfurls 4 magenta-tipped pink petals outward in stages, holds the open bloom a beat, then gently closes back to the bud and loops. Calm radial 'finished' beat with a green stem and leaf. Petals sit on the diagonals with negative-space gaps so it reads as a flower, never a solid disk.",
+  "frames": [
+    [
+      "........",
+      "........",
+      "........",
+      "...G....",
+      "...S....",
+      "...S....",
+      "..SS....",
+      "...S...."
+    ],
+    [
+      "........",
+      "........",
+      "........",
+      "...GG...",
+      "...S....",
+      "...S....",
+      "..SS....",
+      "...S...."
+    ],
+    [
+      "........",
+      "..P..P..",
+      "...GG...",
+      "...GG...",
+      "..PS.P..",
+      "...S....",
+      "..SS....",
+      "...S...."
+    ],
+    [
+      ".MP..PM.",
+      ".PP..PP.",
+      "...GG...",
+      "...GG...",
+      ".PPS.PP.",
+      ".MPS.PM.",
+      "..SS....",
+      "...S...."
+    ],
+    [
+      ".MP..PM.",
+      ".PP..PP.",
+      "...GG...",
+      "...GG...",
+      ".PPS.PP.",
+      ".MPS.PM.",
+      "..SS....",
+      "...S...."
+    ],
+    [
+      ".MP..PM.",
+      ".PP..PP.",
+      "...GG...",
+      "...GG...",
+      ".PPS.PP.",
+      ".MPS.PM.",
+      "..SS....",
+      "...S...."
+    ],
+    [
+      "........",
+      "..P..P..",
+      "...GG...",
+      "...GG...",
+      "..PS.P..",
+      "...S....",
+      "..SS....",
+      "...S...."
+    ],
+    [
+      "........",
+      "........",
+      "........",
+      "...GG...",
+      "...S....",
+      "...S....",
+      "..SS....",
+      "...S...."
+    ]
+  ],
+  "colors": {
+    "G": "#ffcc00",
+    "P": "#ff5fb0",
+    "M": "#ff10a0",
+    "S": "#2bbf3a"
+  },
+  "frame_ms": 140,
+  "loop": 0
+}

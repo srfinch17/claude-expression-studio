@@ -1,0 +1,59 @@
+{
+  "description": "Jupiter, bottom-right quadrant crop: the planet center sits off the top-left corner, the warm-banded disc fills the panel and curves away into black at the lower-right limb. Bands brighten toward the upper-left interior, darken toward the limb. The Great Red Spot is a 2x2 storm of red+orange that rotates slowly clockwise. Loops seamlessly.",
+  "frames": [
+    [
+      "00000000",
+      "11111111",
+      "22222222",
+      "33OR333.",
+      "44RR444.",
+      "555555..",
+      "66666...",
+      "777....."
+    ],
+    [
+      "00000000",
+      "11111111",
+      "22222222",
+      "33RO333.",
+      "44RR444.",
+      "555555..",
+      "66666...",
+      "777....."
+    ],
+    [
+      "00000000",
+      "11111111",
+      "22222222",
+      "33RR333.",
+      "44RO444.",
+      "555555..",
+      "66666...",
+      "777....."
+    ],
+    [
+      "00000000",
+      "11111111",
+      "22222222",
+      "33RR333.",
+      "44OR444.",
+      "555555..",
+      "66666...",
+      "777....."
+    ]
+  ],
+  "colors": {
+    "0": "#d6bd6e",
+    "1": "#8a5e1e",
+    "2": "#c8a44c",
+    "3": "#6e4716",
+    "4": "#b08236",
+    "5": "#523510",
+    "6": "#7e5a26",
+    "7": "#382410",
+    "R": "#d01404",
+    "O": "#ff6010"
+  },
+  "frame_ms": 320,
+  "loop": 0
+}

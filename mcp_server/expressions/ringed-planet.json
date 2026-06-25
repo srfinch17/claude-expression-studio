@@ -1,0 +1,115 @@
+{
+  "description": "ringed planet (Saturn): small shaded gold disc encircled by a wide icy ring \u2014 near side crosses the lower body, far side arcs behind the top, tips overhang both sides; traveling glint; calm ambient space emote",
+  "frames": [
+    [
+      "........",
+      "...HH...",
+      "..HHMM..",
+      "BHHMMMDB",
+      "GRRRRRRR",
+      "..MMDD..",
+      "...DD...",
+      "........"
+    ],
+    [
+      "........",
+      "...HH...",
+      "..HHMM..",
+      "BHHMMMDB",
+      "RGRRRRRR",
+      "..MMDD..",
+      "...DD...",
+      "........"
+    ],
+    [
+      "........",
+      "...HH...",
+      "..HHMM..",
+      "BHHMMMDB",
+      "RRGRRRRR",
+      "..MMDD..",
+      "...DD...",
+      "........"
+    ],
+    [
+      "........",
+      "...HH...",
+      "..HHMM..",
+      "BHHMMMDB",
+      "RRRGRRRR",
+      "..MMDD..",
+      "...DD...",
+      "........"
+    ],
+    [
+      "........",
+      "...HH...",
+      "..HHMM..",
+      "BHHMMMDB",
+      "RRRRGRRR",
+      "..MMDD..",
+      "...DD...",
+      "........"
+    ],
+    [
+      "........",
+      "...HH...",
+      "..HHMM..",
+      "BHHMMMDB",
+      "RRRRRGRR",
+      "..MMDD..",
+      "...DD...",
+      "........"
+    ],
+    [
+      "........",
+      "...HH...",
+      "..HHMM..",
+      "BHHMMMDB",
+      "RRRRRRGR",
+      "..MMDD..",
+      "...DD...",
+      "........"
+    ],
+    [
+      "........",
+      "...HH...",
+      "..HHMM..",
+      "BHHMMMDB",
+      "RRRRRRRG",
+      "..MMDD..",
+      "...DD...",
+      "........"
+    ],
+    [
+      "........",
+      "...HH...",
+      "..HHMM..",
+      "BHHMMMDG",
+      "RRRRRRRR",
+      "..MMDD..",
+      "...DD...",
+      "........"
+    ],
+    [
+      "........",
+      "...HH...",
+      "..HHMM..",
+      "GHHMMMDB",
+      "RRRRRRRR",
+      "..MMDD..",
+      "...DD...",
+      "........"
+    ]
+  ],
+  "colors": {
+    "H": "#d2a83e",
+    "M": "#a87c24",
+    "D": "#6e4e12",
+    "R": "#5fa6c0",
+    "B": "#356b80",
+    "G": "#dff2ff"
+  },
+  "frame_ms": 200,
+  "loop": 0
+}

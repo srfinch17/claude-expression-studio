@@ -1,0 +1,93 @@
+{
+  "description": "A little orange goldfish swimming right, gold forked tail (3-pixel back fin) swishing, blowing pale-cyan bubbles off its snout. Warm idle goof.",
+  "frames": [
+    [
+      "........",
+      "....O...",
+      "T..OOOOB",
+      "TTOOOEO.",
+      "TTOOOOO.",
+      "...OOO..",
+      "........",
+      "........"
+    ],
+    [
+      "........",
+      "T...O..B",
+      "T..OOOO.",
+      "TTOOOEO.",
+      ".TOOOOO.",
+      "...OOO..",
+      "........",
+      "........"
+    ],
+    [
+      ".......B",
+      "....O...",
+      "T..OOOO.",
+      "TTOOOEO.",
+      "TTOOOOO.",
+      "...OOO..",
+      "........",
+      "........"
+    ],
+    [
+      "........",
+      "....O...",
+      "...OOOO.",
+      "TTOOOEO.",
+      "TTOOOOO.",
+      "T..OOO..",
+      "........",
+      "........"
+    ],
+    [
+      "........",
+      "....O...",
+      "T..OOOOB",
+      "TTOOOEO.",
+      "TTOOOOO.",
+      "...OOO..",
+      "........",
+      "........"
+    ],
+    [
+      "........",
+      "T...O..B",
+      "T..OOOO.",
+      "TTOOOEO.",
+      ".TOOOOO.",
+      "...OOO..",
+      "........",
+      "........"
+    ],
+    [
+      ".......B",
+      "....O...",
+      "T..OOOO.",
+      "TTOOOEO.",
+      "TTOOOOO.",
+      "...OOO..",
+      "........",
+      "........"
+    ],
+    [
+      "........",
+      "....O...",
+      "...OOOO.",
+      "TTOOOEO.",
+      "TTOOOOO.",
+      "T..OOO..",
+      "........",
+      "........"
+    ]
+  ],
+  "colors": {
+    "O": "#ff6a00",
+    "T": "#ffb024",
+    "E": "#0a0a40",
+    "B": "#cdeeff"
+  },
+  "frame_ms": 150,
+  "loop": 0
+}

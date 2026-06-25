@@ -1,0 +1,138 @@
+{
+  "description": "Round-bottomed potion bottle with a glowing green liquid, internal bubbles popping at the surface, and little bubbles escaping out the neck into the air above",
+  "frames": [
+    [
+      "........",
+      "........",
+      "...GG...",
+      "...GG...",
+      "..GHHG..",
+      ".GLLLLG.",
+      ".GDBDDG.",
+      "..GDDG.."
+    ],
+    [
+      "........",
+      "...E....",
+      "...GG...",
+      "...GG...",
+      "..GHHG..",
+      ".GLBLLG.",
+      ".GDDDDG.",
+      "..GDDG.."
+    ],
+    [
+      "....F...",
+      "........",
+      "...GG...",
+      "...GG...",
+      "..GPHG..",
+      ".GLLLLG.",
+      ".GDDDDG.",
+      "..GDDG.."
+    ],
+    [
+      "..V.....",
+      "........",
+      "...GG...",
+      "...GG...",
+      "..GHHG..",
+      ".GLLLLG.",
+      ".GDDDDG.",
+      "..GDDG.."
+    ],
+    [
+      "........",
+      "........",
+      "...GG...",
+      "...GG...",
+      "..GHHG..",
+      ".GLLLLG.",
+      ".GBDDDG.",
+      "..GDDG.."
+    ],
+    [
+      "........",
+      "...E....",
+      "...GG...",
+      "...GG...",
+      "..GHHG..",
+      ".GBLLLG.",
+      ".GDDDDG.",
+      "..GDDG.."
+    ],
+    [
+      "....F...",
+      "........",
+      "...GG...",
+      "...GG...",
+      "..GHHG..",
+      ".GLLLLG.",
+      ".GDDDDG.",
+      "..GDDG.."
+    ],
+    [
+      ".....V..",
+      "........",
+      "...GG...",
+      "...GG...",
+      "..GHHG..",
+      ".GLLLLG.",
+      ".GDDBDG.",
+      "..GDDG.."
+    ],
+    [
+      "........",
+      "........",
+      "...GG...",
+      "...GG...",
+      "..GHHG..",
+      ".GLLBLG.",
+      ".GDDDDG.",
+      "..GDDG.."
+    ],
+    [
+      "........",
+      "....E...",
+      "...GG...",
+      "...GG...",
+      "..GHPG..",
+      ".GLLLLG.",
+      ".GDDDDG.",
+      "..GDDG.."
+    ],
+    [
+      "...F....",
+      "........",
+      "...GG...",
+      "...GG...",
+      "..GHHG..",
+      ".GLLLLG.",
+      ".GDDDBG.",
+      "..GDDG.."
+    ],
+    [
+      "........",
+      ".....V..",
+      "...GG...",
+      "...GG...",
+      "..GHHG..",
+      ".GLLLBG.",
+      ".GDDDDG.",
+      "..GDDG.."
+    ]
+  ],
+  "colors": {
+    "G": "#4ABDBD",
+    "L": "#23B300",
+    "H": "#5CFF12",
+    "D": "#0E5C00",
+    "B": "#A6F060",
+    "P": "#E8FFD0",
+    "E": "#7CE0B0",
+    "F": "#3A7A60",
+    "V": "#1E5E5E"
+  },
+  "frame_ms": 150,
+  "loop": 0
+}

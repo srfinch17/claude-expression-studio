@@ -1,0 +1,137 @@
+{
+  "description": "spiral galaxy: white-hot core with two cyan/blue/purple spiral arms (pink star-forming knots) pinwheeling slowly, scattered twinkling stars",
+  "frames": [
+    [
+      "C......S",
+      "T...PK..",
+      "...Y..BC",
+      "...WWY.C",
+      "C.YWW...",
+      "CB..Y...",
+      "..KP..S.",
+      ".S.....C"
+    ],
+    [
+      ".C.....S",
+      "C.......",
+      "C..YPPB.",
+      "C..WWYKB",
+      "BKYWW..C",
+      ".BPPY..C",
+      "......SC",
+      ".T....C."
+    ],
+    [
+      ".C.....S",
+      "SC......",
+      ".B.Y.P..",
+      ".K.WWYB.",
+      ".BYWW.K.",
+      "..P.Y.B.",
+      "......C.",
+      ".S....C."
+    ],
+    [
+      "..CC...C",
+      "S.B.....",
+      ".K.Y....",
+      ".P.WWY..",
+      "..YWW.P.",
+      "....Y.K.",
+      ".....BS.",
+      "CS..CC.."
+    ],
+    [
+      "...BCCCT",
+      "S.BK...C",
+      "..PY....",
+      "..PWWY..",
+      "..YWWP..",
+      "....YP..",
+      "C...KBS.",
+      ".CCCB..."
+    ],
+    [
+      ".......S",
+      "S..BKBCC",
+      "..PY....",
+      "...WWY..",
+      "..YWW...",
+      "....YP..",
+      "CCBKB.T.",
+      ".S......"
+    ],
+    [
+      "C......S",
+      "S...PK..",
+      "...Y..BC",
+      "...WWY.C",
+      "C.YWW...",
+      "CB..Y...",
+      "..KP..S.",
+      ".S.....C"
+    ],
+    [
+      ".C.....S",
+      "C.......",
+      "C..YPPB.",
+      "C..WWYKB",
+      "BKYWW..C",
+      ".BPPY..C",
+      "......SC",
+      ".S....C."
+    ],
+    [
+      ".C.....S",
+      "SC......",
+      ".B.Y.P..",
+      ".K.WWYB.",
+      ".BYWW.K.",
+      "..P.Y.B.",
+      "......C.",
+      ".T....C."
+    ],
+    [
+      "..CC...C",
+      "S.B.....",
+      ".K.Y....",
+      ".P.WWY..",
+      "..YWW.P.",
+      "....Y.K.",
+      ".....BS.",
+      "CS..CC.."
+    ],
+    [
+      "...BCCCS",
+      "S.BK...C",
+      "..PY....",
+      "..PWWY..",
+      "..YWWP..",
+      "....YP..",
+      "C...KBS.",
+      ".CCCB..."
+    ],
+    [
+      ".......T",
+      "S..BKBCC",
+      "..PY....",
+      "...WWY..",
+      "..YWW...",
+      "....YP..",
+      "CCBKB.S.",
+      ".S......"
+    ]
+  ],
+  "colors": {
+    "W": "#ffffe8",
+    "Y": "#ffcf3a",
+    "C": "#35d6ff",
+    "B": "#2a6bff",
+    "P": "#9b3cff",
+    "K": "#ff4fb0",
+    "S": "#9aa0c8",
+    "T": "#e8ecff"
+  },
+  "frame_ms": 150,
+  "loop": 0
+}
