@@ -62,16 +62,31 @@ test("Stop -> done lights up all three renderers, each its own way", async () =>
   for (const o of out) assert.equal(o.intent, "done");
 });
 
-test("idle pool resolves a firmware sim on web-sim and an animation+brightness on esp32", async () => {
+test("screensaver pool resolves a firmware sim on web-sim and an animation+brightness on esp32", async () => {
   const b = build();
-  const out = await fire(MANIFEST, { intent: "idle" }, b.reg, { rng: () => 0 });
+  const out = await fire(MANIFEST, { intent: "screensaver" }, b.reg, { rng: () => 0 });
   assert.equal(out.length, 3);
-  for (const o of out) assert.equal(o.intent, "idle");
+  const byR = Object.fromEntries(out.map((o) => [o.renderer, o]));
+  // esp32 + web-sim bind `screensaver` directly. The card has NO screensaver binding,
+  // so it gracefully falls back to `idle` (its quiet Zzz glyph) — board runs the show,
+  // the card says "Idle". That per-renderer independent fallback is the intended design.
+  assert.equal(byR["esp32-8x8"].intent, "screensaver");
+  assert.equal(byR["web-sim"].intent, "screensaver");
+  assert.equal(byR["card"].intent, "idle");
   // rng 0 -> first pool key "fire": firmware -> esp32 posts an animation (with its params)
-  // at idle brightness 5; web-sim plays the "fire" sim via a stepper.
+  // at ambient brightness 5; web-sim plays the "fire" sim via a stepper.
   assert.equal(b.board.anims.length, 1);
   assert.equal(b.board.anims[0].t, "fire");
   assert.deepEqual(b.board.anims[0].params, { speed: 50, intensity: 70 });
   assert.deepEqual(b.board.brightness, [5]);
   assert.equal(b.panelCalls.steppers, 1);
+});
+
+test("idle resolves the quiet sleep glyph (a frame-expression), not the screensaver pool", async () => {
+  const b = build();
+  const out = await fire(MANIFEST, { intent: "idle" }, b.reg, { rng: () => 0 });
+  for (const o of out) assert.equal(o.intent, "idle");
+  // idle -> "sleep" glyph: esp32 posts frames (not an animation), at no special brightness.
+  assert.equal(b.board.frames.length, 1);
+  assert.equal(b.board.anims.length, 0);
 });

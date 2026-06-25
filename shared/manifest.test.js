@@ -57,3 +57,21 @@ test("seed manifest: presence intent 'question' resolves (question -> awaiting-i
   const got = resolve(MANIFEST, { renderer: "esp32-8x8", intent: "question" });
   assert.deepEqual(got, { intent: "awaiting-input", value: "ask-question" });
 });
+
+// The `idle` conformance root is the QUIET "ambient / away" status (the sleep glyph),
+// renderable by every renderer — distinct from the firmware-only `screensaver` rotation.
+// presence_set(intent:"idle") resolves this; matrix_idle resolves `screensaver` (below).
+test("seed manifest: presence intent 'idle' resolves to the quiet sleep glyph (not the screensaver)", () => {
+  const got = resolve(MANIFEST, { renderer: "esp32-8x8", intent: "idle" });
+  assert.deepEqual(got, { intent: "idle", value: "sleep" });
+});
+
+// The screensaver rotation is its own intent (fallback -> idle): the lossless 8-app
+// firmware pool with per-app params, labels, noRepeat, and ambient brightness 5.
+test("seed manifest: 'screensaver' intent resolves the firmware pool (lossless, brightness 5)", () => {
+  const got = resolve(MANIFEST, { renderer: "esp32-8x8", intent: "screensaver" }, { rng: () => 0 });
+  assert.deepEqual(got, {
+    intent: "screensaver", value: "fire",
+    params: { speed: 50, intensity: 70 }, label: "🔥 fire", brightness: 5,
+  });
+});

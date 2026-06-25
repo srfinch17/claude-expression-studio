@@ -23,6 +23,7 @@
     "error":          { "fallback": "fail",    "doc": "an error" },
     "fatal":          { "fallback": "error",   "doc": "something died" },
     "sleep":          { "fallback": "idle",    "doc": "resting" },
+    "screensaver":    { "fallback": "idle",    "doc": "ambient screensaver rotation (firmware apps)" },
     "greet":          { "fallback": "info",    "doc": "hello" },
     "affection":      { "fallback": "info",    "doc": "warmth" },
     "fun":            { "fallback": "info",    "doc": "playful" }
@@ -43,7 +44,7 @@
         { "on": "hook:SessionEnd",                     "intent": "session-end" },
         { "on": "discretionary", "intent": "celebrate" },
         { "on": "discretionary", "intent": "fatal" },
-        { "on": "discretionary", "intent": "idle" }
+        { "on": "discretionary", "intent": "screensaver" }
       ]
     }
   },
@@ -56,7 +57,8 @@
         "done":           "done",
         "attention":      "ask-attention",
         "fail":           "cross",
-        "idle": {
+        "idle":           "sleep",
+        "screensaver": {
           "noRepeat": true,
           "brightness": 5,
           "pool": {
