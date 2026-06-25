@@ -25,22 +25,6 @@ export const INTENTS = [
   "alert", "error", "question", "info", "idle",
 ] as const;
 
-// Map a presence intent to an existing canned expression name (see CANNED in
-// expressions.ts) so the 8x8 renders via the proven frame path.
-const INTENT_TO_CANNED: Record<string, string> = {
-  working: "working", thinking: "working", ok: "ok",
-  celebrate: "party", alert: "alert", error: "cross",
-  info: "smiley", idle: "sleep",
-  // NOTE: `done` and `question` intents are intentionally unmapped — their canned
-  // glyphs were retired as redundant (the animated ask-question + the task-complete
-  // checkbox supersede them). They fall back to "smiley" via cannedFor() until
-  // rehomed in the icon-assignment pass. `ok` was remapped check→ok (the OK glyph).
-};
-
-export function cannedFor(intent: string): string {
-  return INTENT_TO_CANNED[intent] ?? "smiley";
-}
-
 const URGENCIES: Urgency[] = ["ambient", "notice", "urgent"];
 
 function isObj(v: unknown): v is Record<string, unknown> {

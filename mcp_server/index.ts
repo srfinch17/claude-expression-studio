@@ -25,10 +25,7 @@
 // Claude's expression channel: canned glyph library + text-art → wire conversion.
 import { CANNED, MAX_FRAMES, artToFrameHex, expressionToWire, type Expression } from "./expressions.js";
 import { decideRender, loadEngine, type RenderPlan } from "./engine.js";
-// Wait-animation library: the random "wait" pool (snake + saved wait-* expressions).
-import { buildWaitPool, pickWait, isWaitAnimation } from "./wait.js";
-import { normalizePresence, cannedFor } from "./presence.js";
-import { IDLE_APPS, IDLE_BRIGHTNESS, pickIdleApp } from "./idle.js";
+import { normalizePresence } from "./presence.js";
 import { normalizeSettingsPatch } from "./settings.js";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
@@ -61,26 +58,6 @@ async function loadSavedExpression(name: string): Promise<Expression | null> {
   } catch {
     return null;
   }
-}
-
-// Relative likelihoods for the random wait pool, from mcp_server/wait-weights.json.
-// Read at runtime (no rebuild to retune); returns {} (→ uniform) if missing/corrupt
-// so a fresh install works with or without the file.
-async function loadWaitWeights(): Promise<Record<string, number>> {
-  try {
-    const raw = JSON.parse(await readFile(path.join(MCP_DIR, "wait-weights.json"), "utf8"));
-    return raw && typeof raw.weights === "object" && raw.weights ? raw.weights : {};
-  } catch {
-    return {};
-  }
-}
-
-// Resolve the "wait" group to a concrete expression name: build the pool (snake +
-// saved wait-*), apply the weight preferences, pick one (weighted random).
-// Shared by matrix_express("wait") and presence_set(intent:"working").
-async function resolveWait(): Promise<string> {
-  const pool = buildWaitPool((await listSavedExpressions()).map((s) => s.name));
-  return pickWait(pool, await loadWaitWeights());
 }
 
 async function listSavedExpressions(): Promise<Array<{ name: string; description: string }>> {
@@ -122,9 +99,6 @@ import {
 // The ?? operator means "use the right side if the left is null/undefined".
 // ------------------------------------------------------------
 const BOARD_URL = process.env.ESP32_URL ?? "http://esp32matrix.local";
-
-// Remembers the last matrix_idle pick so consecutive idle launches differ.
-let lastIdleType: string | null = null;
 
 // The manifest engine: shared resolver + manifest, loaded once. Repo-first so dev edits
 // to shared/manifest.json are live; falls back to the bundled copy inside the .mcpb.
