@@ -598,7 +598,7 @@
       "frame_ms": 130,
       "loop": 0,
       "description": "Falling multicolor confetti — celebration, big win, milestone shipped. 16 pieces drift down continuously; the 8 frames loop seamlessly.",
-      "group": "bored",
+      "group": "wired",
       "approved": false
     },
     {
@@ -816,7 +816,7 @@
       "frame_ms": 150,
       "loop": 0,
       "description": "Friendly yellow smiley face — greeting, contentment, all-is-well.",
-      "group": "bored",
+      "group": "wired",
       "approved": false
     },
     {
@@ -1108,7 +1108,7 @@
       "frame_ms": 120,
       "loop": 0,
       "description": "Red X inside a red border that glows up and down (never off, never inverts) — failure, error, 'no'. One red hue at 6 baked brightness steps (A = dim floor, still lit … F = peak) so the glow survives low board brightness. Loops forever.",
-      "group": "canned",
+      "group": "wired",
       "approved": false
     },
     {
@@ -1750,7 +1750,7 @@
       "frame_ms": 600,
       "loop": 0,
       "description": "Drifting Zz — idle, waiting quietly, nothing needs attention.",
-      "group": "canned",
+      "group": "wired",
       "approved": false
     },
     {
@@ -2360,7 +2360,7 @@
       "frame_ms": 140,
       "loop": 0,
       "description": "Aurora borealis — vertical curtains of light hang from the top of a dark night sky and sway in a slow horizontal wave, colors flowing green->cyan->violet over time, with a few faint static stars. Calm, flowing, ambient. Baked brightness steps with soft bottom-edge falloff so dim curtain survives bri5. Loops over one full wave/color period.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -2482,7 +2482,7 @@
       "frame_ms": 110,
       "loop": 0,
       "description": "black hole: dark event-horizon core ringed by a hot accretion disk whose two spiral arms (white-hot -> orange -> magenta -> purple) rotate and swirl around it",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -3443,7 +3443,7 @@
       "frame_ms": 120,
       "loop": 0,
       "description": "Multicolor confetti falling continuously from the top -- pieces flutter down with side-to-side sway at varied speeds, a steady stream feeding a built-up line of confetti along the bottom; loops seamlessly",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -4526,7 +4526,7 @@
       "frame_ms": 150,
       "loop": 0,
       "description": "spiral galaxy: white-hot core with two cyan/blue/purple spiral arms (pink star-forming knots) pinwheeling slowly, scattered twinkling stars",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -7560,7 +7560,7 @@
       "frame_ms": 160,
       "loop": 0,
       "description": "A bone-white skull — rounded cranium, close-set purple eye sockets that glow up and down, a 1px nose hole and a toothy jaw. Spooky/fatal emote.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -8246,7 +8246,7 @@
       "frame_ms": 140,
       "loop": 0,
       "description": "Swarm merge: four channel-distinct helpers (cyan/magenta/green/gold) travel smoothly inward from the corners one even step at a time, converge at the center, fuse in a white-hot merge flash (subagents reported back / results combined), then settle to a soft glowing core. Loops.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -10500,38 +10500,42 @@
       "dizzy",
       "heart",
       "pacman",
-      "party",
       "rocket",
       "shooting-star",
-      "smiley",
       "wink",
       "yawn"
     ],
+    "wired": [
+      "party",
+      "smiley",
+      "cross",
+      "sleep",
+      "aurora",
+      "black-hole",
+      "confetti",
+      "galaxy",
+      "skull",
+      "swarm-merge"
+    ],
     "canned": [
       "sad",
-      "cross",
       "thumbsup",
       "ok",
       "sparkle",
       "alert",
-      "spaceship",
-      "sleep"
+      "spaceship"
     ],
     "orphan": [
       "atom",
-      "aurora",
-      "black-hole",
       "bloom",
       "bomb",
       "butterfly",
       "claude-idle",
       "compactor",
-      "confetti",
       "crystal-ball",
       "double-slit",
       "dusk",
       "fireflies",
-      "galaxy",
       "goldfish",
       "hourglass",
       "idea",
@@ -10548,11 +10552,9 @@
       "rain",
       "reticle",
       "ringed-planet",
-      "skull",
       "soundwave",
       "spinning-coin",
       "sunrise",
-      "swarm-merge",
       "task-complete",
       "tornado",
       "ufo",

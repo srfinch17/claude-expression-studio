@@ -3,12 +3,13 @@ import { Panel } from "../shared/render.js";
 import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";
 
 const REDUCE = matchMedia("(prefers-reduced-motion:reduce)").matches;
-const GROUP_ORDER = ["orphan", "canned", "wait", "ask", "bored", "firmware"];
+const GROUP_ORDER = ["orphan", "wired", "canned", "wait", "ask", "bored", "firmware"];
 const GROUP_TITLE = {
   orphan:   "Orphans — no rotation",
+  wired:    "Wired (other moments)",
   canned:   "Canned glyphs (matrix_express)",
   wait:     "Wait pool",
-  ask:      "Ask-* hooks",
+  ask:      "Ask / attention",
   bored:    "Bored pool",
   firmware: "Firmware animations",
 };
@@ -49,7 +50,7 @@ async function build() {
     return;
   }
 
-  const byGroup = { orphan: [], canned: [], wait: [], ask: [], bored: [], firmware: [] };
+  const byGroup = { orphan: [], wired: [], canned: [], wait: [], ask: [], bored: [], firmware: [] };
   for (const e of data.expressions) (byGroup[e.group] ||= []).push(e);
 
   for (const group of GROUP_ORDER) {
