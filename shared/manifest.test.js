@@ -33,5 +33,27 @@ test("seed manifest: every renderer covers the 6 roots", () => {
 
 test("seed manifest: a working pool pick returns a pool member", () => {
   const got = resolve(MANIFEST, { renderer: "esp32-8x8", intent: "working" }, { rng: () => 0 });
-  assert.ok(["working", "wait-claude", "wait-rainbow", "wait-orbit", "claudesweep"].includes(got.value));
+  assert.ok([
+    "working", "wait-claude", "wait-rainbow", "wait-orbit", "claudesweep",
+    "wait-logo-breathe", "wait-logo-chase", "wait-logo-boot", "wait-logo-ripple",
+  ].includes(got.value));
+});
+
+test("seed manifest: working pool is faithful to wait-weights.json (9 members, exact weights)", () => {
+  const b = effectiveBindings(MANIFEST, "esp32-8x8");
+  assert.deepEqual(b.working, { pool: {
+    "wait-claude": 40, "wait-rainbow": 30, "wait-orbit": 20, "claudesweep": 20,
+    "working": 10, "wait-logo-breathe": 8, "wait-logo-chase": 8,
+    "wait-logo-boot": 8, "wait-logo-ripple": 8,
+  } });
+});
+
+test("seed manifest: presence intent 'ok' resolves (ok -> approve -> done -> 'done')", () => {
+  const got = resolve(MANIFEST, { renderer: "esp32-8x8", intent: "ok" });
+  assert.deepEqual(got, { intent: "done", value: "done" });
+});
+
+test("seed manifest: presence intent 'question' resolves (question -> awaiting-input -> 'ask-question')", () => {
+  const got = resolve(MANIFEST, { renderer: "esp32-8x8", intent: "question" });
+  assert.deepEqual(got, { intent: "awaiting-input", value: "ask-question" });
 });

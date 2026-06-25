@@ -14,6 +14,8 @@
     "session-end":    { "fallback": "idle",    "doc": "signing off" },
     "results-merged": { "fallback": "done",    "doc": "a helper reported back" },
     "approve":        { "fallback": "done",    "doc": "acknowledgement / thumbs-up" },
+    "ok":             { "fallback": "approve",        "doc": "acknowledged" },
+    "question":       { "fallback": "awaiting-input", "doc": "asking the human" },
     "celebrate":      { "fallback": "done",    "doc": "a win / milestone" },
     "delight":        { "fallback": "celebrate", "doc": "pleasant surprise" },
     "awaiting-input": { "fallback": "attention", "doc": "blocked on the human" },
@@ -50,7 +52,7 @@
       "doc": "8x8 WS2812B board",
       "bindings": {
         "info":           "smiley",
-        "working":        { "pool": { "working": 10, "wait-claude": 40, "wait-rainbow": 30, "wait-orbit": 20, "claudesweep": 20 } },
+        "working":        { "pool": { "wait-claude": 40, "wait-rainbow": 30, "wait-orbit": 20, "claudesweep": 20, "working": 10, "wait-logo-breathe": 8, "wait-logo-chase": 8, "wait-logo-boot": 8, "wait-logo-ripple": 8 } },
         "done":           "done",
         "attention":      "ask-attention",
         "fail":           "cross",
