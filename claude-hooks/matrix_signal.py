@@ -1,31 +1,32 @@
 #!/usr/bin/env python3
 """
-matrix_signal.py — fire a canned expression on the ESP32-S3 LED matrix from the
-command line, so Claude Code HOOKS can drive the board deterministically.
+matrix_signal.py — fire the manifest-resolved expression on the ESP32-S3 LED
+matrix from the command line, so Claude Code HOOKS can drive the board.
 
-Why this exists: the named expressions (working/done/alert/sleep) live in the
-matrix MCP server (mcp_server/expressions.ts), which hooks can't call. This script
-reproduces the exact art + the MCP's wire format and POSTs it to the board's
-/api/display/frames endpoint (the same call the MCP makes), using only the Python
-stdlib. It FAILS SILENTLY (exit 0) if the board is unreachable, so a turn/hook is
-never blocked or broken by the board being off.
+Why this exists: hooks can't call the MCP server. This script resolves a
+HARNESS MOMENT (e.g. `hook:Stop`) via the manifest + manifest_resolver.py, then
+renders the pick directly to the board's HTTP API using only the Python stdlib.
+It FAILS SILENTLY (exit 0) if the board is unreachable, so a turn/hook is never
+blocked or broken by the board being off.
 
-Usage:  python matrix_signal.py <name>
-        names: wait | working | done | alert | sleep | party
-        ("wait" = weighted-random pick from the wait pool — the snake plus any
-         saved wait-* expression; this is what the UserPromptSubmit hook fires.
-         "working" forces the default snake specifically.)
+Usage:  python matrix_signal.py <moment>
+        moment: a manifest harness moment key, e.g.
+          hook:UserPromptSubmit  hook:Stop
+          hook:PreToolUse:AskUserQuestion  hook:PreToolUse:ExitPlanMode
+          hook:PostToolUse:AskUserQuestion  hook:PostToolUse:ExitPlanMode
+          hook:Notification:permission_prompt
 Env:    ESP32_URL (default http://esp32matrix.local)
-        MATRIX_MCP_DIR (path to the repo's mcp_server/, for the wait pool files)
+        MATRIX_MCP_DIR (path to the repo's mcp_server/, for the expressions dir
+                        and for locating shared/manifest.json)
 
 Art/colors mirror peckworks-esp32s3matrix/mcp_server/expressions.ts (keep in sync
 if those change).
 
-Idle/"bored" feature: on the `done` signal this also (a) records an activity
+Idle/"bored" feature: on the `hook:Stop` moment this also (a) records an activity
 token and (b) spawns matrix_idle.py detached. That watcher waits and, if the user
 hasn't come back, plays random fun animations until they do (or an idle cap is
-hit). `working` re-stamps the token, which makes any pending watcher exit. See
-matrix_idle.py. The whole thing is silenced by the .matrix_off kill switch.
+hit). `hook:UserPromptSubmit` re-stamps the token, which makes any pending watcher
+exit. See matrix_idle.py. The whole thing is silenced by the .matrix_off kill switch.
 """
 import sys, os, json, urllib.request, subprocess, time, random
 
@@ -36,6 +37,37 @@ HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 FLAG_OFF = os.path.join(HOOK_DIR, ".matrix_off")        # kill switch
 ACTIVITY_FILE = os.path.join(HOOK_DIR, ".matrix_activity")  # last-activity token
 IDLE_WATCHER = os.path.join(HOOK_DIR, "matrix_idle.py")     # the "bored" watcher
+
+sys.path.insert(0, HOOK_DIR)            # manifest_resolver.py sits next to this script
+from manifest_resolver import resolve   # pure mirror of shared/resolver.js
+
+# Firmware animation names — MIRROR of shared/firmware-names.js (keep in sync). These
+# render via POST /api/display/animation (transient); everything else is a frame-expression.
+FIRMWARE_NAMES = {
+    "fire", "rainbow", "breathe", "wave", "solid", "liquid", "imu", "chiptemp",
+    "weather", "timer_fill", "timer_snow", "timer_text", "clock", "matrix_rain",
+    "snow", "dancefloor", "spiral", "starfield", "fireworks", "fireworks2",
+    "comet", "sun", "frostbite", "calendar", "sound", "claudesweep",
+}
+
+MCP_DIR = os.environ.get(
+    "MATRIX_MCP_DIR",
+    r"C:\Users\srfin\Dropbox\Dev\repos\peckworks-esp32s3matrix\mcp_server",
+)
+EXPR_DIR = os.path.join(MCP_DIR, "expressions")
+
+
+def load_manifest():
+    # Repo-first (sibling of mcp_server/), then the in-bundle copy (installed .mcpb).
+    for cand in (os.path.join(MCP_DIR, "..", "shared", "manifest.json"),
+                 os.path.join(MCP_DIR, "shared-runtime", "manifest.json")):
+        try:
+            with open(cand, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            continue
+    return None
+
 
 # (frames, colors, frame_ms, loop) — copied verbatim from expressions.ts
 EXPR = {
@@ -129,7 +161,7 @@ def post_frames(frames_hex, frame_ms, loop, idle=False):
     """POST a pre-rendered animation to the board. Fails silently if unreachable.
 
     idle=True marks the payload as idle content (keeps the board's dead-man's-switch
-    armed). Default False so all normal expressions (wait/working/done) disarm as usual.
+    armed). Default False so all normal expressions (working/done) disarm as usual.
     """
     body = {"frames": frames_hex, "frame_ms": frame_ms, "loop": loop, "idle": idle}
     data = json.dumps(body).encode("utf-8")
@@ -143,6 +175,31 @@ def post_frames(frames_hex, frame_ms, loop, idle=False):
         pass  # board offline / unreachable — never block a turn
 
 
+def post_brightness(level):
+    try:
+        data = json.dumps({"level": level}).encode("utf-8")
+        req = urllib.request.Request(BOARD_URL + "/api/brightness", data=data,
+            headers={"Content-Type": "application/json"}, method="POST")
+        urllib.request.urlopen(req, timeout=TIMEOUT).read()
+    except Exception:
+        pass
+
+
+def post_animation(anim_type, params=None, transient=True):
+    """Best-effort POST /api/display/animation for a firmware-animation pick (transient)."""
+    try:
+        body = {"type": anim_type, "transient": transient}
+        if params:
+            body.update(params)
+        data = json.dumps(body).encode("utf-8")
+        req = urllib.request.Request(BOARD_URL + "/api/display/animation", data=data,
+                                     headers={"Content-Type": "application/json"}, method="POST")
+        urllib.request.urlopen(req, timeout=3).read()
+        return True
+    except Exception:
+        return False
+
+
 def send_named(name):
     e = EXPR.get(name)
     if not e:
@@ -151,81 +208,9 @@ def send_named(name):
     post_frames([art_to_hex(f, colors) for f in frames_art], frame_ms, loop)
 
 
-# --- Weighted wait pool (mirrors mcp_server/wait.ts + index.ts resolveWait) ---
-# matrix_express("wait") in the MCP plays a WEIGHTED-RANDOM pick from the wait
-# pool: the canned "working" snake plus any saved expression named "wait-*".
-# This lets the UserPromptSubmit hook do the SAME pick, so the automatic busy
-# indicator matches the MCP (relative weights wait-claude:40 / wait-rainbow:30 /
-# wait-orbit:20 / claudesweep:20 / working:10 — set in mcp_server/wait-weights.json,
-# read at RUNTIME; claudesweep is a firmware animation launched transiently). Reads
-# the repo's JSON directly; no MCP call. Fails silently back to "working" if
-# anything is missing, so a turn is never blocked.
-MCP_DIR = os.environ.get(
-    "MATRIX_MCP_DIR",
-    r"C:\Users\srfin\Dropbox\Dev\repos\peckworks-esp32s3matrix\mcp_server",
-)
-EXPR_DIR = os.path.join(MCP_DIR, "expressions")
-WAIT_WEIGHTS_FILE = os.path.join(MCP_DIR, "wait-weights.json")
-WAIT_BUILTINS = ["working"]   # canned wait animations (drawn from EXPR above)
-WAIT_PREFIX = "wait-"
-WAIT_ANIMATIONS = ["claudesweep"]   # firmware anims in the wait pool (not frame expressions)
-
-
-def post_animation(anim_type, transient=True):
-    """Best-effort POST /api/display/animation for a firmware-animation wait pick."""
-    try:
-        body = json.dumps({"type": anim_type, "transient": transient}).encode()
-        req = urllib.request.Request(BOARD_URL + "/api/display/animation", data=body,
-                                     headers={"Content-Type": "application/json"}, method="POST")
-        urllib.request.urlopen(req, timeout=3).read()
-        return True
-    except Exception:
-        return False
-
-
-def build_wait_pool():
-    """Built-ins + firmware-animation entries + any saved wait-*.json (de-duped)."""
-    pool = list(WAIT_BUILTINS) + list(WAIT_ANIMATIONS)
-    try:
-        for fn in os.listdir(EXPR_DIR):
-            if fn.startswith(WAIT_PREFIX) and fn.endswith(".json"):
-                nm = fn[:-5]
-                if nm not in pool:
-                    pool.append(nm)
-    except Exception:
-        pass
-    return pool
-
-
-def load_wait_weights():
-    try:
-        with open(WAIT_WEIGHTS_FILE, "r", encoding="utf-8") as f:
-            raw = json.load(f)
-        w = raw.get("weights")
-        return w if isinstance(w, dict) else {}
-    except Exception:
-        return {}
-
-
-def pick_wait(pool, weights):
-    """Weighted random, mirroring wait.ts pickWait: weight defaults to 1, clamped
-    >= 0; zero-weight dropped; if everything zeroes out, fall back to uniform."""
-    if not pool:
-        return WAIT_BUILTINS[0]
-    entries = [(n, max(0.0, float(weights.get(n, 1)))) for n in pool]
-    entries = [(n, w) for n, w in entries if w > 0] or [(n, 1.0) for n in pool]
-    total = sum(w for _, w in entries)
-    r = random.random() * total
-    for n, w in entries:
-        r -= w
-        if r < 0:
-            return n
-    return entries[-1][0]
-
-
 def send_saved(name):
     """Load ANY saved expression JSON {colors,frames,frame_ms,loop} by name and POST
-    it (wait-*, ask-*, idle, …). Best-effort: returns False on miss / board offline."""
+    it (ask-*, idle, …). Best-effort: returns False on miss / board offline."""
     try:
         with open(os.path.join(EXPR_DIR, name + ".json"), "r", encoding="utf-8") as f:
             e = json.load(f)
@@ -237,16 +222,32 @@ def send_saved(name):
         return False
 
 
-def send_wait():
-    """Pick one wait animation by weight and play it (snake, firmware anim, or a saved wait-*)."""
-    name = pick_wait(build_wait_pool(), load_wait_weights())
-    if name in WAIT_ANIMATIONS:
-        if not post_animation(name):
-            send_named("working")  # never leave the board blank
-    elif name in EXPR:
-        send_named(name)
-    elif not send_saved(name):
-        send_named("working")  # never leave the board blank
+def render_resolved(resolved):
+    """Render a manifest-resolved pick. Mirrors the MCP's decideRender/runPlan."""
+    if not resolved:
+        return
+    value = resolved.get("value")
+    if not isinstance(value, str):
+        return
+    if resolved.get("brightness") is not None:
+        post_brightness(resolved["brightness"])
+    if value in FIRMWARE_NAMES:
+        if not post_animation(value, resolved.get("params") or {}):
+            send_named("working")        # never blank
+        return
+    if value in EXPR:
+        send_named(value)
+        return
+    if not send_saved(value):
+        send_named("working")            # never blank
+
+
+def render_moment(moment):
+    manifest = load_manifest()
+    if not manifest:
+        send_named("working")            # degrade, never blank
+        return
+    render_resolved(resolve(manifest, {"harness": "claude-code", "renderer": "esp32-8x8", "moment": moment}))
 
 
 def write_activity_token():
@@ -282,27 +283,18 @@ def spawn_idle_watcher(token):
 def main():
     if len(sys.argv) < 2:
         return 0
-    # At-will kill switch: if the flag file exists next to this script, no-op.
-    # `touch ~/.claude/hooks/.matrix_off` to silence the board this session;
-    # `del`/`rm` it to re-enable. Takes effect immediately (checked per call),
-    # no restart needed. Hooks stay registered either way.
-    if os.path.exists(FLAG_OFF):
+    if os.path.exists(FLAG_OFF):         # at-will kill switch
         return 0
-    name = sys.argv[1].strip().lower()
-    # wait + working + done are the real "Claude activity" beats — stamp the token
-    # so any stale idle watcher exits. (Manual alert/sleep/party don't touch it.)
-    token = write_activity_token() if name in ("wait", "working", "done") else None
-    if name == "wait":
-        send_wait()       # weighted-random pick from the wait pool (the hook path)
-    elif name in EXPR:
-        send_named(name)  # a specific CANNED expression by name (working forces the snake)
-    else:
-        send_saved(name)  # any SAVED expression by name (ask-question/ask-confirm/
-                          # ask-attention, or any other saved JSON). Best-effort: no-op
-                          # if the file is missing or the board is offline — never blocks.
-    # The checkmark arms boredom: if the user doesn't come back, the watcher goofs off.
-    if name == "done" and token is not None:
-        # send_named("done") above posted with idle=False (disarms); re-arm AFTER it.
+    moment = sys.argv[1].strip()
+    # "user is active" beats stamp the token (any pending idle watcher then exits);
+    # the Stop beat arms the board's screensaver + spawns the bored watcher.
+    is_done = (moment == "hook:Stop")
+    is_active = moment in ("hook:UserPromptSubmit",
+                           "hook:PostToolUse:AskUserQuestion",
+                           "hook:PostToolUse:ExitPlanMode")
+    token = write_activity_token() if (is_active or is_done) else None
+    render_moment(moment)
+    if is_done and token is not None:
         arm_board_idle()
         spawn_idle_watcher(token)
     return 0
