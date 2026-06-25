@@ -1,0 +1,56 @@
+{
+  "manifests": {
+    "basic": {
+      "version": "1.0",
+      "intents": {
+        "info":    { "fallback": null, "root": true },
+        "working": { "fallback": null, "root": true },
+        "done":    { "fallback": null, "root": true },
+        "attention": { "fallback": null, "root": true },
+        "fail":    { "fallback": null, "root": true },
+        "idle":    { "fallback": null, "root": true },
+        "thinking":{ "fallback": "working" },
+        "fatal":   { "fallback": "error" },
+        "error":   { "fallback": "fail" }
+      },
+      "harnesses": {
+        "claude-code": { "moments": [ { "on": "hook:Stop", "intent": "done" } ] }
+      },
+      "renderers": {
+        "r1": { "bindings": {
+          "info": "a-info", "working": "a-work", "done": "a-done",
+          "attention": "a-att", "fail": "a-fail", "idle": "a-idle"
+        } },
+        "r2": { "inherits": "r1", "bindings": { "done": "a-done2" } },
+        "pooler": { "bindings": {
+          "info": "a-info", "working": "a-work", "done": "a-done",
+          "attention": "a-att", "fail": "a-fail",
+          "idle": { "pool": { "x": 1, "y": 3 } }
+        } }
+      }
+    }
+  },
+  "cases": [
+    { "name": "moment maps to intent + binding",
+      "manifest": "basic", "harness": "claude-code", "renderer": "r1",
+      "moment": "hook:Stop", "rngSeq": [], "expect": { "intent": "done", "value": "a-done" } },
+    { "name": "unknown moment resolves to null",
+      "manifest": "basic", "harness": "claude-code", "renderer": "r1",
+      "moment": "hook:Nope", "rngSeq": [], "expect": null },
+    { "name": "fallback walk: fatal -> error -> fail (only fail bound)",
+      "manifest": "basic", "renderer": "r1",
+      "intent": "fatal", "rngSeq": [], "expect": { "intent": "fail", "value": "a-fail" } },
+    { "name": "inherited binding used when not overridden",
+      "manifest": "basic", "renderer": "r2",
+      "intent": "info", "rngSeq": [], "expect": { "intent": "info", "value": "a-info" } },
+    { "name": "own binding overrides inherited",
+      "manifest": "basic", "renderer": "r2",
+      "intent": "done", "rngSeq": [], "expect": { "intent": "done", "value": "a-done2" } },
+    { "name": "pool pick: rng 0.9 over weights x:1,y:3 -> y",
+      "manifest": "basic", "renderer": "pooler",
+      "intent": "idle", "rngSeq": [0.9], "expect": { "intent": "idle", "value": "y" } },
+    { "name": "pool pick: rng 0.1 over weights x:1,y:3 -> x",
+      "manifest": "basic", "renderer": "pooler",
+      "intent": "idle", "rngSeq": [0.1], "expect": { "intent": "idle", "value": "x" } }
+  ]
+}
