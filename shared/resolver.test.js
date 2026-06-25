@@ -68,6 +68,13 @@ test("pickWeighted reads weight from an object entry (rng 0.9 over x:{weight:1},
   assert.equal(picked, "y");
 });
 
+test("pickWeighted reads weight from an object entry (rng 0.3 over x:{weight:1}, y:{weight:3} -> y)", () => {
+  // Discriminates new from old: OLD fallback-to-1 -> total 2, r=0.6 -> 'x';
+  // NEW reads weight -> total 4, r=1.2 -> 'y'.
+  const picked = pickWeighted({ x: { weight: 1 }, y: { weight: 3 } }, () => 0.3);
+  assert.equal(picked, "y");
+});
+
 test("pickWeighted: object entry with no weight defaults to 1", () => {
   // x:{} (=>1) vs y:1 : equal halves; rng 0.4 -> x, rng 0.6 -> y
   assert.equal(pickWeighted({ x: {}, y: 1 }, () => 0.4), "x");
