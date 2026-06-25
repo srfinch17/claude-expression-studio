@@ -409,7 +409,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
 - blocked / waiting for the human's input → "alert" (blinks until replaced — this is the silent tap on the shoulder)
 - celebration / milestone → "party"; approval → "thumbsup"; failure → "cross" or "sad"
 - idle → "sleep"; delight → "sparkle"; pure fun when the moment fits → "spaceship"
-One expression per state change — don't spam every step. Canned (pre-vetted as human-readable): smiley, sad, heart, check, cross, thumbsup, question, ok, sparkle, alert, working, done, party, spaceship, sleep. "wait" = a random wait spinner (the working snake + any saved wait-* animation). Also plays anything saved via matrix_animate's save_as (see matrix_list_expressions).`,
+One expression per state change — don't spam every step. Canned (pre-vetted as human-readable): smiley, sad, heart, cross, thumbsup, ok, sparkle, alert, working, party, spaceship, sleep. "wait" = a random wait spinner (the working snake + any saved wait-* animation). Also plays anything saved via matrix_animate's save_as (see matrix_list_expressions).`,
       inputSchema: {
         type: "object",
         properties: {

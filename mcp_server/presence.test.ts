@@ -56,8 +56,10 @@ test("data with two cases is rejected", () => {
 });
 
 test("cannedFor maps known intents and falls back to smiley", () => {
-  assert.equal(cannedFor("done"), "done");
   assert.equal(cannedFor("error"), "cross");
+  assert.equal(cannedFor("ok"), "ok"); // remapped check→ok (the OK glyph) after check was retired
+  assert.equal(cannedFor("done"), "smiley"); // retired glyph → falls back until rehomed
+  assert.equal(cannedFor("question"), "smiley"); // retired glyph → falls back until rehomed
   assert.equal(cannedFor("teleporting"), "smiley");
 });
 

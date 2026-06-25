@@ -1,9 +1,10 @@
 {
-  "description": "Red heart — warm idle goof. Part of the bored-Claude rotation.",
+  "description": "Red beating heart — warm idle goof. Part of the bored-Claude rotation. Expands then contracts/dips on a ~1s lub-dub.",
   "frames": [
-    [".RR..RR.", "RRRRRRRR", "RRRRRRRR", "RRRRRRRR", ".RRRRRR.", "..RRRR..", "...RR...", "........"]
+    [".RR..RR.", "RRRRRRRR", "RRRRRRRR", "RRRRRRRR", ".RRRRRR.", "..RRRR..", "...RR...", "........"],
+    ["........", ".RR..RR.", "RRRRRRRR", "RRRRRRRR", ".RRRRRR.", "..RRRR..", "...RR...", "........"]
   ],
   "colors": { "R": "#ff1432" },
-  "frame_ms": 150,
+  "frame_ms": 520,
   "loop": 0
 }
