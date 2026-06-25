@@ -681,22 +681,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           const lr = await post("/api/display/animation", { type: "presence" });
           ledNote = lr.ok ? "8x8 → data" : `8x8 data error ${lr.status}`;
         } else {
-          // No data → render the intent's canned glyph via the frame path (v0 behavior).
-          // "working" routes through the weighted wait pool so presence varies too.
-          const canned = msg.intent === "working" ? await resolveWait() : cannedFor(msg.intent);
-          if (isWaitAnimation(canned)) {
-            // Firmware-animation pick: fire POST /api/display/animation (transient).
-            const lr = await post("/api/display/animation", { type: canned, transient: true });
-            ledNote = lr.ok ? `8x8 → ${canned} (transient anim)` : `8x8 anim error ${lr.status}`;
-          } else {
-            const expr = CANNED[canned] ?? (await loadSavedExpression(canned));
-            if (expr) {
-              const lr = await post("/api/display/frames", expressionToWire(expr));
-              ledNote = lr.ok ? `8x8 → ${canned}` : `8x8 error ${lr.status}`;
-            } else {
-              ledNote = `no 8x8 glyph for "${canned}"`;
-            }
+          // No data → resolve the intent's binding via the manifest and render the glyph.
+          // Never blank: a missing/unbound intent falls back to `info`.
+          let note = await renderIntent({ intent: msg.intent });
+          if (note === "no binding" || note.startsWith("no glyph")) {
+            note = await renderIntent({ intent: "info" });
           }
+          ledNote = `8x8 → ${note}`;
         }
 
         return { content: [{ type: "text", text: `Presence "${msg.intent}" set (${cardNote}; ${ledNote}).` }] };
