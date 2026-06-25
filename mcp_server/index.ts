@@ -24,6 +24,7 @@
 
 // Claude's expression channel: canned glyph library + text-art → wire conversion.
 import { CANNED, MAX_FRAMES, artToFrameHex, expressionToWire, type Expression } from "./expressions.js";
+import { decideRender, loadEngine, type RenderPlan } from "./engine.js";
 // Wait-animation library: the random "wait" pool (snake + saved wait-* expressions).
 import { buildWaitPool, pickWait, isWaitAnimation } from "./wait.js";
 import { normalizePresence, cannedFor } from "./presence.js";
@@ -124,6 +125,35 @@ const BOARD_URL = process.env.ESP32_URL ?? "http://esp32matrix.local";
 
 // Remembers the last matrix_idle pick so consecutive idle launches differ.
 let lastIdleType: string | null = null;
+
+// The manifest engine: shared resolver + manifest, loaded once. Repo-first so dev edits
+// to shared/manifest.json are live; falls back to the bundled copy inside the .mcpb.
+let enginePromise: ReturnType<typeof loadEngine> | null = null;
+function engine() { return (enginePromise ??= loadEngine(MCP_DIR)); }
+
+// noRepeat memory for pooled bindings (idle), shared across calls in this process.
+const renderCtx: { last: Record<string, string> } = { last: {} };
+
+// Execute a render plan against the board; returns a short note for the tool reply.
+async function runPlan(plan: RenderPlan): Promise<string> {
+  if (plan.kind === "noop") return "no binding";
+  if (plan.brightness != null) await post("/api/brightness", { level: plan.brightness });
+  if (plan.kind === "animation") {
+    const r = await post("/api/display/animation", { type: plan.type, ...plan.params, transient: true });
+    return r.ok ? `${plan.type} (transient anim)` : `anim error ${r.status}`;
+  }
+  const expr = CANNED[plan.name] ?? (await loadSavedExpression(plan.name));
+  if (!expr) return `no glyph for "${plan.name}"`;
+  const r = await post("/api/display/frames", expressionToWire(expr));
+  return r.ok ? plan.name : `frames error ${r.status}`;
+}
+
+// Resolve an intent (or moment) for the esp32-8x8 renderer and render it. Returns the note.
+async function renderIntent(opts: { intent?: string; moment?: string; harness?: string }): Promise<string> {
+  const { manifest, resolve, isFirmwareName } = await engine();
+  const resolved = resolve(manifest, { ...opts, renderer: "esp32-8x8" }, renderCtx);
+  return runPlan(decideRender(resolved, isFirmwareName));
+}
 
 // ------------------------------------------------------------
 // HTTP HELPERS
@@ -613,14 +643,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "matrix_express": {
-        let exprName = String(args.name ?? "");
-        // "wait" is a GROUP, not a single expression: pick a weighted-random wait
-        // animation (snake built-in + saved wait-* + firmware anims like claudesweep).
-        if (exprName === "wait") exprName = await resolveWait();
-        // Firmware-animation pick: fire POST /api/display/animation (transient) and return.
-        if (isWaitAnimation(exprName)) {
-          const r = await post("/api/display/animation", { type: exprName, transient: true });
-          return { content: [{ type: "text", text: r.ok ? `Busy indicator: ${exprName} (transient animation).` : `Error ${r.status}: ${r.body}` }] };
+        const exprName = String(args.name ?? "");
+        // "wait" is the busy GROUP: resolve the manifest's `working` intent (the weighted
+        // pool faithful to wait-weights.json) and render the pick (frame-expr or firmware).
+        if (exprName === "wait") {
+          const note = await renderIntent({ intent: "working" });
+          return { content: [{ type: "text", text: `Busy indicator: ${note}.` }] };
         }
         const expr = CANNED[exprName] ?? (await loadSavedExpression(exprName));
         if (!expr) {
