@@ -242,12 +242,20 @@ core — `shared/{manifest.json,manifest.schema.json,resolver.js}` + `claude-hoo
 parity + `scripts/check-manifest.mjs`) **+** Plan 2 (3 renderers `shared/renderers/{esp32,web-sim,card}.js`
 + `registry.js` `fire()` dispatcher, DI-factory + unit-testable) **+** Plan 3a (binding-format extension:
 rich pools `{weight,params,label}` + pool `brightness` → lossless idle migration prep) are ALL EXECUTED +
-opus-reviewed; full suite **125/125** + `manifest OK`. **NEXT = Plan 3b (the live flips):** flip the
-gallery classifier → MCP `wait`/`presence`/`idle` handlers → Python hook onto the manifest (wiring the
-esp32 renderer to real board HTTP + an `exists`/`loadExpression` covering **canned + saved + firmware**),
-then delete the dead config. ⚠ Plan 3b changes LIVE board behavior (presence/idle adopt the seed's new
-bindings) — hardware-verify before merge. Plans 3b/4/5/6 remain; all on `feat/expression-studio`, merge
-at the end. 6 just-in-time plans total; **this is the active work.**
+opus-reviewed; full suite **125/125** + `manifest OK`. **Plan 3b (the live flips) is WRITTEN + committed**
+(`docs/superpowers/plans/2026-06-25-trigger-manifest-plan3b-live-flips.md`, 10 tasks) — **NEXT = EXECUTE it**
+(subagent-driven, sonnet implementers). Design decisions locked in the plan: **resolver-only** (the MCP and
+Python hook each resolve via the shared resolver = one brain, then render with their own proven board I/O —
+NOT the registry/renderer plugins, which stay for web-sim/Studio/Plan-4); **characterization-first fidelity**
+(Task 2 fixes a non-faithful seed BEFORE flipping: the `working` pool was missing the 4 `wait-logo-*` @8, and
+presence intents `ok`/`question` were absent → would blank the board); **manifest-driven gallery** (orphan =
+manifest-unbound; new `wired` group); **`.mcpb` bundles the shared engine** (packs only `mcp_server/`, so a
+`copy-shared-runtime` prebuild + repo-first/bundle-fallback loader — deleting `wait.ts` without this breaks the
+installed extension); **hook re-keyed to manifest MOMENTS** (`settings.hooks.snippet.json` passes
+`hook:UserPromptSubmit` etc.; bored-watcher kept intact). ⚠ Plan 3b changes LIVE board behavior (presence
+`ok`→done-glyph, `alert`→ask-attention, `celebrate`→pool, idle now transient) — the plan ends with a D1
+hardware-verification checklist; do NOT merge until verified. Plans 4/5/6 remain; all on
+`feat/expression-studio`, merge at the end. 6 just-in-time plans total; **this is the active work.**
 
 **Wait-animation library:** `matrix_express("wait")` plays a RANDOM wait spinner
 (no immediate repeat) so the busy indicator varies. The pool is **type-aware**: it
