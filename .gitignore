@@ -41,3 +41,6 @@ __pycache__/
 
 # Release build output (merged firmware, manifest, .mcpb) — produced by scripts/build-release.mjs
 release/
+
+# Generated: shared engine copied into the MCP bundle for packing (see scripts/copy-shared-runtime.mjs)
+mcp_server/shared-runtime/
