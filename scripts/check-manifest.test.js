@@ -38,10 +38,11 @@ test("flags a fallback to a nonexistent intent", () => {
   assert.ok(validateManifest(m, new Set(["skull"])).some((e) => /ghost/.test(e)));
 });
 
-test("flags a fallback cycle", () => {
+test("flags a fallback cycle exactly once (no per-node over-reporting)", () => {
   const m = ok();
   m.intents.a = { fallback: "b" }; m.intents.b = { fallback: "a" };
-  assert.ok(validateManifest(m, new Set(["skull"])).some((e) => /cycle/i.test(e)));
+  const errs = validateManifest(m, new Set(["skull"]));
+  assert.equal(errs.filter((e) => /cycle/i.test(e)).length, 1);
 });
 
 test("flags a non-root intent whose chain dead-ends (fallback null, not root)", () => {

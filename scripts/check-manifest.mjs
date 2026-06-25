@@ -60,11 +60,19 @@ export function validateManifest(manifest, animationNames) {
   }
 
   // 3. Each chain has no cycle and terminates at a root (fallback null + root:true).
+  // reportedCycle dedupes: one structural cycle yields one error, not one per node.
+  const reportedCycle = new Set();
   for (const name of Object.keys(intents)) {
     const seen = new Set();
     let cur = name;
     while (cur != null) {
-      if (seen.has(cur)) { errors.push(`intent "${name}" is in a fallback cycle`); break; }
+      if (seen.has(cur)) {
+        // Only report this cycle once — skip if any implicated node was already reported.
+        if (![...seen].some((n) => reportedCycle.has(n)))
+          errors.push(`intent "${name}" is in a fallback cycle`);
+        for (const n of seen) reportedCycle.add(n);
+        break;
+      }
       seen.add(cur);
       const def = intents[cur];
       if (!def) break; // unknown intent already reported by rule 2
@@ -78,9 +86,16 @@ export function validateManifest(manifest, animationNames) {
   }
 
   // 4. Renderer inheritance resolves (no cycle, target exists) + covers the roots.
+  const reportedMissingRenderer = new Set();
   const effective = (rid, seen = new Set()) => {
     const r = renderers[rid];
-    if (!r) { errors.push(`renderer "${rid}" inherits unknown renderer`); return {}; }
+    if (!r) {
+      if (!reportedMissingRenderer.has(rid)) {
+        reportedMissingRenderer.add(rid);
+        errors.push(`renderer "${rid}" inherits unknown renderer`);
+      }
+      return {};
+    }
     if (seen.has(rid)) { errors.push(`renderer "${rid}" has an inherits cycle`); return {}; }
     seen.add(rid);
     const inh = r.inherits ? effective(r.inherits, seen) : {};
