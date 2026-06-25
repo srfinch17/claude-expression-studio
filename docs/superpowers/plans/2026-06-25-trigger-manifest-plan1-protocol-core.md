@@ -728,19 +728,19 @@ export function validateManifest(manifest, animationNames) {
   // 3. Each chain has no cycle and terminates at a root (fallback null + root:true).
   for (const name of Object.keys(intents)) {
     const seen = new Set();
-    let cur = name, ok = false;
+    let cur = name;
     while (cur != null) {
       if (seen.has(cur)) { errors.push(`intent "${name}" is in a fallback cycle`); break; }
       seen.add(cur);
       const def = intents[cur];
-      if (!def) break; // already reported as unknown
-      if (def.fallback == null) { ok = def.root === true; break; }
+      if (!def) break; // unknown intent already reported by rule 2
+      if (def.fallback == null) {
+        if (def.root !== true)
+          errors.push(`intent "${name}" chain dead-ends at non-root "${cur}" (must reach a root)`);
+        break;
+      }
       cur = def.fallback;
     }
-    if (!ok && !seen.size === false && cur == null) { /* unreachable */ }
-    // If we exited because fallback null but not root, flag a dead-end.
-    if (cur != null && intents[cur] && intents[cur].fallback == null && intents[cur].root !== true)
-      errors.push(`intent "${name}" chain dead-ends at non-root "${cur}" (must reach a root)`);
   }
 
   // 4. Renderer inheritance resolves (no cycle, target exists) + covers the roots.
@@ -791,10 +791,9 @@ function main() {
 if (import.meta.url === pathToFileURL(process.argv[1]).href) main();
 ```
 
-> Implementer note: rule 3's dead-end detection must report when a chain stops at an intent
-> whose `fallback` is `null` but `root` is not `true`. Keep the final `if` that checks
-> `intents[cur].fallback == null && intents[cur].root !== true`. Verify against the
-> "dead-ends" test; simplify the loop if clearer, but all Step-1 tests must pass.
+> Implementer note: transcribe the validator as written. Rule 3 reports both fallback cycles
+> and chains that dead-end at a non-root intent; rules 1–5 each correspond to a test in Step 1.
+> All Step-1 tests must pass before committing.
 
 - [ ] **Step 4: Run the test, verify it passes**
 
