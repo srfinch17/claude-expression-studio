@@ -5,6 +5,22 @@ import { classifyExpression } from "../shared/catalog.js";
 
 const FIRMWARE = ["claudesweep","frostbite","fire","matrix_rain","snow","fireworks","dancefloor"];
 
+// User-approved ("done") expressions — the studio gallery renders a green ✓ on these.
+// Add a name when the user signs off. IMPORTANT: when an expression is EDITED/revisited,
+// REMOVE it here — revisiting requires fresh re-approval, so it must go back to orange.
+const APPROVED = new Set([
+  "aurora", "bloom", "claude-idle", "crystal-ball", "fireflies",
+  "idea", "inchworm", "soundwave", "task-complete",
+  "hourglass", "reticle", "skull", "spinning-coin",
+  "compactor", "confetti", "dusk",
+  "lightning", "warp-portal",
+  "goldfish", "lava-lamp", "ringed-planet", "swarm-merge",
+  "atom", "double-slit", "jupiter", "meteor", "ufo",
+  "black-hole", "butterfly", "galaxy", "jellyfish", "newtons-cradle", "rain", "tornado",
+  "jack-o-lantern", "mushroom-cloud", "volcano",
+  "bomb", "potion", "sunrise", "warrocket",
+]);
+
 // Dynamic-import the COMPILED MCP module so canned data has a single source of
 // truth (never re-parse the .ts). Async; main() and tests await this first.
 export async function loadCanned(cannedModulePath) {
@@ -50,7 +66,7 @@ export function buildGalleryData({ canned, savedDir, waitWeightsPath, boredDir }
   for (const [name, data] of byName) {
     let group = classifyExpression(name, { waitNames, boredNames });
     if (group === "orphan" && cannedNames.has(name)) group = "canned";
-    expressions.push({ name, ...data, group });
+    expressions.push({ name, ...data, group, approved: APPROVED.has(name) });
     groups[group].push(name);
   }
 

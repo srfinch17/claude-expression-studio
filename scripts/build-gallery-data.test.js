@@ -17,12 +17,14 @@ test("buildGalleryData merges canned + saved, classifies, lists firmware", async
   const groupOf = (n) => data.expressions.find((e) => e.name === n)?.group;
   assert.ok(data.firmware.includes("claudesweep") && data.firmware.length === 7, "7 firmware sims listed");
 
-  // The orphan gate: exactly the saved-and-unwired set.
-  const orphans = data.expressions.filter((e) => e.group === "orphan").map((e) => e.name).sort();
-  assert.deepEqual(orphans, ["claude-idle", "idea"], "exactly the two known orphans");
+  // The orphan gate: saved-but-unwired expressions. The known unwired ones plus the v1
+  // animation library (built unwired, awaiting the event-assignment pass) all land here.
+  const orphans = data.expressions.filter((e) => e.group === "orphan").map((e) => e.name);
+  for (const n of ["claude-idle", "idea", "task-complete", "goldfish", "skull"])
+    assert.ok(orphans.includes(n), `${n} is an unwired orphan`);
 
   // Rotation role wins over data-origin tier for dual-members:
-  assert.equal(groupOf("done"), "canned", "pure on-demand glyph → canned");
+  assert.equal(groupOf("sparkle"), "canned", "pure on-demand glyph → canned");
   assert.equal(groupOf("heart"), "bored", "canned+bored → bored (rotation wins)");
   assert.equal(groupOf("working"), "wait", "canned+wait → wait (rotation wins)");
   // Completeness: a bored-only animation (no canned/saved counterpart) is not dropped.

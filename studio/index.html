@@ -105,6 +105,7 @@
 
   /* ── Cell ── */
   .cell {
+    position: relative;
     background: var(--panel);
     border: 1px solid #1c1c24;
     border-radius: 12px;
@@ -118,6 +119,28 @@
   .cell.orphan {
     border-color: var(--orange);
     box-shadow: 0 0 0 1px var(--orange), 0 8px 32px rgba(255, 80, 8, .16);
+  }
+
+  /* user-approved ("done") cards get a green check + green frame, overriding the orphan ring */
+  .cell.approved {
+    border-color: #16a34a;
+    box-shadow: 0 0 0 1px #16a34a, 0 8px 32px rgba(22, 163, 74, .16);
+  }
+  .cell .check {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 21px;
+    height: 21px;
+    border-radius: 50%;
+    background: #16a34a;
+    color: #fff;
+    font-size: 13px;
+    line-height: 21px;
+    text-align: center;
+    font-weight: 700;
+    box-shadow: 0 0 0 2px #0a0a0c, 0 0 10px rgba(22, 163, 74, .6);
+    z-index: 2;
   }
 
   canvas {

@@ -24,9 +24,12 @@ const FW_DEFAULTS = {
 
 const panels = [];
 
-function cell(grid, name, desc, group) {
+function cell(grid, name, desc, group, approved) {
   const el = document.createElement("div");
-  el.className = "cell" + (group === "orphan" ? " orphan" : "");
+  el.className = "cell" + (group === "orphan" ? " orphan" : "") + (approved ? " approved" : "");
+  if (approved) {
+    const ck = document.createElement("div"); ck.className = "check"; ck.textContent = "✓"; ck.title = "Approved / done"; el.appendChild(ck);
+  }
   const cv = document.createElement("canvas"); cv.width = 128; cv.height = 128;
   el.appendChild(cv);
   const nm = document.createElement("div"); nm.className = "name"; nm.textContent = name; el.appendChild(nm);
@@ -65,7 +68,7 @@ async function build() {
           const sim = FIRMWARE_SIMS[it.name](FW_DEFAULTS[it.name] || {});
           const p = new Panel(cv); p.setStepper(() => sim.frame(), sim.frame_ms); panels.push(p);
         } else {
-          const cv = cell(grid, it.name, it.description, group);
+          const cv = cell(grid, it.name, it.description, group, it.approved);
           const expr = resolveExpression(it);
           const p = new Panel(cv); p.setFrames(expr.frames, expr.frame_ms); panels.push(p);
         }
