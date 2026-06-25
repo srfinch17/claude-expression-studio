@@ -1,0 +1,15 @@
+{
+  "description": "Done — a green checkmark blinks against its filled inverse (turn/task finished). Ported from the Claude Code hook's done art so the MCP and the hook render an identical done glyph. Bound to the manifest `done` intent (and `ok`/`approve` via fallback).",
+  "frames": [
+    ["........",".......G","......GG","G....GG.","GG..GG..",".GGGG...","..GG....","........"],
+    ["GGGGGGGG","GGGGGGG.","GGGGGG..",".GGGG..G","..GG..GG","G....GGG","GG..GGGG","GGGGGGGG"],
+    ["........",".......G","......GG","G....GG.","GG..GG..",".GGGG...","..GG....","........"],
+    ["GGGGGGGG","GGGGGGG.","GGGGGG..",".GGGG..G","..GG..GG","G....GGG","GG..GGGG","GGGGGGGG"],
+    ["........",".......G","......GG","G....GG.","GG..GG..",".GGGG...","..GG....","........"],
+    ["GGGGGGGG","GGGGGGG.","GGGGGG..",".GGGG..G","..GG..GG","G....GGG","GG..GGGG","GGGGGGGG"],
+    ["........",".......G","......GG","G....GG.","GG..GG..",".GGGG...","..GG....","........"]
+  ],
+  "colors": { "G": "#00c83c" },
+  "frame_ms": 220,
+  "loop": 1
+}

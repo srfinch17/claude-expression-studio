@@ -1750,7 +1750,7 @@
       "frame_ms": 600,
       "loop": 0,
       "description": "Drifting Zz — idle, waiting quietly, nothing needs attention.",
-      "group": "wired",
+      "group": "bored",
       "approved": false
     },
     {
@@ -3587,6 +3587,90 @@
       "description": "crystal ball thinking it through - violet orb with swirling teal mist and a white glint when the answer lands",
       "group": "orphan",
       "approved": true
+    },
+    {
+      "name": "done",
+      "source": "saved",
+      "frames": [
+        [
+          "........",
+          ".......G",
+          "......GG",
+          "G....GG.",
+          "GG..GG..",
+          ".GGGG...",
+          "..GG....",
+          "........"
+        ],
+        [
+          "GGGGGGGG",
+          "GGGGGGG.",
+          "GGGGGG..",
+          ".GGGG..G",
+          "..GG..GG",
+          "G....GGG",
+          "GG..GGGG",
+          "GGGGGGGG"
+        ],
+        [
+          "........",
+          ".......G",
+          "......GG",
+          "G....GG.",
+          "GG..GG..",
+          ".GGGG...",
+          "..GG....",
+          "........"
+        ],
+        [
+          "GGGGGGGG",
+          "GGGGGGG.",
+          "GGGGGG..",
+          ".GGGG..G",
+          "..GG..GG",
+          "G....GGG",
+          "GG..GGGG",
+          "GGGGGGGG"
+        ],
+        [
+          "........",
+          ".......G",
+          "......GG",
+          "G....GG.",
+          "GG..GG..",
+          ".GGGG...",
+          "..GG....",
+          "........"
+        ],
+        [
+          "GGGGGGGG",
+          "GGGGGGG.",
+          "GGGGGG..",
+          ".GGGG..G",
+          "..GG..GG",
+          "G....GGG",
+          "GG..GGGG",
+          "GGGGGGGG"
+        ],
+        [
+          "........",
+          ".......G",
+          "......GG",
+          "G....GG.",
+          "GG..GG..",
+          ".GGGG...",
+          "..GG....",
+          "........"
+        ]
+      ],
+      "colors": {
+        "G": "#00c83c"
+      },
+      "frame_ms": 220,
+      "loop": 1,
+      "description": "Done — a green checkmark blinks against its filled inverse (turn/task finished). Ported from the Claude Code hook's done art so the MCP and the hook render an identical done glyph. Bound to the manifest `done` intent (and `ok`/`approve` via fallback).",
+      "group": "wired",
+      "approved": false
     },
     {
       "name": "double-slit",
@@ -10503,16 +10587,17 @@
       "rocket",
       "shooting-star",
       "wink",
-      "yawn"
+      "yawn",
+      "sleep"
     ],
     "wired": [
       "party",
       "smiley",
       "cross",
-      "sleep",
       "aurora",
       "black-hole",
       "confetti",
+      "done",
       "galaxy",
       "skull",
       "swarm-merge"

@@ -670,7 +670,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       case "matrix_idle": {
         const { manifest, resolve, isFirmwareName } = await engine();
         const resolved = resolve(manifest, { renderer: "esp32-8x8", intent: "screensaver" }, renderCtx);
-        if (!resolved) return { content: [{ type: "text", text: "No idle binding configured." }] };
+        if (!resolved) return { content: [{ type: "text", text: "No screensaver binding configured." }] };
         const note = await runPlan(decideRender(resolved, isFirmwareName));
         const label = resolved.label ?? String(resolved.value);
         return { content: [{ type: "text", text: `Idle pick: ${label} (${note}).` }] };

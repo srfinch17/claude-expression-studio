@@ -16,3 +16,7 @@ test("FIRMWARE_NAMES is a Set covering the matrix_set_animation enum", () => {
   assert.ok(FIRMWARE_NAMES instanceof Set);
   assert.ok(FIRMWARE_NAMES.has("starfield") && FIRMWARE_NAMES.has("timer_text"));
 });
+
+test("FIRMWARE_NAMES size is exactly 26 — drift guard for Python mirror", () => {
+  assert.equal(FIRMWARE_NAMES.size, 26);
+});
