@@ -20,7 +20,7 @@ const loadExpression = (n) => FIRMWARE.includes(n)
   : { frames: [["A.......","","","","","","",""]], colors: { A: "#ffffff" }, frame_ms: 150, loop: 0 };
 
 function build() {
-  const board = { frames: [], anims: [] };
+  const board = { frames: [], anims: [], brightness: [] };
   const panelCalls = { frames: 0, steppers: 0, stepperSamples: [] };
   const cardEl = { style: {}, querySelector: () => ({ textContent: "" }) };
   const reg = createRegistry();
@@ -28,7 +28,8 @@ function build() {
     isFirmware: (n) => FIRMWARE.includes(n),
     loadExpression,
     postFrames: async (w) => board.frames.push(w),
-    postAnimation: async (t) => board.anims.push(t),
+    postAnimation: async (t, params) => board.anims.push({ t, params }),
+    setBrightness: async (level) => board.brightness.push(level),
   }));
   reg.register(makeWebSimRenderer({
     panel: {
@@ -61,14 +62,16 @@ test("Stop -> done lights up all three renderers, each its own way", async () =>
   for (const o of out) assert.equal(o.intent, "done");
 });
 
-test("idle pool resolves a firmware sim on web-sim and an animation on esp32", async () => {
+test("idle pool resolves a firmware sim on web-sim and an animation+brightness on esp32", async () => {
   const b = build();
-  // Force the idle pool to pick a firmware entry deterministically by excluding others
-  // is overkill here; just assert the dispatch produced SOME output on each renderer.
   const out = await fire(MANIFEST, { intent: "idle" }, b.reg, { rng: () => 0 });
   assert.equal(out.length, 3);
   for (const o of out) assert.equal(o.intent, "idle");
-  // esp32 idle pool is all firmware -> an animation post (not frames); web-sim -> a stepper.
+  // rng 0 -> first pool key "fire": firmware -> esp32 posts an animation (with its params)
+  // at idle brightness 5; web-sim plays the "fire" sim via a stepper.
   assert.equal(b.board.anims.length, 1);
+  assert.equal(b.board.anims[0].t, "fire");
+  assert.deepEqual(b.board.anims[0].params, { speed: 50, intensity: 70 });
+  assert.deepEqual(b.board.brightness, [5]);
   assert.equal(b.panelCalls.steppers, 1);
 });

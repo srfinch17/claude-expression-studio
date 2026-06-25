@@ -54,7 +54,20 @@
         "done":           "done",
         "attention":      "ask-attention",
         "fail":           "cross",
-        "idle":           { "noRepeat": true, "pool": { "fire": 1, "frostbite": 1, "snow": 1, "claudesweep": 1 } },
+        "idle": {
+          "noRepeat": true,
+          "brightness": 5,
+          "pool": {
+            "fire":        { "weight": 1, "params": { "speed": 50, "intensity": 70 }, "label": "🔥 fire" },
+            "dancefloor":  { "weight": 1, "params": { "palette": 0, "hold": 6 }, "label": "🪩 dance floor" },
+            "fireworks":   { "weight": 1, "params": { "color1": "#ff0050", "color2": "#00e0ff", "color3": "#ffd000" }, "label": "🎆 fireworks" },
+            "clock":       { "weight": 1, "params": { "color1": "#00ff88", "color2": "#0088ff", "color3": "#ff4040" }, "label": "🕐 clock" },
+            "frostbite":   { "weight": 1, "params": { "color": "#66ccff", "sparkle": 5, "mist": 4 }, "label": "❄️ frostbite" },
+            "matrix_rain": { "weight": 1, "params": { "theme": "classic", "speed": 60 }, "label": "🟩 matrix" },
+            "snow":        { "weight": 1, "params": { "speed": 110 }, "label": "❄️ snow" },
+            "claudesweep": { "weight": 1, "params": {}, "label": "🟠 claude sweep" }
+          }
+        },
         "awaiting-input": "ask-question",
         "results-merged": "swarm-merge",
         "compacting":     { "pool": { "black-hole": 2, "galaxy": 1 } },
