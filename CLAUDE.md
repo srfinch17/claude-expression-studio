@@ -237,8 +237,17 @@ streams to a browser **virtual board**; `.mcpb` = one-file install, Claude-first
 This will **migrate + replace** today's scattered config (`wait.ts` pool, `idle.ts` lineup,
 `presence.ts` `INTENT_TO_CANNED`, the `catalog.js` name-convention classifier) — treat those as
 transitional. Spec: `docs/superpowers/specs/2026-06-25-expression-trigger-manifest-design.md`; plans:
-`docs/superpowers/plans/2026-06-25-trigger-manifest-plan{1,2}-*.md` (Plan 1 protocol core DONE, 89/89
-tests, opus-reviewed; Plan 2 renderers WRITTEN). 6 just-in-time plans total; **this is the active work.**
+`docs/superpowers/plans/2026-06-25-trigger-manifest-plan*.md`. **Status (2026-06-25):** Plan 1 (protocol
+core — `shared/{manifest.json,manifest.schema.json,resolver.js}` + `claude-hooks/manifest_resolver.py`
+parity + `scripts/check-manifest.mjs`) **+** Plan 2 (3 renderers `shared/renderers/{esp32,web-sim,card}.js`
++ `registry.js` `fire()` dispatcher, DI-factory + unit-testable) **+** Plan 3a (binding-format extension:
+rich pools `{weight,params,label}` + pool `brightness` → lossless idle migration prep) are ALL EXECUTED +
+opus-reviewed; full suite **125/125** + `manifest OK`. **NEXT = Plan 3b (the live flips):** flip the
+gallery classifier → MCP `wait`/`presence`/`idle` handlers → Python hook onto the manifest (wiring the
+esp32 renderer to real board HTTP + an `exists`/`loadExpression` covering **canned + saved + firmware**),
+then delete the dead config. ⚠ Plan 3b changes LIVE board behavior (presence/idle adopt the seed's new
+bindings) — hardware-verify before merge. Plans 3b/4/5/6 remain; all on `feat/expression-studio`, merge
+at the end. 6 just-in-time plans total; **this is the active work.**
 
 **Wait-animation library:** `matrix_express("wait")` plays a RANDOM wait spinner
 (no immediate repeat) so the busy indicator varies. The pool is **type-aware**: it
