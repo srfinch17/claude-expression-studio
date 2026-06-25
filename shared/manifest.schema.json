@@ -52,8 +52,20 @@
                 { "type": "object",
                   "required": ["pool"],
                   "properties": {
-                    "pool": { "type": "object", "additionalProperties": { "type": "number" } },
-                    "noRepeat": { "type": "boolean" }
+                    "pool": { "type": "object", "additionalProperties": {
+                      "oneOf": [
+                        { "type": "number" },
+                        { "type": "object",
+                          "properties": {
+                            "weight": { "type": "number" },
+                            "params": { "type": "object" },
+                            "label":  { "type": "string" }
+                          },
+                          "additionalProperties": false }
+                      ]
+                    } },
+                    "noRepeat": { "type": "boolean" },
+                    "brightness": { "type": "number" }
                   },
                   "additionalProperties": false },
                 { "type": "object", "not": { "required": ["pool"] } }

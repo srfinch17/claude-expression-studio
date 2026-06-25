@@ -79,3 +79,60 @@ test("flags an x- intent with no fallback", () => {
 test("collectAnimationNames includes canned, saved, bored, firmware", () => {
   for (const n of ["done", "skull", "claudesweep"]) assert.ok(NAMES.has(n), `${n} known`);
 });
+
+// --- Task 3: rich pool shape + duplicate-moment rule ---
+
+const RICH_NAMES = new Set(["a-info", "a-work", "a-done", "a-att", "a-fail", "fire", "snow"]);
+function richRoots(extra = {}) {
+  return { info: "a-info", working: "a-work", done: "a-done", attention: "a-att", fail: "a-fail", ...extra };
+}
+function mf(bindings, moments = [{ on: "hook:Stop", intent: "done" }]) {
+  return {
+    version: "1.0",
+    intents: {
+      info: { fallback: null, root: true }, working: { fallback: null, root: true },
+      done: { fallback: null, root: true }, attention: { fallback: null, root: true },
+      fail: { fallback: null, root: true }, idle: { fallback: null, root: true },
+    },
+    harnesses: { h: { moments } },
+    renderers: { r: { bindings } },
+  };
+}
+
+test("validator accepts a rich pool (object entries + brightness)", () => {
+  const errors = validateManifest(mf(richRoots({
+    idle: { brightness: 5, pool: { fire: { weight: 1, params: { speed: 50 }, label: "fire" }, snow: 3 } },
+  })), RICH_NAMES);
+  assert.deepEqual(errors, []);
+});
+
+test("validator flags a negative weight inside an object pool entry", () => {
+  const errors = validateManifest(mf(richRoots({
+    idle: { pool: { fire: { weight: -2 } } },
+  })), RICH_NAMES);
+  assert.ok(errors.some((e) => /invalid weight/i.test(e) && /fire/.test(e)), errors.join("; "));
+});
+
+test("validator flags a missing animation inside an object pool entry", () => {
+  const errors = validateManifest(mf(richRoots({
+    idle: { pool: { ghost: { weight: 1 } } },
+  })), RICH_NAMES);
+  assert.ok(errors.some((e) => /missing animation "ghost"/i.test(e)), errors.join("; "));
+});
+
+test("validator flags a duplicate moment `on` within a harness", () => {
+  const errors = validateManifest(mf(richRoots({ idle: "fire" }), [
+    { on: "hook:Stop", intent: "done" },
+    { on: "hook:Stop", intent: "working" },
+  ]), RICH_NAMES);
+  assert.ok(errors.some((e) => /duplicate moment/i.test(e) && /hook:Stop/.test(e)), errors.join("; "));
+});
+
+test("validator does NOT flag repeated on:\"discretionary\" (intent-path, not moment-lookup)", () => {
+  const errors = validateManifest(mf(richRoots({ idle: "fire" }), [
+    { on: "hook:Stop", intent: "done" },
+    { on: "discretionary", intent: "idle" },
+    { on: "discretionary", intent: "fail" },
+  ]), RICH_NAMES);
+  assert.deepEqual(errors, []);
+});

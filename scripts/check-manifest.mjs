@@ -118,12 +118,29 @@ export function validateManifest(manifest, animationNames) {
         for (const [anim, w] of Object.entries(value.pool)) {
           if (!animationNames.has(anim))
             errors.push(`renderer "${rid}" pool "${intent}" references missing animation "${anim}"`);
-          if (typeof w !== "number" || w < 0)
+          const weight = typeof w === "number" ? w
+            : (w && typeof w === "object" ? (typeof w.weight === "number" ? w.weight : 1) : NaN);
+          if (typeof weight !== "number" || Number.isNaN(weight) || weight < 0)
             errors.push(`renderer "${rid}" pool "${intent}" has invalid weight for "${anim}"`);
         }
       }
     }
   }
+
+  // 6. No duplicate moment `on` within a harness (intentForMoment returns the FIRST
+  //    match, so a duplicate hook moment would silently never fire). "discretionary"
+  //    is exempt: it is reached via the intent path, not moment-lookup, and is shared
+  //    by the discretionary intents intentionally.
+  for (const [hid, h] of Object.entries(manifest.harnesses || {})) {
+    const seen = new Set();
+    for (const m of (h.moments || [])) {
+      const on = m && m.on;
+      if (on == null || on === "discretionary") continue;
+      if (seen.has(on)) errors.push(`harness "${hid}" has duplicate moment "${on}"`);
+      seen.add(on);
+    }
+  }
+
   return errors;
 }
 
