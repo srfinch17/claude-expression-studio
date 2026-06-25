@@ -32,6 +32,10 @@ esp32_matrix_webserver/build/
 # Windows
 Thumbs.db
 
+# Python bytecode cache (from running the claude-hooks resolver/parity tests)
+__pycache__/
+*.pyc
+
 # Playwright MCP scratch output (browser snapshots/console logs)
 .playwright-mcp/
 
