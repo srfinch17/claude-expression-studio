@@ -29,6 +29,12 @@
         } },
         "norep": { "bindings": {
           "idle": { "noRepeat": true, "pool": { "x": 1, "y": 1 } }
+        } },
+        "rich": { "bindings": {
+          "idle": { "brightness": 5, "pool": {
+            "fire": { "weight": 1, "params": { "speed": 50 }, "label": "fire" },
+            "snow": { "weight": 3 }
+          } }
         } }
       }
     }
@@ -60,6 +66,18 @@
       "steps": [
         { "intent": "idle", "expect": { "intent": "idle", "value": "x" } },
         { "intent": "idle", "expect": { "intent": "idle", "value": "y" } }
-      ] }
+      ] },
+    { "name": "rich pool: rng 0.1 picks fire (weight 1 of 4) and surfaces params+label+brightness",
+      "manifest": "basic", "renderer": "rich",
+      "intent": "idle", "rngSeq": [0.1],
+      "expect": { "intent": "idle", "value": "fire", "params": { "speed": 50 }, "label": "fire", "brightness": 5 } },
+    { "name": "rich pool: rng 0.9 picks snow (bare weight 3) — brightness only, no params/label",
+      "manifest": "basic", "renderer": "rich",
+      "intent": "idle", "rngSeq": [0.9],
+      "expect": { "intent": "idle", "value": "snow", "brightness": 5 } },
+    { "name": "rich pool DISCRIMINATING: rng 0.3 over fire:{weight:1}, snow:{weight:3} -> snow (old fallback-to-1 would pick fire)",
+      "manifest": "basic", "renderer": "rich",
+      "intent": "idle", "rngSeq": [0.3],
+      "expect": { "intent": "idle", "value": "snow", "brightness": 5 } }
   ]
 }

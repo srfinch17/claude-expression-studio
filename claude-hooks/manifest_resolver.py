@@ -49,7 +49,13 @@ def pick_weighted(weights, rng=random.random, exclude=None):
         filtered = [n for n in names if n != exclude]
         if filtered:
             names = filtered
-    entries = [(n, max(0, weights[n] if isinstance(weights[n], (int, float)) else 1)) for n in names]
+    def _w(v):
+        if isinstance(v, (int, float)):
+            return v
+        if isinstance(v, dict) and isinstance(v.get("weight"), (int, float)):
+            return v["weight"]
+        return 1
+    entries = [(n, max(0, _w(weights[n]))) for n in names]
     entries = [(n, w) for n, w in entries if w > 0]
     if not entries:
         entries = [(n, 1) for n in names]
@@ -84,5 +90,14 @@ def resolve(manifest, opts, ctx=None):
         picked = pick_weighted(binding["pool"], rng, exclude)
         if ctx.get("last") is not None and picked is not None:
             ctx["last"][key] = picked
-        return {"intent": bound, "value": picked}
+        out = {"intent": bound, "value": picked}
+        entry = binding["pool"].get(picked) if picked is not None else None
+        if isinstance(entry, dict):
+            if entry.get("params") is not None:
+                out["params"] = entry["params"]
+            if entry.get("label") is not None:
+                out["label"] = entry["label"]
+        if binding.get("brightness") is not None:
+            out["brightness"] = binding["brightness"]
+        return out
     return {"intent": bound, "value": binding}
