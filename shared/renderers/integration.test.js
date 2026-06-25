@@ -21,7 +21,7 @@ const loadExpression = (n) => FIRMWARE.includes(n)
 
 function build() {
   const board = { frames: [], anims: [] };
-  const panelCalls = { frames: 0, steppers: 0 };
+  const panelCalls = { frames: 0, steppers: 0, stepperSamples: [] };
   const cardEl = { style: {}, querySelector: () => ({ textContent: "" }) };
   const reg = createRegistry();
   reg.register(makeEsp32Renderer({
@@ -31,7 +31,20 @@ function build() {
     postAnimation: async (t) => board.anims.push(t),
   }));
   reg.register(makeWebSimRenderer({
-    panel: { setFrames: () => panelCalls.frames++, setStepper: () => panelCalls.steppers++ },
+    panel: {
+      setFrames: () => panelCalls.frames++,
+      setStepper: (fn, ms) => {
+        panelCalls.steppers++;
+        // Exercise the factory→instance→frame() contract end-to-end: call the stepper
+        // and assert it returns a non-empty pixel array with {x,y,r,g,b} objects.
+        const sample = fn();
+        assert.ok(Array.isArray(sample) && sample.length > 0,
+          "setStepper fn() must return a non-empty pixel array");
+        assert.ok("x" in sample[0] && "y" in sample[0] && "r" in sample[0],
+          "pixels must have x,y,r,g,b fields");
+        panelCalls.stepperSamples.push(sample);
+      },
+    },
     loadExpression, firmwareSims: FIRMWARE_SIMS,
   }));
   reg.register(makeCardRenderer({ el: cardEl }));

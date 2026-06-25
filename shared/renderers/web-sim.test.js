@@ -13,7 +13,7 @@ function fakePanel() {
   };
 }
 
-const firmwareSims = { claudesweep: { frame_ms: 90, frame: () => [{ x: 0, y: 0, r: 255, g: 176, b: 0 }] } };
+const firmwareSims = { claudesweep: () => ({ frame_ms: 90, frame: () => [{ x: 0, y: 0, r: 255, g: 176, b: 0 }] }) };
 const loadExpression = (n) => n === "done"
   ? { frames: [["G.......","","","","","","",""], ["........","","","","","","",""]], colors: { G: "#00c83c" }, frame_ms: 120, loop: 0 }
   : null;
