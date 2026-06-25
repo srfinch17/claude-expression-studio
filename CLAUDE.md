@@ -222,6 +222,24 @@ PNG contact sheet = build/critique board-free; the basis of the animator-subagen
 loop, proven at ~40 animations). Build log: `docs/superpowers/specs/2026-06-23-animation-roster-baseline.md`;
 full hook→animation map: `docs/superpowers/specs/2026-06-24-hooks-and-animation-moments.md`.
 
+**⭐ Expression Trigger Manifest (ACTIVE — the "wiring" built as real architecture):** the
+wiring/reset pass above is being built as a **renderer-agnostic protocol**, not ad-hoc glue. One
+**`shared/manifest.json`** (the single source of truth) maps **moment → intent → renderer**:
+`intents` (a curated-core + `x-`-extension vocabulary with **fallback chains**; 6 conformance roots
+info/working/done/attention/fail/idle), `harnesses` (per-harness moment→intent, Claude-first), and
+`renderers` (per-renderer intent→animation bindings; **any** intent is poolable + weighted; a binding
+is a reference so every animation is always assignable and reusable). A pure resolver
+(`shared/resolver.js`, mirrored in `claude-hooks/manifest_resolver.py`, **parity-tested** so they
+can't drift) + a bespoke validator (`scripts/check-manifest.mjs` → `npm run check:manifest`, gated in
+`npm test`). Renderers are 1-method plugins `{id, render(value)}` — `esp32-8x8` / `web-sim` / `card`.
+The MCP server is slated to **become an engine** that also serves the Studio over localhost and
+streams to a browser **virtual board**; `.mcpb` = one-file install, Claude-first but harness-agnostic.
+This will **migrate + replace** today's scattered config (`wait.ts` pool, `idle.ts` lineup,
+`presence.ts` `INTENT_TO_CANNED`, the `catalog.js` name-convention classifier) — treat those as
+transitional. Spec: `docs/superpowers/specs/2026-06-25-expression-trigger-manifest-design.md`; plans:
+`docs/superpowers/plans/2026-06-25-trigger-manifest-plan{1,2}-*.md` (Plan 1 protocol core DONE, 89/89
+tests, opus-reviewed; Plan 2 renderers WRITTEN). 6 just-in-time plans total; **this is the active work.**
+
 **Wait-animation library:** `matrix_express("wait")` plays a RANDOM wait spinner
 (no immediate repeat) so the busy indicator varies. The pool is **type-aware**: it
 contains both **frame-expressions** (saved `wait-*` JSON played via `/api/display/frames`)
