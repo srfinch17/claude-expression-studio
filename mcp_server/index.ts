@@ -694,16 +694,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "matrix_idle": {
-        if (IDLE_APPS.length === 0) return { content: [{ type: "text", text: "No idle apps configured." }] };
-        const app = pickIdleApp(IDLE_APPS, lastIdleType);
-        lastIdleType = app.type;
-
-        const br = await post("/api/brightness", { level: IDLE_BRIGHTNESS });
-        const r = await post("/api/display/animation", { type: app.type, ...app.params });
-        if (!r.ok) return { content: [{ type: "text", text: `Error ${r.status}: ${r.body}` }] };
-
-        const brNote = br.ok ? "" : ` (brightness set failed: ${br.status})`;
-        return { content: [{ type: "text", text: `Idle pick: ${app.label} at brightness ${IDLE_BRIGHTNESS}${brNote}.` }] };
+        const { manifest, resolve, isFirmwareName } = await engine();
+        const resolved = resolve(manifest, { renderer: "esp32-8x8", intent: "screensaver" }, renderCtx);
+        if (!resolved) return { content: [{ type: "text", text: "No idle binding configured." }] };
+        const note = await runPlan(decideRender(resolved, isFirmwareName));
+        const label = resolved.label ?? String(resolved.value);
+        return { content: [{ type: "text", text: `Idle pick: ${label} (${note}).` }] };
       }
 
       case "matrix_animate": {
