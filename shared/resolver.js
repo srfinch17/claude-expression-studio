@@ -58,8 +58,9 @@ export function pickWeighted(weights, rng = Math.random, exclude = null) {
 }
 
 // Top-level resolve. opts: { harness, renderer, moment?, intent? }.
-// ctx: { rng?, last? } — `last` is a mutable map keyed `${renderer}:${intent}`
-// giving noRepeat its memory. Returns { intent, value } or null (degrade to nothing).
+// ctx: { rng?, last? } — `last` is a mutable map keyed `${renderer}:${bound}`
+// (the fallback-RESOLVED intent, not the raw input intent) giving noRepeat its
+// memory. Returns { intent, value } or null (degrade to nothing).
 export function resolve(manifest, opts, ctx = {}) {
   const rng = ctx.rng || Math.random;
   const intent = opts.intent != null
