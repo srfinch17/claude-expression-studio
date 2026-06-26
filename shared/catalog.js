@@ -12,7 +12,7 @@ const RANK = { wait: 0, ask: 1, bored: 2, wired: 3 };
 
 // The animation names a binding references: a single value or every pool key.
 // (Object bindings like the card's {glyph,text,color} reference no animation name.)
-function bindingNames(binding) {
+export function bindingNames(binding) {
   if (binding == null) return [];
   if (typeof binding === "string") return [binding];
   if (typeof binding === "object" && binding.pool) return Object.keys(binding.pool);
