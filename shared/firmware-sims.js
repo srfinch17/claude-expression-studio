@@ -919,6 +919,111 @@ function makeBreathe(opts = {}) {
   };
 }
 
+// ---- comet (port of anim_comet.ino) ----
+// A 2×2 "heart" at the right edge (cols 6-7) bobs vertically via a sine oscillator
+// (cY = 3 + sin(phase)*2, phase += 0.10 per frame). A Y-history ring buffer (8 entries)
+// records the head position each frame; the 4 tail columns (x=5..2) each reference an
+// increasingly older history entry, producing a lagged trailing effect. ~5% chance per
+// frame to spawn one of 6 sparks near the head, drifting left and fading.
+function makeComet(opts = {}) {
+  const color1 = opts.color1 ? hexToRGB(opts.color1) : [255, 255, 220]; // warm-white head
+  const color2 = opts.color2 ? hexToRGB(opts.color2) : [255, 140,   0]; // orange first tail
+  const color3 = opts.color3 ? hexToRGB(opts.color3) : [255,  60,   0]; // warm-red mid tail
+  const color4 = opts.color4 ? hexToRGB(opts.color4) : [180,   0,   0]; // deep-red far tail
+
+  // 8-entry Y-history ring buffer, seeded at y=3 (matches C++ static init)
+  const yHist = new Float32Array(8).fill(3);
+  let histIdx = 0;
+  let phase   = 0;
+
+  // Returns the Y stored n frames ago (0 = most recently written), matching cometGetHistY
+  function getHistY(n) {
+    return yHist[(histIdx + 16 - 1 - n) % 8];
+  }
+
+  // Draw one tail column: bounds-checked equivalent of C++ drawCometCol + setPixel
+  function drawCometCol(px, x, histN, rowOff, rowCount, color, bri) {
+    const baseY = Math.floor(getHistY(histN));
+    const [r, g, b] = nscale8(color, bri);
+    for (let d = rowOff; d < rowOff + rowCount; d++) {
+      const py = baseY + d;
+      if (x >= 0 && x < 8 && py >= 0 && py < 8) px.push({ x, y: py, r, g, b });
+    }
+  }
+
+  // 6 spark slots (matches C++ cometSparks[6])
+  const sparks = Array.from({ length: 6 }, () => ({
+    x: 0, y: 0, dx: 0, dy: 0, brightness: 0, active: false,
+  }));
+
+  return {
+    frame_ms: opts.frame_ms || 70,
+    frame() {
+      const px = [];
+
+      // Advance bob oscillator
+      phase += 0.10;
+      const cY = 3.0 + Math.sin(phase) * 2.0;
+
+      // Store in ring buffer, then advance index
+      yHist[histIdx] = cY;
+      histIdx = (histIdx + 1) % 8;
+
+      const iy = Math.floor(cY);
+
+      // Head: 2×2 block at cols 6-7, rows iy and iy+1 (color1, full brightness)
+      for (let hx = 6; hx <= 7; hx++) {
+        for (let hy = iy; hy <= iy + 1; hy++) {
+          if (hx < 8 && hy >= 0 && hy < 8) {
+            px.push({ x: hx, y: hy, r: color1[0], g: color1[1], b: color1[2] });
+          }
+        }
+      }
+
+      // Tail: 4 columns trailing left, each referencing progressively older history
+      drawCometCol(px, 5, 1, -1, 4, color2, 192);
+      drawCometCol(px, 4, 2, -1, 4, color3, 140);
+      drawCometCol(px, 3, 3, -1, 4, color3, 102);
+      drawCometCol(px, 2, 4, -1, 4, color4,  64);
+
+      // Sparks: ~5% chance per frame (equivalent to C++ random(20)==0)
+      if (Math.random() * 20 < 1) {
+        const s = sparks.find((sp) => !sp.active);
+        if (s) {
+          s.x          = 5.0;
+          s.y          = cY + Math.floor(Math.random() * 2);
+          s.dx         = -(0.4 + Math.floor(Math.random() * 4) * 0.15);
+          s.dy         = (Math.floor(Math.random() * 5) - 2) * 0.15;
+          s.brightness = 220;
+          s.active     = true;
+        }
+      }
+
+      // Advance and render active sparks
+      for (const s of sparks) {
+        if (!s.active) continue;
+        s.x += s.dx;
+        s.y += s.dy;
+        if (s.brightness > 35) {
+          s.brightness -= 35;
+        } else {
+          s.active = false;
+          continue;
+        }
+        // C++ cull condition: x<0, y<0, y>7 (no x>7 check — sparks only drift left)
+        if (s.x < 0 || s.y < 0 || s.y > 7) { s.active = false; continue; }
+        const sx = Math.floor(s.x), sy = Math.floor(s.y);
+        if (sx >= 0 && sx < 8 && sy >= 0 && sy < 8) {
+          const [r, g, b] = nscale8(color3, s.brightness);
+          px.push({ x: sx, y: sy, r, g, b });
+        }
+      }
+
+      return px;
+    },
+  };
+}
+
 export const FIRMWARE_SIMS = {
   claudesweep: makeClaudeSweep,
   frostbite: makeFrostbite,
@@ -930,4 +1035,5 @@ export const FIRMWARE_SIMS = {
   rainbow: makeRainbow,
   breathe: makeBreathe,
   wave: makeWave,
+  comet: makeComet,
 };

@@ -152,6 +152,20 @@ test("wave: a filled water surface that rolls and varies by column", () => {
   assert.notDeepEqual(a.map((p)=>`${p.x},${p.y}`).sort(), b.map((p)=>`${p.x},${p.y}`).sort());
 });
 
+test("comet: bright head at the right edge, bobbing, with a trailing tail", () => {
+  const sim = FIRMWARE_SIMS.comet();
+  const frames = [];
+  for (let i = 0; i < 40; i++) { const f = sim.frame(); assertInBounds(f); frames.push(f); }
+  // Head lives at the right edge (cols 6–7) and is present every frame.
+  for (const f of frames) assert.ok(f.some((p) => p.x >= 6), "head at right edge");
+  // There is a tail to the left of the head (cols < 6 lit at least sometimes).
+  assert.ok(frames.some((f) => f.some((p) => p.x <= 5)), "tail extends left");
+  // It bobs: the head's row changes across frames.
+  const headRow = (f) => Math.min(...f.filter((p) => p.x === 7).map((p) => p.y));
+  const rows = new Set(frames.map(headRow));
+  assert.ok(rows.size > 1, "head bobs vertically");
+});
+
 test("every FIRMWARE_SIMS entry is a factory that produces in-bounds frames", () => {
   for (const [name, make] of Object.entries(FIRMWARE_SIMS)) {
     const sim = make();
