@@ -70,7 +70,7 @@ export function assign(manifest, rendererId = "esp32-8x8", intent, name, weight 
     const cur = b[intent];
     if (cur == null) { b[intent] = name; return; }
     if (typeof cur === "string") { if (cur !== name) b[intent] = { pool: { [cur]: 1, [name]: weight } }; return; }
-    if (isPool(cur)) cur.pool[name] = weight;
+    if (isPool(cur)) { if (!(name in cur.pool)) cur.pool[name] = weight; }
   });
 }
 

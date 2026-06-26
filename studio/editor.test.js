@@ -114,6 +114,11 @@ test("setPoolOption sets/deletes pool-level options", () => {
   assert.equal("brightness" in m.renderers["esp32-8x8"].bindings.idle, false);
 });
 
+test("assign onto an existing pool member is a no-op (preserves weight/params/label)", () => {
+  const out = assign(fresh(), "esp32-8x8", "idle", "fire", 1);
+  assert.deepEqual(out.renderers["esp32-8x8"].bindings.idle.pool.fire, { weight: 2, params: { speed: 50 }, label: "🔥" });
+});
+
 test("edits preserve untouched intents-vocab and the card renderer (lossless)", () => {
   const m = reweight(fresh(), "esp32-8x8", "working", "rainbow", 99);
   assert.deepEqual(m.intents, fresh().intents);
