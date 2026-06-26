@@ -7,6 +7,7 @@ import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import http from "node:http";
 // NOTE: engine-server.ts uses .js imports (Node16/tsc convention), which Node's type-strip
 // runner cannot resolve to .ts sources. We import the compiled dist file instead; the
 // rebuild hook keeps dist/ current on every .ts edit.
@@ -60,4 +61,35 @@ test("GET /events streams a DisplayEvent broadcast over SSE", async () => {
   assert.match(text, /data: /);
   assert.match(text, /"name":"done"/);
   await reader.cancel();
+});
+
+test("GET /api/framebuffer proxies the board's framebuffer", async () => {
+  // fake "board" that returns a framebuffer
+  const px = Array.from({ length: 64 }, (_, i) => (i === 0 ? " FF0000".trim() : "000000"));
+  const board = http.createServer((req, res) => {
+    if (req.url === "/api/display/framebuffer") {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ px }));
+    } else { res.writeHead(404); res.end(); }
+  });
+  await new Promise<void>((r) => board.listen(0, "127.0.0.1", () => r()));
+  const boardUrl = `http://127.0.0.1:${(board.address() as any).port}`;
+
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0, boardUrl });
+  after(() => { eng.close(); board.close(); });
+
+  const r = await fetch(`${eng.url}/api/framebuffer`);
+  assert.equal(r.status, 200);
+  const body = await r.json() as any;
+  assert.equal(body.px.length, 64);
+  assert.equal(body.px[0], "FF0000");
+});
+
+test("GET /api/framebuffer returns 503 reachable:false when the board is unreachable", async () => {
+  // an unused port → connection refused
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0, boardUrl: "http://127.0.0.1:1" });
+  after(() => eng.close());
+  const r = await fetch(`${eng.url}/api/framebuffer`);
+  assert.equal(r.status, 503);
+  assert.equal((await r.json() as any).reachable, false);
 });

@@ -16,12 +16,13 @@ async function readBody(req: http.IncomingMessage): Promise<string> {
   return Buffer.concat(chunks).toString("utf8");
 }
 
-export async function startEngineServer(opts: { mcpDir: string; port?: number; manifestDir?: string; repoRoot?: string }) {
+export async function startEngineServer(opts: { mcpDir: string; port?: number; manifestDir?: string; repoRoot?: string; boardUrl?: string }) {
   const { mcpDir } = opts;
   const hub = new SseHub();
   const base = resolveStaticBase(mcpDir);
   const mfDir = opts.manifestDir ?? engineDir(mcpDir);   // shared/ in dev, shared-runtime/ when packed
   const repoRoot = opts.repoRoot ?? path.join(mcpDir, "..");   // for the validator (validateManifest + collectAnimationNames)
+  const boardUrl = opts.boardUrl;
 
   const server = http.createServer(async (req, res) => {
     try {
@@ -59,6 +60,20 @@ export async function startEngineServer(opts: { mcpDir: string; port?: number; m
           return;
         }
         res.writeHead(405); res.end(); return;
+      }
+
+      if (url.startsWith("/api/framebuffer")) {
+        if (!boardUrl) { res.writeHead(503, { "content-type": "application/json" }); res.end(JSON.stringify({ reachable: false })); return; }
+        try {
+          const fb = await fetch(`${boardUrl}/api/display/framebuffer`, { signal: AbortSignal.timeout(1500) });
+          if (!fb.ok) { res.writeHead(503, { "content-type": "application/json" }); res.end(JSON.stringify({ reachable: false })); return; }
+          const body = await fb.text();
+          res.writeHead(200, { "content-type": "application/json", "cache-control": "no-cache" });
+          res.end(body);
+        } catch {
+          res.writeHead(503, { "content-type": "application/json" }); res.end(JSON.stringify({ reachable: false }));
+        }
+        return;
       }
 
       const out = await serveStatic(url, base);
