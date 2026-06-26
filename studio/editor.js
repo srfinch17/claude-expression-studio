@@ -50,3 +50,90 @@ export function computeOrphans(manifest, rendererId, allNames) {
   }
   return allNames.filter((n) => !bound.has(n));
 }
+
+// --- mutation ops (each returns a new manifest; never mutates input) ---
+
+const clone = (m) => JSON.parse(JSON.stringify(m));
+
+// clone the manifest, ensure renderers[rid].bindings exists, run fn on it, return the clone.
+function withBindings(manifest, rendererId, fn) {
+  const m = clone(manifest);
+  m.renderers = m.renderers || {};
+  m.renderers[rendererId] = m.renderers[rendererId] || {};
+  m.renderers[rendererId].bindings = m.renderers[rendererId].bindings || {};
+  fn(m.renderers[rendererId].bindings);
+  return m;
+}
+
+export function assign(manifest, rendererId = "esp32-8x8", intent, name, weight = 1) {
+  return withBindings(manifest, rendererId, (b) => {
+    const cur = b[intent];
+    if (cur == null) { b[intent] = name; return; }
+    if (typeof cur === "string") { if (cur !== name) b[intent] = { pool: { [cur]: 1, [name]: weight } }; return; }
+    if (isPool(cur)) cur.pool[name] = weight;
+  });
+}
+
+export function remove(manifest, rendererId = "esp32-8x8", intent, name) {
+  return withBindings(manifest, rendererId, (b) => {
+    const cur = b[intent];
+    if (typeof cur === "string") { if (cur === name) delete b[intent]; return; }
+    if (isPool(cur)) {
+      delete cur.pool[name];
+      if (Object.keys(cur.pool).length === 0) delete b[intent];
+    }
+  });
+}
+
+export function reweight(manifest, rendererId = "esp32-8x8", intent, name, weight) {
+  return withBindings(manifest, rendererId, (b) => {
+    const cur = b[intent];
+    if (!isPool(cur) || !(name in cur.pool)) return;
+    const v = cur.pool[name];
+    if (v && typeof v === "object") v.weight = weight; // keep params/label
+    else cur.pool[name] = weight;
+  });
+}
+
+export function move(manifest, rendererId = "esp32-8x8", fromIntent, toIntent, name) {
+  return withBindings(manifest, rendererId, (b) => {
+    if (fromIntent === toIntent) return;
+    const src = b[fromIntent];
+    let val = 1;
+    if (typeof src === "string" && src === name) { delete b[fromIntent]; }
+    else if (isPool(src) && name in src.pool) {
+      val = src.pool[name];
+      delete src.pool[name];
+      if (Object.keys(src.pool).length === 0) delete b[fromIntent];
+    } else return; // name not in source -> no-op
+    const dst = b[toIntent];
+    if (dst == null) b[toIntent] = { pool: { [name]: val } };
+    else if (typeof dst === "string") b[toIntent] = { pool: { [dst]: 1, [name]: val } };
+    else if (isPool(dst)) dst.pool[name] = val;
+  });
+}
+
+export function singleToPool(manifest, rendererId = "esp32-8x8", intent) {
+  return withBindings(manifest, rendererId, (b) => {
+    if (typeof b[intent] === "string") b[intent] = { pool: { [b[intent]]: 1 } };
+  });
+}
+
+export function poolToSingle(manifest, rendererId = "esp32-8x8", intent) {
+  return withBindings(manifest, rendererId, (b) => {
+    const cur = b[intent];
+    if (isPool(cur)) {
+      const names = Object.keys(cur.pool);
+      if (names.length === 1) b[intent] = names[0];
+    }
+  });
+}
+
+export function setPoolOption(manifest, rendererId = "esp32-8x8", intent, key, value) {
+  return withBindings(manifest, rendererId, (b) => {
+    const cur = b[intent];
+    if (!isPool(cur)) return;
+    if (value == null || value === false) delete cur[key];
+    else cur[key] = value;
+  });
+}
