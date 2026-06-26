@@ -137,6 +137,21 @@ test("breathe: whole panel pulses brightness over time", () => {
   assert.ok(maxSum - minSum > maxSum * 0.3, "brightness clearly oscillates (breathing)");
 });
 
+test("wave: a filled water surface that rolls and varies by column", () => {
+  const sim = FIRMWARE_SIMS.wave();
+  const a = sim.frame();
+  assertInBounds(a);
+  assert.ok(a.length > 0 && a.length < 64, "partially filled (water below a wavy surface)");
+  // Different columns have different fill heights (a wave, not a flat line).
+  const heightOf = (frame, x) => frame.filter((p) => p.x === x).length;
+  const heights = [0,1,2,3,4,5,6,7].map((x) => heightOf(a, x));
+  assert.ok(new Set(heights).size > 1, "columns have differing heights");
+  // It rolls: the lit set changes over time.
+  for (let i = 0; i < 4; i++) sim.frame();
+  const b = sim.frame();
+  assert.notDeepEqual(a.map((p)=>`${p.x},${p.y}`).sort(), b.map((p)=>`${p.x},${p.y}`).sort());
+});
+
 test("every FIRMWARE_SIMS entry is a factory that produces in-bounds frames", () => {
   for (const [name, make] of Object.entries(FIRMWARE_SIMS)) {
     const sim = make();

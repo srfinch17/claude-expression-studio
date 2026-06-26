@@ -833,6 +833,37 @@ function makeDancefloor(opts = {}) {
   };
 }
 
+// ---- wave (port of anim_effects.ino runWaveFrame) ----
+// Rolling water: per column, a phase-shifted beatsin8 sets the wave height.
+// Pixels at/below the surface are lit, blending surfaceColor (bright) → deepColor (dark)
+// by relative depth. Pixels above the surface are omitted (black/unlit).
+// waveOffset advances 2 per frame so the crests roll sideways over time.
+function makeWave(opts = {}) {
+  const surfaceColor = opts.surface ? hexToRGB(opts.surface) : hexToRGB('#46c8ff');
+  const deepColor    = opts.deep    ? hexToRGB(opts.deep)    : hexToRGB('#0a2864');
+  let waveOffset = 0;
+  return {
+    frame_ms: opts.frame_ms || 60,
+    frame() {
+      const px = [];
+      for (let x = 0; x < 8; x++) {
+        // Phase-shifted sine gives each column a different wave height (0-7).
+        // phaseU8 wraps naturally: sin is 2π-periodic so no need to mask.
+        const waveH   = beatsin8(20, 0, 7, x * 32 + waveOffset);
+        const surface = 7 - waveH;  // row index of the wave surface for this column
+        for (let y = surface; y < 8; y++) {
+          // t=0 at the surface (bright) → t=255 at the deepest row (dark)
+          const t       = waveH === 0 ? 0 : Math.round(((y - surface) * 255) / waveH);
+          const [r, g, b] = blendRGB(surfaceColor, deepColor, t);
+          px.push({ x, y, r, g, b });
+        }
+      }
+      waveOffset = (waveOffset + 2) & 0xFF;
+      return px;
+    },
+  };
+}
+
 // ---- rainbow (port of anim_effects.ino runRainbowFrame) ----
 // 8 vertical hue stripes: column x gets hue = rainbowHue + x*32, color CHSV(hue,255,200).
 // rainbowHue advances each frame so the stripes scroll continuously across the hue wheel.
@@ -898,4 +929,5 @@ export const FIRMWARE_SIMS = {
   dancefloor: makeDancefloor,
   rainbow: makeRainbow,
   breathe: makeBreathe,
+  wave: makeWave,
 };
