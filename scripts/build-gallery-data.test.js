@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildGalleryData, loadCanned } from "./build-gallery-data.mjs";
+import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
@@ -14,7 +15,10 @@ test("buildGalleryData merges canned + saved, classifies, lists firmware", async
     manifestPath: join(ROOT, "shared/manifest.json"),
     boredDir: join(ROOT, "claude-hooks/bored_animations"),
   });
-  assert.ok(data.firmware.includes("claudesweep") && data.firmware.length === 8, "8 firmware sims listed");
+  // The gallery firmware list IS the registry (Task 1 wired FIRMWARE = Object.keys(FIRMWARE_SIMS)),
+  // so assert that invariant — auto-tracks every sim added, never needs a hardcoded count bump.
+  assert.ok(data.firmware.includes("claudesweep"), "includes a known firmware sim");
+  assert.equal(data.firmware.length, Object.keys(FIRMWARE_SIMS).length, "gallery lists every registered firmware sim");
 
   // Orphan = saved AND unbound by the manifest. The unwired v1 library lands here…
   const orphans = data.expressions.filter((e) => e.group === "orphan").map((e) => e.name);
