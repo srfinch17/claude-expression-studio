@@ -6,6 +6,15 @@
 const scale8 = (v, s) => (v * s) >> 8;
 const nscale8 = ([r, g, b], s) => [scale8(r, s), scale8(g, s), scale8(b, s)];
 
+// beatsin8(bpm, lo, hi, phaseU8) — FastLED-style BPM sine helper.
+// phaseU8 is a 0-255 phase counter driving one full sine cycle (0=mid-rise, 64=peak,
+// 128=mid-fall, 192=trough). Output mapped to [lo, hi] inclusive.
+const beatsin8 = (bpm, lo, hi, phaseU8) => {
+  const angle = (phaseU8 / 256) * 2 * Math.PI;
+  const sin01 = (Math.sin(angle) + 1) / 2;  // 0..1
+  return Math.round(lo + sin01 * (hi - lo));
+};
+
 // ---- claudesweep (port of anim_claudesweep.ino) ----
 const SWEEP_PERIM = [
   [0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0],
@@ -849,6 +858,36 @@ function makeRainbow(opts = {}) {
   };
 }
 
+// ---- breathe (port of anim_effects.ino runBreatheFrame) ----
+// Fills the whole panel with a single hue, then scales every LED's brightness by a
+// sine wave — beatsin8(20 BPM, 10, 255) — so the panel pulses in and out together.
+// solidColor is user-set on the board; default here is cyan #28c8ff (overridable via opts.color).
+// The phase counter advances each frame at ~20 BPM so one pulse cycle is ~3 seconds.
+function makeBreathe(opts = {}) {
+  const frameMs = opts.frame_ms || 50;
+  const [cr, cg, cb] = opts.color ? hexToRGB(opts.color) : hexToRGB('#28c8ff');
+  // Advance the 0-255 phase counter so one sine cycle = 60000ms/20bpm = 3000ms.
+  // At frameMs ms/frame: phaseStep = 256 / (3000 / frameMs) = 256 * frameMs / 3000.
+  // At default 50ms → phaseStep ≈ 4, giving a 3.2 s cycle (close to 20 BPM / 3 s).
+  const phaseStep = Math.max(1, Math.round(256 * frameMs / 3000));
+  let breathePhase = 0;
+  return {
+    frame_ms: frameMs,
+    frame() {
+      const level = beatsin8(20, 10, 255, breathePhase);
+      breathePhase = (breathePhase + phaseStep) & 0xFF;
+      const px = [];
+      for (let y = 0; y < 8; y++) {
+        for (let x = 0; x < 8; x++) {
+          const [r, g, b] = nscale8([cr, cg, cb], level);
+          px.push({ x, y, r, g, b });
+        }
+      }
+      return px;
+    },
+  };
+}
+
 export const FIRMWARE_SIMS = {
   claudesweep: makeClaudeSweep,
   frostbite: makeFrostbite,
@@ -858,4 +897,5 @@ export const FIRMWARE_SIMS = {
   fireworks: makeFireworks,
   dancefloor: makeDancefloor,
   rainbow: makeRainbow,
+  breathe: makeBreathe,
 };

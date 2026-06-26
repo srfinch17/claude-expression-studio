@@ -124,6 +124,19 @@ test("rainbow: vertical hue stripes that scroll", () => {
   assert.ok(b0.r !== col0[0].r || b0.g !== col0[0].g || b0.b !== col0[0].b, "hue advances over frames");
 });
 
+test("breathe: whole panel pulses brightness over time", () => {
+  const sim = FIRMWARE_SIMS.breathe();
+  let minSum = Infinity, maxSum = -Infinity;
+  for (let i = 0; i < 120; i++) {
+    const f = sim.frame();
+    assertInBounds(f);
+    const sum = f.reduce((a, p) => a + p.r + p.g + p.b, 0);
+    minSum = Math.min(minSum, sum); maxSum = Math.max(maxSum, sum);
+  }
+  assert.ok(maxSum > 0, "panel lights up");
+  assert.ok(maxSum - minSum > maxSum * 0.3, "brightness clearly oscillates (breathing)");
+});
+
 test("every FIRMWARE_SIMS entry is a factory that produces in-bounds frames", () => {
   for (const [name, make] of Object.entries(FIRMWARE_SIMS)) {
     const sim = make();
