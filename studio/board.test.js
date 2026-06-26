@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { framesFromWire, framesFromPx, applyEvent, mirrorGate } from "./board.js";
+import { framesFromWire, framesFromPx, applyEvent, mirrorGate, buildPlaylists } from "./board.js";
 
 // one all-off frame except pixel (0,0) red: 64 hex strings
 function wireOneRed() {
@@ -50,4 +50,22 @@ test("framesFromPx drops off pixels and tolerates a bad px", () => {
 test("mirrorGate: SSE draws only when the board is offline", () => {
   assert.equal(mirrorGate(true), false);   // board online → framebuffer is the truth, ignore SSE
   assert.equal(mirrorGate(false), true);    // board offline → SSE is the only source
+});
+
+test("buildPlaylists: ambient follows showcase order, skips unknown names, tags kinds", () => {
+  const fakeGallery = {
+    expressions: [
+      { name: "galaxy", frames: [["........", "........", "........", "........", "........", "........", "........", "........"]], colors: {}, frame_ms: 120 },
+      { name: "smiley", frames: [["........"]], colors: {}, frame_ms: 150 },
+    ],
+    firmware: ["fire", "snow"],
+  };
+  const { ambient, all } = buildPlaylists(fakeGallery, ["fire", "snow"], ["fire", "galaxy", "nope"]);
+  assert.deepEqual(ambient.map((i) => i.name), ["fire", "galaxy"]); // "nope" skipped
+  assert.equal(ambient[0].kind, "firmware");
+  assert.equal(ambient[1].kind, "expression");
+  assert.equal(ambient[1].entry.name, "galaxy");
+  assert.equal(ambient[0].entry, null);
+  // all = every renderable: firmware first, then expressions
+  assert.deepEqual(all.map((i) => i.name), ["fire", "snow", "galaxy", "smiley"]);
 });

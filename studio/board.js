@@ -49,6 +49,26 @@ export function connectBoard({ panel, webSim, source }) {
 // ignored. Only when the board is offline does the SSE stream become the display.
 export function mirrorGate(boardOnline) { return !boardOnline; }
 
+// Build the renderable library from gallery-data + firmware sim names, and the
+// curated ambient playlist. Item = { name, kind: "firmware"|"expression", entry }.
+// entry is the gallery expression object (with frames/colors) or null for firmware.
+export function buildPlaylists(galleryData, firmwareKeys, showcaseNames) {
+  const byName = new Map();
+  for (const name of firmwareKeys || []) {
+    if (!byName.has(name)) byName.set(name, { name, kind: "firmware", entry: null });
+  }
+  for (const e of (galleryData && galleryData.expressions) || []) {
+    if (!byName.has(e.name)) byName.set(e.name, { name: e.name, kind: "expression", entry: e });
+  }
+  const all = [...byName.values()];
+  const ambient = [];
+  for (const name of showcaseNames || []) {
+    const it = byName.get(name);
+    if (it) ambient.push(it);
+  }
+  return { ambient, all };
+}
+
 // Wire the SSE fallback so it only draws while offline. `state` is a shared object the
 // poll loop (in board.html) flips: state.online = true on a good framebuffer poll.
 export function connectMirror({ panel, webSim, source, state }) {
