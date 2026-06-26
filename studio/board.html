@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Virtual Board — Expression Studio</title>
+  <style>
+    body { margin: 0; background: #060608; display: grid; place-items: center; height: 100vh; }
+    canvas { width: min(80vmin, 560px); height: min(80vmin, 560px); border-radius: 12px;
+      box-shadow: 0 0 60px var(--glow, rgba(255,80,8,.35)); image-rendering: pixelated; }
+  </style>
+</head>
+<body>
+  <canvas id="board" width="512" height="512"></canvas>
+  <script type="module">
+    import { Panel } from "../shared/render.js";
+    import { makeWebSimRenderer } from "../shared/renderers/web-sim.js";
+    import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";
+    import { resolveExpression } from "../shared/expressions.js";
+    import { connectBoard } from "./board.js";
+
+    const cv = document.getElementById("board");
+    const panel = new Panel(cv, { device: cv });
+    const webSim = makeWebSimRenderer({ panel, loadExpression: () => null, firmwareSims: FIRMWARE_SIMS });
+
+    // drive the panel's animation clock
+    let last = performance.now();
+    (function loop(now) { panel.tick(now - last, now); last = now; requestAnimationFrame(loop); })(last);
+
+    connectBoard({ panel, webSim, source: new EventSource("/events") });
+  </script>
+</body>
+</html>
