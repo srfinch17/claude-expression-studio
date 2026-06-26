@@ -1065,6 +1065,96 @@ function makeSpiral(opts = {}) {
   };
 }
 
+// ---- starfield (port of anim_gradient.ino runStarfieldFrame + spawnStar) ----
+// Pool of up to 16 star particles. Each has position (x,y), velocity (dx,dy),
+// age, maxAge, brightness, and active flag.
+//
+// Outward (default): born at center (3.5, 3.5) with a random angle and speed
+// (0.15 + floor(random*3)*0.08), age staggered by random(10). Dies when it
+// reaches the edge (off-screen).
+//
+// Inward (opts.inward): born at a random edge pixel, heading toward center
+// (dx,dy = normalized vector × speed 0.2 + floor(random*3)*0.08), age=0.
+// Dies when within 0.7 of center (3.5, 3.5).
+//
+// Color: blendRGB(color1, color2, age/maxAge*255) scaled by per-star brightness.
+// Defaults: white→blue, density 14.
+function makeStarfield(opts = {}) {
+  const inward  = opts.inward  || false;
+  const density = Math.min(opts.density ?? 14, 16);
+  const color1  = opts.color1 ? hexToRGB(opts.color1) : [255, 255, 255]; // white (birth)
+  const color2  = opts.color2 ? hexToRGB(opts.color2) : [40,  96,  255]; // #2860ff blue (death)
+
+  const stars = Array.from({ length: density }, () => ({
+    x: 0, y: 0, dx: 0, dy: 0,
+    age: 0, maxAge: 0, brightness: 0, active: false,
+  }));
+  let initialized = false;
+
+  function spawnStar(s) {
+    if (inward) {
+      const edge = Math.floor(Math.random() * 4);
+      if      (edge === 0) { s.x = Math.floor(Math.random() * 8); s.y = 0; }
+      else if (edge === 1) { s.x = 7;                              s.y = Math.floor(Math.random() * 8); }
+      else if (edge === 2) { s.x = Math.floor(Math.random() * 8); s.y = 7; }
+      else                 { s.x = 0;                              s.y = Math.floor(Math.random() * 8); }
+      let cx = 3.5 - s.x, cy = 3.5 - s.y;
+      let len = Math.sqrt(cx * cx + cy * cy);
+      if (len < 0.01) len = 0.01;
+      const speed = 0.2 + Math.floor(Math.random() * 3) * 0.08;
+      s.dx = cx / len * speed;
+      s.dy = cy / len * speed;
+      s.age = 0;
+    } else {
+      s.x = 3.5; s.y = 3.5;
+      const angle = Math.floor(Math.random() * 360) * (Math.PI / 180);
+      const speed = 0.15 + Math.floor(Math.random() * 3) * 0.08;
+      s.dx = Math.cos(angle) * speed;
+      s.dy = Math.sin(angle) * speed;
+      s.age = Math.floor(Math.random() * 10);
+    }
+    s.maxAge    = 25 + Math.floor(Math.random() * 20);
+    s.brightness = 80 + Math.floor(Math.random() * 175);
+    s.active    = true;
+  }
+
+  return {
+    frame_ms: opts.frame_ms || 80,
+    frame() {
+      const px = [];
+
+      for (let i = 0; i < density; i++) {
+        const s = stars[i];
+
+        // Respawn if first init, inactive, or aged out — mirrors C++ condition
+        if (!initialized || !s.active || s.age >= s.maxAge) spawnStar(s);
+
+        // Advance position and age (always, even after respawn)
+        s.x += s.dx;
+        s.y += s.dy;
+        s.age++;
+
+        // Death checks — respawn and skip this frame's draw (matches C++ continue)
+        const offScreen = s.x < 0 || s.x > 7 || s.y < 0 || s.y > 7;
+        const atCenter  = inward && (Math.abs(s.x - 3.5) < 0.7 && Math.abs(s.y - 3.5) < 0.7);
+        if (offScreen || atCenter) { spawnStar(s); continue; }
+
+        // Color: blend birth→death color by age fraction, scaled by per-star brightness
+        const t = Math.round((s.age * 255) / s.maxAge);
+        const [cr, cg, cb] = nscale8(blendRGB(color1, color2, t), s.brightness);
+
+        const ix = Math.floor(s.x), iy = Math.floor(s.y);
+        if (ix >= 0 && ix < 8 && iy >= 0 && iy < 8) {
+          px.push({ x: ix, y: iy, r: cr, g: cg, b: cb });
+        }
+      }
+
+      initialized = true;
+      return px;
+    },
+  };
+}
+
 export const FIRMWARE_SIMS = {
   claudesweep: makeClaudeSweep,
   frostbite: makeFrostbite,
@@ -1078,4 +1168,5 @@ export const FIRMWARE_SIMS = {
   wave: makeWave,
   comet: makeComet,
   spiral: makeSpiral,
+  starfield: makeStarfield,
 };

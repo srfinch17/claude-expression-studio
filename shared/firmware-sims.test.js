@@ -166,6 +166,20 @@ test("comet: bright head at the right edge, bobbing, with a trailing tail", () =
   assert.ok(rows.size > 1, "head bobs vertically");
 });
 
+test("starfield: a modest set of moving star pixels that changes over time", () => {
+  const sim = FIRMWARE_SIMS.starfield();
+  const a = sim.frame();
+  assertInBounds(a);
+  assert.ok(a.length > 0 && a.length <= 16, "≤16 stars, some lit");
+  for (let i = 0; i < 6; i++) sim.frame();
+  const b = sim.frame();
+  assert.notDeepEqual(
+    a.map((p) => `${p.x},${p.y}`).sort(),
+    b.map((p) => `${p.x},${p.y}`).sort(),
+    "stars move/respawn over time",
+  );
+});
+
 test("spiral: whole board lit, gradient slides each frame", () => {
   const sim = FIRMWARE_SIMS.spiral();
   const a = sim.frame();
