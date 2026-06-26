@@ -14,7 +14,7 @@ test("buildGalleryData merges canned + saved, classifies, lists firmware", async
     manifestPath: join(ROOT, "shared/manifest.json"),
     boredDir: join(ROOT, "claude-hooks/bored_animations"),
   });
-  assert.ok(data.firmware.includes("claudesweep") && data.firmware.length === 7, "7 firmware sims listed");
+  assert.ok(data.firmware.includes("claudesweep") && data.firmware.length === 8, "8 firmware sims listed");
 
   // Orphan = saved AND unbound by the manifest. The unwired v1 library lands here…
   const orphans = data.expressions.filter((e) => e.group === "orphan").map((e) => e.name);

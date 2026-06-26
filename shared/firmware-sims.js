@@ -54,6 +54,33 @@ function hexToRGB(hex) {
   return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
 }
 
+// FastLED-style CHSV → RGB: h, s, v ∈ 0–255.
+// Uses a 6-section rainbow hue wheel (not standard HSV) with 43 steps per section.
+// Full hue sweep: red(0)→orange(32)→yellow(64)→green(96)→cyan(128)→blue(172)→magenta(214)→red.
+function chsv8(h, s, v) {
+  h = h & 0xFF;
+  const section = Math.floor(h / 43);        // 0-5
+  const pos     = (h - section * 43) * 6;    // 0-252 ramp within section
+  let r, g, b;
+  switch (section) {
+    case 0:  r = 255;       g = pos;        b = 0;          break; // R → Y
+    case 1:  r = 255 - pos; g = 255;        b = 0;          break; // Y → G
+    case 2:  r = 0;         g = 255;        b = pos;        break; // G → C
+    case 3:  r = 0;         g = 255 - pos;  b = 255;        break; // C → B
+    case 4:  r = pos;       g = 0;          b = 255;        break; // B → M
+    default: r = 255;       g = 0;          b = 255 - pos;  break; // M → R
+  }
+  // Apply saturation: blend toward white
+  if (s < 255) {
+    const ds = 255 - s;
+    r = Math.min(255, r + scale8(255 - r, ds));
+    g = Math.min(255, g + scale8(255 - g, ds));
+    b = Math.min(255, b + scale8(255 - b, ds));
+  }
+  // Apply value (brightness)
+  return [scale8(r, v), scale8(g, v), scale8(b, v)];
+}
+
 // ---- frostbite (port of anim_frostbite.ino) ----
 function makeFrostbite(opts = {}) {
   const color = opts.color ? hexToRGB(opts.color) : [102, 204, 255]; // #66ccff
@@ -797,6 +824,31 @@ function makeDancefloor(opts = {}) {
   };
 }
 
+// ---- rainbow (port of anim_effects.ino runRainbowFrame) ----
+// 8 vertical hue stripes: column x gets hue = rainbowHue + x*32, color CHSV(hue,255,200).
+// rainbowHue advances each frame so the stripes scroll continuously across the hue wheel.
+// Full-spectrum mode only (palette mode optional — ignored in v1 as per task spec).
+function makeRainbow(opts = {}) {
+  let rainbowHue = 0;
+  // advance ≈ 400/animationSpeed; at ~90ms/frame that's ~4.  Default matches C++ medium speed.
+  const advance = opts.advance || 4;
+  return {
+    frame_ms: opts.frame_ms || 90,
+    frame() {
+      rainbowHue = (rainbowHue + advance) & 0xFF;
+      const px = [];
+      for (let x = 0; x < 8; x++) {
+        const hue = (rainbowHue + x * 32) & 0xFF;
+        const [r, g, b] = chsv8(hue, 255, 200);
+        for (let y = 0; y < 8; y++) {
+          px.push({ x, y, r, g, b });
+        }
+      }
+      return px;
+    },
+  };
+}
+
 export const FIRMWARE_SIMS = {
   claudesweep: makeClaudeSweep,
   frostbite: makeFrostbite,
@@ -805,4 +857,5 @@ export const FIRMWARE_SIMS = {
   snow: makeSnow,
   fireworks: makeFireworks,
   dancefloor: makeDancefloor,
+  rainbow: makeRainbow,
 };

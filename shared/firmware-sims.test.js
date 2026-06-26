@@ -106,6 +106,24 @@ test("dancefloor sim yields in-bounds frames and many pixels lit every frame", (
   assert.notEqual(laterColors, earlyColors, "dancefloor colors must change over time (state machine cycled)");
 });
 
+test("rainbow: vertical hue stripes that scroll", () => {
+  const sim = FIRMWARE_SIMS.rainbow();
+  const a = sim.frame();
+  for (let i = 0; i < 5; i++) sim.frame();
+  const b = sim.frame();
+  assertInBounds(a); assertInBounds(b);
+  assert.equal(a.length, 64, "every cell is lit (solid stripes)");
+  // A column is one solid hue → all 8 cells in column 0 share a color.
+  const col0 = a.filter((p) => p.x === 0);
+  assert.ok(col0.every((p) => p.r === col0[0].r && p.g === col0[0].g && p.b === col0[0].b), "column 0 is one hue");
+  // Adjacent columns differ (distinct stripes).
+  const c4 = a.find((p) => p.x === 4 && p.y === 0);
+  assert.ok(c4.r !== col0[0].r || c4.g !== col0[0].g || c4.b !== col0[0].b, "columns differ");
+  // It scrolls: column 0's color changes over time.
+  const b0 = b.find((p) => p.x === 0 && p.y === 0);
+  assert.ok(b0.r !== col0[0].r || b0.g !== col0[0].g || b0.b !== col0[0].b, "hue advances over frames");
+});
+
 test("every FIRMWARE_SIMS entry is a factory that produces in-bounds frames", () => {
   for (const [name, make] of Object.entries(FIRMWARE_SIMS)) {
     const sim = make();
