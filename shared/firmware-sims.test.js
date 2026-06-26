@@ -105,3 +105,12 @@ test("dancefloor sim yields in-bounds frames and many pixels lit every frame", (
   const laterColors = laterPx.map((p) => `${p.r},${p.g},${p.b}`).join("|");
   assert.notEqual(laterColors, earlyColors, "dancefloor colors must change over time (state machine cycled)");
 });
+
+test("every FIRMWARE_SIMS entry is a factory that produces in-bounds frames", () => {
+  for (const [name, make] of Object.entries(FIRMWARE_SIMS)) {
+    const sim = make();
+    assert.equal(typeof sim.frame_ms, "number", `${name}: frame_ms is a number`);
+    assert.ok(sim.frame_ms > 0, `${name}: frame_ms > 0`);
+    for (let i = 0; i < 30; i++) assertInBounds(sim.frame());
+  }
+});

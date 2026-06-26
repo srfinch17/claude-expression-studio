@@ -2,8 +2,9 @@ import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join, dirname, basename } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { manifestRoles, classifyExpression } from "../shared/catalog.js";
+import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";
 
-const FIRMWARE = ["claudesweep","frostbite","fire","matrix_rain","snow","fireworks","dancefloor"];
+const FIRMWARE = Object.keys(FIRMWARE_SIMS);
 
 // User-approved ("done") expressions — the studio gallery renders a green ✓ on these.
 // Add a name when the user signs off. IMPORTANT: when an expression is EDITED/revisited,
