@@ -1155,6 +1155,53 @@ function makeStarfield(opts = {}) {
   };
 }
 
+// ---- sun (port of anim_gradient.ino runSunFrame) ----
+// A rounded 4x4 disc (rows/cols 2–5, minus the 4 corner pixels) in a warm yellow,
+// with 4 colored dots (light→dark) orbiting 8 outer ray positions one slot per frame.
+// Each dot keeps its own color as they revolve together around the sun.
+
+const SUN_BX = [3, 6, 7, 6, 4, 1, 0, 1];
+const SUN_BY = [0, 1, 3, 6, 7, 6, 4, 1];
+
+function makeSun(opts = {}) {
+  const discColor = opts.color1 ? hexToRGB(opts.color1) : hexToRGB('#ffb400');
+  const dotColors = [
+    opts.color2 ? hexToRGB(opts.color2) : hexToRGB('#fff0a0'),
+    opts.color3 ? hexToRGB(opts.color3) : hexToRGB('#ffc832'),
+    opts.color4 ? hexToRGB(opts.color4) : hexToRGB('#ff9000'),
+    opts.color5 ? hexToRGB(opts.color5) : hexToRGB('#ff5008'),
+  ];
+  const discBri = opts.discBri ?? 200;
+  const ringBri = opts.ringBri ?? 255;
+  let ringSlot = 0;
+
+  return {
+    frame_ms: opts.frame_ms || 120,
+    frame() {
+      const px = [];
+
+      // Disc: 4x4 block (x,y ∈ 2..5) minus the 4 corners (2,2),(5,2),(2,5),(5,5)
+      const [dr, dg, db] = nscale8(discColor, discBri);
+      for (let y = 2; y <= 5; y++) {
+        for (let x = 2; x <= 5; x++) {
+          if ((x === 2 || x === 5) && (y === 2 || y === 5)) continue; // skip corners
+          px.push({ x, y, r: dr, g: dg, b: db });
+        }
+      }
+
+      // 4 orbiting dots, evenly spaced every 2 ring slots, each keeping its own color
+      for (let d = 0; d < 4; d++) {
+        const pos = (ringSlot + d * 2) % 8;
+        const [r, g, b] = nscale8(dotColors[d], ringBri);
+        px.push({ x: SUN_BX[pos], y: SUN_BY[pos], r, g, b });
+      }
+
+      ringSlot = (ringSlot + 1) % 8;
+      return px;
+    },
+  };
+}
+
 export const FIRMWARE_SIMS = {
   claudesweep: makeClaudeSweep,
   frostbite: makeFrostbite,
@@ -1169,4 +1216,5 @@ export const FIRMWARE_SIMS = {
   comet: makeComet,
   spiral: makeSpiral,
   starfield: makeStarfield,
+  sun: makeSun,
 };

@@ -195,6 +195,25 @@ test("spiral: whole board lit, gradient slides each frame", () => {
   assert.ok(pa.r !== pb.r || pa.g !== pb.g || pa.b !== pb.b, "gradient advances");
 });
 
+const SUN_BX = [3, 6, 7, 6, 4, 1, 0, 1];
+const SUN_BY = [0, 1, 3, 6, 7, 6, 4, 1];
+
+test("sun: a steady central disc with dots orbiting the ring", () => {
+  const sim = FIRMWARE_SIMS.sun();
+  const a = sim.frame();
+  assertInBounds(a);
+  // Disc: the 4 inner cells (3,3)(4,3)(3,4)(4,4) are always lit.
+  for (const [x, y] of [[3,3],[4,3],[3,4],[4,4]]) {
+    assert.ok(a.some((p) => p.x === x && p.y === y), `disc lit at ${x},${y}`);
+  }
+  // Some dots sit on ring positions; the ring lights shift over frames.
+  const ringLit = (f) => SUN_BX.map((bx, i) => f.some((p) => p.x === bx && p.y === SUN_BY[i])).join("");
+  const r0 = ringLit(a);
+  let moved = false;
+  for (let i = 0; i < 8; i++) { if (ringLit(sim.frame()) !== r0) { moved = true; break; } }
+  assert.ok(moved, "ring dots orbit");
+});
+
 test("every FIRMWARE_SIMS entry is a factory that produces in-bounds frames", () => {
   for (const [name, make] of Object.entries(FIRMWARE_SIMS)) {
     const sim = make();
