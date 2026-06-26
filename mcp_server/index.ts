@@ -532,7 +532,7 @@ If a drawing lands well (or the user likes it), re-call with save_as (kebab-case
     {
       name: "matrix_set_settings",
       description:
-        "Change one or more board settings (persisted on the board, survives reflash). Only the fields you provide change. Fields: idle_enabled (bool), idle_apps (comma-separated app names from: fire, matrix_rain, clock, fireworks, frostbite, snow, dancefloor), idle_after_secs (seconds of quiet before the screensaver starts), idle_rotate_secs (seconds between screensaver changes), idle_brightness (1-255, screensaver dimness), default_brightness (0-255 on boot), boot_animation (animation type to show on power-up, or empty to resume last), timezone (POSIX TZ string for the clock), calibration_correction (bool — apply the measured LED color/brightness correction; turn off to A/B compare). Example: 'start the screensaver after 5 minutes' -> { idle_after_secs: 300 }.",
+        "Change one or more board settings (persisted on the board, survives reflash). Only the fields you provide change. Fields: idle_enabled (bool), idle_apps (comma-separated app names from: fire, matrix_rain, clock, fireworks, frostbite, snow, dancefloor, claudesweep), idle_after_secs (seconds of quiet before the screensaver starts), idle_rotate_secs (seconds between screensaver changes), idle_brightness (1-255, screensaver dimness), default_brightness (0-255 on boot), boot_animation (animation type to show on power-up, or empty to resume last), timezone (POSIX TZ string for the clock), calibration_correction (bool — apply the measured LED color/brightness correction; turn off to A/B compare). Example: 'start the screensaver after 5 minutes' -> { idle_after_secs: 300 }.",
       inputSchema: {
         type: "object",
         properties: {
@@ -551,7 +551,7 @@ If a drawing lands well (or the user likes it), re-call with save_as (kebab-case
     {
       name: "matrix_studio",
       description:
-        "Get the local URL of the Expression Studio served by this engine (open it in a browser to see the live virtual board mirror the display, and to view/edit the animation library). Returns the URL or a note if the engine HTTP server is not running.",
+        "Get the local URL of the Expression Studio served by this engine. Open it in a browser to BROWSE the animation library (the Gallery is view-only for now — an editor is planned). The board.html page is a LIVE MIRROR of the physical panel when the board is reachable (it polls the real framebuffer), and falls back to showing fired intents when no board is present. Returns the URLs, or a note if the engine HTTP server is not running.",
       inputSchema: { type: "object", properties: {}, additionalProperties: false },
     },
   ],
@@ -792,7 +792,7 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   try {
-    const eng = await startEngineServer({ mcpDir: MCP_DIR });
+    const eng = await startEngineServer({ mcpDir: MCP_DIR, boardUrl: BOARD_URL });
     engineHub = eng.hub;
     engineUrl = eng.url;
     await writeFile(path.join(MCP_DIR, ".engine-url"), eng.url, "utf8").catch(() => {});
