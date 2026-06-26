@@ -1,4 +1,8 @@
 // mcp_server/engine-server.test.ts
+// NOTE: this test imports the COMPILED ./dist/*.js (Node type-strip can't resolve
+// engine-server's .js-specifier sibling imports to .ts). Run it via `npm test`, which
+// runs `tsc` FIRST — running `node --test` on this file standalone tests STALE dist and
+// can pass against old code. (See Plan 4 / the "tests must discriminate" project rule.)
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
@@ -46,7 +50,9 @@ test("GET /events streams a DisplayEvent broadcast over SSE", async () => {
 
   // Collect chunks until the broadcast data arrives (skips the initial ': ok' comment)
   let text = "";
+  const deadline = Date.now() + 5000;
   while (!text.includes("data: ")) {
+    if (Date.now() > deadline) throw new Error("SSE: expected data not received within 5s");
     const { value, done } = await reader.read();
     if (done) break;
     text += new TextDecoder().decode(value);

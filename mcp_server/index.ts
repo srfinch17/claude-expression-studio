@@ -122,6 +122,7 @@ async function runPlan(plan: RenderPlan): Promise<string> {
   if (plan.brightness != null) await post("/api/brightness", { level: plan.brightness });
   if (plan.kind === "animation") {
     const r = await post("/api/display/animation", { type: plan.type, ...plan.params, transient: true });
+    // Broadcast POST-result-independent: virtual board mirrors the panel even when the board POST fails or no hardware is present (D2).
     engineHub?.broadcast(planToDisplayEvent(plan));
     return r.ok ? `${plan.type} (transient anim)` : `anim error ${r.status}`;
   }
@@ -129,6 +130,7 @@ async function runPlan(plan: RenderPlan): Promise<string> {
   if (!expr) return `no glyph for "${plan.name}"`;
   const wire = expressionToWire(expr);
   const r = await post("/api/display/frames", wire);
+  // Broadcast POST-result-independent: virtual board mirrors the panel even when the board POST fails or no hardware is present (D2).
   engineHub?.broadcast(planToDisplayEvent(plan, wire));
   return r.ok ? plan.name : `frames error ${r.status}`;
 }

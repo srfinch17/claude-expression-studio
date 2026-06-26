@@ -1,8 +1,9 @@
 // mcp_server/engine-integration.test.ts — capstone integration test: engine boot, static
 // serving, SSE broadcast, and manifest round-trip (side-effect-free).
-// NOTE: engine-server.ts uses .js specifiers (Node16/tsc convention); Node's type-strip
-// runner can't resolve those to .ts sources at test time. Import compiled dist instead;
-// `npm test` runs tsc before --test, so dist/ is always fresh.
+// NOTE: this test imports the COMPILED ./dist/*.js (Node type-strip can't resolve
+// engine-server's .js-specifier sibling imports to .ts). Run it via `npm test`, which
+// runs `tsc` FIRST — running `node --test` on this file standalone tests STALE dist and
+// can pass against old code. (See Plan 4 / the "tests must discriminate" project rule.)
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import path from "node:path";
@@ -32,7 +33,9 @@ test("engine serves board.html + a broadcast reaches a live SSE client", async (
   eng.hub.broadcast(planToDisplayEvent({ kind: "frames", name: "smiley" }, wire));
   // Collect chunks until the broadcast data arrives (skips the initial ': ok' SSE comment)
   let text = "";
+  const deadline = Date.now() + 5000;
   while (!text.includes('"name":"smiley"')) {
+    if (Date.now() > deadline) throw new Error("SSE: expected data not received within 5s");
     const { value, done } = await reader.read();
     if (done) break;
     text += new TextDecoder().decode(value);
