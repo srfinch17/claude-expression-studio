@@ -61,8 +61,11 @@ def validate(frames, colors):
 
 def render(data, cell=26, per_row=8, glow=True):
     frames = data["frames"]
-    colors = {k: hex_rgb(v) for k, v in data.get("colors", {}).items()}
-    validate(frames, colors)
+    if not data.get("raw"):
+        colors = {k: hex_rgb(v) for k, v in data.get("colors", {}).items()}
+        validate(frames, colors)
+    else:
+        colors = {}
 
     n = len(frames)
     per_row = max(1, min(per_row, n))
@@ -91,6 +94,16 @@ def render(data, cell=26, per_row=8, glow=True):
 
     for i, fr in enumerate(frames):
         ox, oy = panel_origin(i)
+        # Raw-RGB frame: a single 384-char hex string = 64 "RRGGBB" cells, row-major.
+        if isinstance(fr, str) and len(fr) == 64 * 6:
+            for idx in range(64):
+                h = fr[idx * 6: idx * 6 + 6]
+                rgb = (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
+                cx, cy = idx % 8, idx // 8
+                x0 = ox + cx * cell
+                y0 = oy + cy * cell
+                sd.rectangle([x0, y0, x0 + cell - 2, y0 + cell - 2], fill=rgb)
+            continue
         for ry in range(8):
             for rx in range(8):
                 ch = fr[ry][rx]
