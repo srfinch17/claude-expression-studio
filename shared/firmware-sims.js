@@ -1024,6 +1024,47 @@ function makeComet(opts = {}) {
   };
 }
 
+// ---- spiral (port of anim_gradient.ino runSpiralFrame + buildSpiralPath) ----
+// Pre-computes the 64-cell clockwise-inward spiral path once in the closure.
+// Each frame slides a two-color gradient along that path: the whole 8×8 board
+// stays lit at all times, with color1 chasing color2 endlessly inward.
+// Port of the C++ spiral: top→right→bottom→left, shrinking each pass.
+function makeSpiral(opts = {}) {
+  const color1 = opts.color1 ? hexToRGB(opts.color1) : [255, 80, 8];    // #ff5008 orange
+  const color2 = opts.color2 ? hexToRGB(opts.color2) : [16, 96, 255];   // #1060ff blue
+
+  // Build the 64-cell clockwise inward spiral path once (mirrors buildSpiralPath())
+  const path = [];
+  let top = 0, bottom = 7, left_col = 0, right_col = 7;
+  while (path.length < 64) {
+    for (let x = left_col; x <= right_col && path.length < 64; x++) path.push([x, top]);
+    top++;
+    for (let y = top; y <= bottom && path.length < 64; y++) path.push([right_col, y]);
+    right_col--;
+    for (let x = right_col; x >= left_col && path.length < 64; x--) path.push([x, bottom]);
+    bottom--;
+    for (let y = bottom; y >= top && path.length < 64; y--) path.push([left_col, y]);
+    left_col++;
+  }
+
+  let phase = 0;
+
+  return {
+    frame_ms: opts.frame_ms || 80,
+    frame() {
+      const px = [];
+      for (let i = 0; i < 64; i++) {
+        // Matches C++: t = ((i + 64 - spiralPhase) % 64) * 255 / 63
+        const t = Math.round(((i + 64 - phase) % 64) * 255 / 63);
+        const [r, g, b] = blendRGB(color1, color2, t);
+        px.push({ x: path[i][0], y: path[i][1], r, g, b });
+      }
+      phase = (phase + 1) % 64;
+      return px;
+    },
+  };
+}
+
 export const FIRMWARE_SIMS = {
   claudesweep: makeClaudeSweep,
   frostbite: makeFrostbite,
@@ -1036,4 +1077,5 @@ export const FIRMWARE_SIMS = {
   breathe: makeBreathe,
   wave: makeWave,
   comet: makeComet,
+  spiral: makeSpiral,
 };

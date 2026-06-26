@@ -166,6 +166,21 @@ test("comet: bright head at the right edge, bobbing, with a trailing tail", () =
   assert.ok(rows.size > 1, "head bobs vertically");
 });
 
+test("spiral: whole board lit, gradient slides each frame", () => {
+  const sim = FIRMWARE_SIMS.spiral();
+  const a = sim.frame();
+  assertInBounds(a);
+  assert.equal(a.length, 64, "every cell lit");
+  // The path covers all 64 distinct cells.
+  assert.equal(new Set(a.map((p) => `${p.x},${p.y}`)).size, 64, "covers all cells once");
+  // The gradient slides: a fixed cell's color changes frame to frame.
+  for (let i = 0; i < 3; i++) sim.frame();
+  const b = sim.frame();
+  const at = (f, x, y) => f.find((p) => p.x === x && p.y === y);
+  const pa = at(a, 0, 0), pb = at(b, 0, 0);
+  assert.ok(pa.r !== pb.r || pa.g !== pb.g || pa.b !== pb.b, "gradient advances");
+});
+
 test("every FIRMWARE_SIMS entry is a factory that produces in-bounds frames", () => {
   for (const [name, make] of Object.entries(FIRMWARE_SIMS)) {
     const sim = make();
