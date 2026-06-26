@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { framesFromWire, applyEvent } from "./board.js";
+import { framesFromWire, framesFromPx, applyEvent } from "./board.js";
 
 // one all-off frame except pixel (0,0) red: 64 hex strings
 function wireOneRed() {
@@ -31,4 +31,18 @@ test("applyEvent animation -> webSim.render(type)", () => {
 
 test("applyEvent noop does nothing", () => {
   assert.doesNotThrow(() => applyEvent({ kind: "noop" }, { panel: {}, webSim: { render() {} } }));
+});
+
+test("framesFromPx decodes a 64-entry px array to lit pixels, row-major", () => {
+  const px = Array.from({ length: 64 }, (_, i) => (i === 9 ? "00ff00" : "000000"));
+  const frame = framesFromPx(px);
+  // index 9 => x=1, y=1, green
+  assert.deepEqual(frame, [{ x: 1, y: 1, r: 0, g: 255, b: 0 }]);
+});
+
+test("framesFromPx drops off pixels and tolerates a bad px", () => {
+  assert.deepEqual(framesFromPx([]), []);
+  assert.deepEqual(framesFromPx(null), []);
+  const allOff = Array.from({ length: 64 }, () => "000000");
+  assert.deepEqual(framesFromPx(allOff), []);
 });
