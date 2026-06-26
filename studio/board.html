@@ -39,7 +39,7 @@
     import { makeWebSimRenderer } from "../shared/renderers/web-sim.js";
     import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";
     import { resolveExpression } from "../shared/expressions.js";
-    import { framesFromPx, applyEvent, buildPlaylists, arbitrate, nextIndex, isEngineResponse, DECAY_MS } from "./board.js";
+    import { framesFromPx, applyEvent, buildPlaylists, arbitrate, nextIndex, isEngineResponse } from "./board.js";
     import { SHOWCASE } from "./showcase.js";
 
     // Default params for the few firmware sims that take them (others -> {}).
@@ -60,11 +60,13 @@
     const webSim = makeWebSimRenderer({ panel, loadExpression: () => null, firmwareSims: FIRMWARE_SIMS });
 
     // shared runtime state
-    let ambItems = [], byName = new Map();
+    let ambItems = [];
     let ambIdx = 0, ambNextAt = 0, curToken = null;
     let pinned = null, lastSseAt = null, mirrorOk = false;
 
-    function setStatus(html) { statusEl.innerHTML = html; }
+    // control() runs every rAF frame; skip the innerHTML re-parse when unchanged.
+    let lastStatus = null;
+    function setStatus(html) { if (html !== lastStatus) { statusEl.innerHTML = html; lastStatus = html; } }
 
     function playItem(item) {
       if (!item) return;
@@ -103,7 +105,6 @@
       const data = await (await fetch("./gallery-data.json")).json();
       const built = buildPlaylists(data, Object.keys(FIRMWARE_SIMS), SHOWCASE);
       ambItems = built.ambient;
-      byName = new Map(built.all.map((it) => [it.name, it]));
       // resume button + one button per renderable item
       const resume = document.createElement("button");
       resume.className = "resume"; resume.textContent = "↻ resume cycle";
