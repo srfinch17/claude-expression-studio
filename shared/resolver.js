@@ -39,7 +39,10 @@ export function resolveBoundIntent(manifest, rendererId, intent) {
 }
 
 // Weighted random pick. weights: { name: number>=0 }. rng() in [0,1).
-// `exclude`: a name to avoid when alternatives exist (noRepeat). Mirrors wait.ts.
+// `exclude`: a name to avoid when alternatives exist — this is the noRepeat guard,
+// applied ONLY when a binding sets noRepeat (e.g. the idle/screensaver pool). The
+// working/wait pool deliberately does NOT set noRepeat (pure weighted random, repeats
+// allowed, so weights are honored exactly — same as the old wait.ts pickWait did).
 export function pickWeighted(weights, rng = Math.random, exclude = null) {
   let names = Object.keys(weights);
   if (names.length === 0) return null;

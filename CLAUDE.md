@@ -264,8 +264,10 @@ restart + `/mcp` reconnect) before merge. Plans 4/5/6 (engine+Studio+virtual boa
 ~40) remain; all on `feat/expression-studio`, merge at the very end. SDD ledger: `.superpowers/sdd/progress.md`.
 
 **Wait-animation library (now manifest-driven):** `matrix_express("wait")` resolves the manifest's
-**`working` intent** — a weighted pool on the `esp32-8x8` renderer, picked with no-immediate-repeat so the
-busy indicator varies. The pool is **type-aware**: frame-expressions (saved `wait-*` JSON via
+**`working` intent** — a weighted pool on the `esp32-8x8` renderer, picked by **pure weighted random
+(repeats allowed — there is NO no-immediate-repeat guard here, by design: a high-weight favorite like
+`wait-claude` genuinely shows that often; the no-repeat guard is reserved for the idle/screensaver pool)**.
+The pool is **type-aware**: frame-expressions (saved `wait-*` JSON via
 `/api/display/frames`) AND firmware animations (`claudesweep`, launched transiently via
 `/api/display/animation {transient:true}` so they don't clobber NVS auto-resume) — `shared/firmware-names.js`
 decides the path. ⚠ **The old `wait-*` name-convention auto-join is GONE** (`wait.ts`/`wait-weights.json`
@@ -313,9 +315,9 @@ celebrate/alert/error/question/info/idle) + optional `headline`/`detail`/`data`
 (canned glyph via the frame path) and the **desktop card** (`/presence-card.html`, polls
 `/api/presence`). The board stores the last message at `/api/presence` (RAM). This is the
 first slice of the "presence protocol" — one semantic message, many renderers. The 8×8 shows the intent glyph (MCP frame push) for glyph-only presences; when a presence
-carries `data`, the board renders it NATIVELY (v0.5) — progress as a bottom-up panel fill,
-`series` as a column sparkline, `values` as a cycling 3×5 number, all in the intent's color
-(`anim_presence.ino`). The desktop card always renders the full rich message. Spec:
+carries `data`, the board renders it NATIVELY (v0.5) — progress as a **big number (the percent — a solid
+fill doesn't read on 8×8; see `anim_presence.ino` `PRES_PROGRESS`)**, `series` as a column sparkline,
+`values` as a cycling 3×5 number, all in the intent's color (`anim_presence.ino`). The desktop card always renders the full rich message. Spec:
 `docs/superpowers/specs/2026-06-17-presence-protocol-v0-design.md`.
 
 ## Versioning (know what's actually deployed)
