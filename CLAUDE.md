@@ -222,95 +222,88 @@ PNG contact sheet = build/critique board-free; the basis of the animator-subagen
 loop, proven at ~40 animations). Build log: `docs/superpowers/specs/2026-06-23-animation-roster-baseline.md`;
 full hook→animation map: `docs/superpowers/specs/2026-06-24-hooks-and-animation-moments.md`.
 
-**⭐ Expression Trigger Manifest (ACTIVE — the "wiring" built as real architecture):** the
-wiring/reset pass above is being built as a **renderer-agnostic protocol**, not ad-hoc glue. One
-**`shared/manifest.json`** (the single source of truth) maps **moment → intent → renderer**:
+**⭐ Expression Trigger Manifest (LIVE — the "wiring" built as real architecture):** the
+wiring/reset pass above is now a **renderer-agnostic protocol**, not ad-hoc glue. One
+**`shared/manifest.json`** (the SINGLE SOURCE OF TRUTH) maps **moment → intent → renderer**:
 `intents` (a curated-core + `x-`-extension vocabulary with **fallback chains**; 6 conformance roots
 info/working/done/attention/fail/idle), `harnesses` (per-harness moment→intent, Claude-first), and
-`renderers` (per-renderer intent→animation bindings; **any** intent is poolable + weighted; a binding
-is a reference so every animation is always assignable and reusable). A pure resolver
-(`shared/resolver.js`, mirrored in `claude-hooks/manifest_resolver.py`, **parity-tested** so they
-can't drift) + a bespoke validator (`scripts/check-manifest.mjs` → `npm run check:manifest`, gated in
-`npm test`). Renderers are 1-method plugins `{id, render(value)}` — `esp32-8x8` / `web-sim` / `card`.
-The MCP server is slated to **become an engine** that also serves the Studio over localhost and
-streams to a browser **virtual board**; `.mcpb` = one-file install, Claude-first but harness-agnostic.
-This will **migrate + replace** today's scattered config (`wait.ts` pool, `idle.ts` lineup,
-`presence.ts` `INTENT_TO_CANNED`, the `catalog.js` name-convention classifier) — treat those as
-transitional. Spec: `docs/superpowers/specs/2026-06-25-expression-trigger-manifest-design.md`; plans:
-`docs/superpowers/plans/2026-06-25-trigger-manifest-plan*.md`. **Status (2026-06-25):** Plan 1 (protocol
-core — `shared/{manifest.json,manifest.schema.json,resolver.js}` + `claude-hooks/manifest_resolver.py`
-parity + `scripts/check-manifest.mjs`) **+** Plan 2 (3 renderers `shared/renderers/{esp32,web-sim,card}.js`
-+ `registry.js` `fire()` dispatcher, DI-factory + unit-testable) **+** Plan 3a (binding-format extension:
-rich pools `{weight,params,label}` + pool `brightness` → lossless idle migration prep) are ALL EXECUTED +
-opus-reviewed; full suite **125/125** + `manifest OK`. **Plan 3b (the live flips) is WRITTEN + committed**
-(`docs/superpowers/plans/2026-06-25-trigger-manifest-plan3b-live-flips.md`, 10 tasks) — **NEXT = EXECUTE it**
-(subagent-driven, sonnet implementers). Design decisions locked in the plan: **resolver-only** (the MCP and
-Python hook each resolve via the shared resolver = one brain, then render with their own proven board I/O —
-NOT the registry/renderer plugins, which stay for web-sim/Studio/Plan-4); **characterization-first fidelity**
-(Task 2 fixes a non-faithful seed BEFORE flipping: the `working` pool was missing the 4 `wait-logo-*` @8, and
-presence intents `ok`/`question` were absent → would blank the board); **manifest-driven gallery** (orphan =
-manifest-unbound; new `wired` group); **`.mcpb` bundles the shared engine** (packs only `mcp_server/`, so a
-`copy-shared-runtime` prebuild + repo-first/bundle-fallback loader — deleting `wait.ts` without this breaks the
-installed extension); **hook re-keyed to manifest MOMENTS** (`settings.hooks.snippet.json` passes
-`hook:UserPromptSubmit` etc.; bored-watcher kept intact). ⚠ Plan 3b changes LIVE board behavior (presence
-`ok`→done-glyph, `alert`→ask-attention, `celebrate`→pool, idle now transient) — the plan ends with a D1
-hardware-verification checklist; do NOT merge until verified. Plans 4/5/6 remain; all on
-`feat/expression-studio`, merge at the end. 6 just-in-time plans total; **this is the active work.**
+`renderers` (per-renderer intent→animation bindings; **any** intent is poolable + weighted via
+`{weight,params,label}` entries + pool `brightness`/`noRepeat`; a binding is a reference so every
+animation is always assignable). A pure resolver (`shared/resolver.js`, mirrored in
+`claude-hooks/manifest_resolver.py`, **parity-tested** so they can't drift) + a bespoke validator
+(`scripts/check-manifest.mjs` → `npm run check:manifest`, gated in `npm test`). Renderers are 1-method
+plugins `{id, render(value)}` — `esp32-8x8` / `web-sim`(inherits esp32) / `card`. Spec:
+`docs/superpowers/specs/2026-06-25-expression-trigger-manifest-design.md`; plans:
+`docs/superpowers/plans/2026-06-25-trigger-manifest-plan*.md`.
 
-**Wait-animation library:** `matrix_express("wait")` plays a RANDOM wait spinner
-(no immediate repeat) so the busy indicator varies. The pool is **type-aware**: it
-contains both **frame-expressions** (saved `wait-*` JSON played via `/api/display/frames`)
-and **firmware animations** (launched transiently via `/api/display/animation {transient:true}`
-so they don't clobber NVS auto-resume). The frame-expression tier = the canned `working`
-snake (the "Default") **+ any saved expression named `wait-*`** (convention-based,
-see `mcp_server/wait.ts`). To ADD a frame-expression wait: design it live with
-`matrix_animate`, then `save_as: "wait-<name>"` — it auto-joins the pool with **zero
-code, zero rebuild, zero reconnect**. Force a specific one by its name (`working`,
-`wait-rainbow`, …). Current pool: `working` (snake) + `wait-rainbow` (old-Mac
-pinwheel, `expressions/wait-rainbow.json`, regenerate via `scripts/gen-wait-rainbow.py`)
-+ `wait-orbit` (six-hue color arc sweeping the panel perimeter,
-`expressions/wait-orbit.json`) + `wait-claude` (the orange Claude-mascot alien bobbing
-with an eye-blink, `expressions/wait-claude.json` — the user's favorite)
-+ `claudesweep` (firmware animation — CRT/radar border sweep with a resident orange
-Claude mascot, default amber `#ffb000`; launched via animation API with `transient:true`).
-(Sibling `claude-idle` is the same mascot for idle/bored, but has NO `wait-` prefix so
-it stays out of the pool.)
+**Architecture = RESOLVER-ONLY:** the MCP server (TS) and the Python hook EACH resolve a moment/intent
+via the shared resolver (one brain), then render with their OWN proven board HTTP I/O — NOT the
+registry/renderer plugins (those stay for web-sim/Studio/Plan-4 engine). `mcp_server/engine.ts`'s pure
+`decideRender` + `index.ts`'s `runPlan` and the hook's `render_resolved` are the two mirrored dispatchers
+(firmware name → `/api/display/animation` transient + params; else frame-expression → `/api/display/frames`;
+brightness first; never-blank fallback). `shared/firmware-names.js` (mirrored as a Python literal) decides
+which path. The MCP is slated to later **become an engine** serving the Studio + a WS virtual board.
+
+**Status (2026-06-25): Plans 1+2+3a+3b ALL EXECUTED + opus-reviewed** (commits through **abacab9** on
+`feat/expression-studio`; full suite **122/122** + `manifest OK` + `.mcpb` packs). **The migration is LIVE:**
+every consumer — `matrix_express("wait")`, `presence_set`, `matrix_idle`, the gallery classifier
+(`catalog.js`), and the Python hook — resolves via the manifest, and the old scattered config is **DELETED**
+(`wait.ts`, `idle.ts`, `wait-weights.json`, `presence.ts` `INTENT_TO_CANNED`/`cannedFor`). Two structural
+notes: (1) **idle/screensaver split** — the `idle` conformance root binds the quiet **`sleep` glyph**
+(presence-idle, matches the card's Zzz), and a NEW **`screensaver`** intent (fallback→idle) holds the 8-app
+firmware pool that `matrix_idle` resolves; a renderer with no `screensaver` binding degrades to `idle`.
+(2) **`done` glyph** lives at `mcp_server/expressions/done.json` (ported from the hook's art so MCP≡hook);
+`mcp_server/manifest-assets.test.ts` guards that EVERY esp32 binding leaf resolves to a real
+CANNED∪saved∪firmware asset. **`.mcpb` bundles the shared engine** (`copy-shared-runtime.mjs` prebuild copies
+manifest+resolver+firmware-names into `mcp_server/shared-runtime/`; engine loads repo-first/bundle-fallback).
+**Hook re-keyed to manifest MOMENTS** (`settings.hooks.snippet.json` passes `hook:Stop` etc.; PostToolUse split
+per-tool; bored-watcher intact). ⚠ **Plan 3b is DEPLOYED to `~/.claude` but NOT yet hardware-verified or merged:**
+the live changes (presence `ok`→done-glyph, `alert`→ask-attention, `celebrate`→pool, presence-`idle`→sleep glyph,
+`matrix_idle` now TRANSIENT) need a **D1 hardware-verification pass on the physical board** (after a Claude Code
+restart + `/mcp` reconnect) before merge. Plans 4/5/6 (engine+Studio+virtual board / Pages showcase / assign the
+~40) remain; all on `feat/expression-studio`, merge at the very end. SDD ledger: `.superpowers/sdd/progress.md`.
+
+**Wait-animation library (now manifest-driven):** `matrix_express("wait")` resolves the manifest's
+**`working` intent** — a weighted pool on the `esp32-8x8` renderer, picked with no-immediate-repeat so the
+busy indicator varies. The pool is **type-aware**: frame-expressions (saved `wait-*` JSON via
+`/api/display/frames`) AND firmware animations (`claudesweep`, launched transiently via
+`/api/display/animation {transient:true}` so they don't clobber NVS auto-resume) — `shared/firmware-names.js`
+decides the path. ⚠ **The old `wait-*` name-convention auto-join is GONE** (`wait.ts`/`wait-weights.json`
+deleted): to ADD a wait, design it live (`matrix_animate` → `save_as:"wait-<name>"`) AND add an entry to the
+`working` pool in `shared/manifest.json` (`{"wait-<name>": <weight>}`) — read at RUNTIME, so no rebuild, but
+you DO edit the manifest now. Force a specific one with `matrix_express("<name>")`. Current pool (with weights):
+`wait-claude:40` (orange Claude-mascot alien bob+blink, the user's favorite) · `wait-rainbow:30` (old-Mac
+pinwheel) · `wait-orbit:20` (six-hue perimeter arc) · `claudesweep:20` (firmware CRT/radar sweep w/ resident
+mascot) · `working:10` (the snake) · `wait-logo-{breathe,chase,boot,ripple}:8` each. (Sibling `claude-idle` is
+the same mascot for idle/bored — not in the working pool.)
 
 **Also fired by the prompt hook:** the Claude Code `UserPromptSubmit` hook
-(`claude-hooks/matrix_signal.py wait`) plays a wait spinner on every prompt, so the
-indicator varies turn-to-turn. The hook reads the same pool + weights as the MCP path
-— add a `wait-*` expression and it shows up everywhere with no extra wiring.
+(`claude-hooks/matrix_signal.py hook:UserPromptSubmit`) resolves the same `working` pool via the manifest, so
+the indicator varies turn-to-turn — add a `working`-pool entry and it shows up on both the MCP and hook paths.
 
-**Awaiting-input animations (v0.9.0):** a third board state, distinct from *busy*
-(wait spinner) and *idle* (screensaver) — the board shows a context-specific glyph
-when Claude is **blocked on the user**, then flips back to a wait spinner the instant
-they answer. Entirely host-side: Claude Code hooks fire `matrix_signal.py <name>`,
-which `send_saved`-posts a saved `ask-*.json` to the existing `/api/display/frames`
-(no firmware/web change). Verified hook map (`claude-hooks/settings.hooks.snippet.json`,
-merge into `~/.claude/settings.json`):
-`PreToolUse:AskUserQuestion → ask-question`, `PreToolUse:ExitPlanMode → ask-question`
-(the `?` now doubles for plan-approval; the old `ask-confirm` checkbox became the unwired
-`task-complete` glyph, 2026-06-24), `Notification:permission_prompt → ask-attention`, and
-`PostToolUse:AskUserQuestion|ExitPlanMode → wait` (clear-on-answer). The three `ask-*`
-glyphs are generated by `scripts/gen-ask-icons.py`. Because it's host-hook-based, the
-animations work as soon as the live `settings.json` is wired (hooks load at session
-start — no firmware reflash needed). Spec:
+**Awaiting-input animations:** a third board state, distinct from *busy* (working pool) and *idle*
+(screensaver) — a context-specific glyph when Claude is **blocked on the user**, flipping back to the busy pool
+the instant they answer. Host-side: Claude Code hooks fire `matrix_signal.py <moment-key>`, which resolves the
+manifest moment and posts the bound `ask-*` glyph to `/api/display/frames`. Verified hook map
+(`claude-hooks/settings.hooks.snippet.json`, merge into `~/.claude/settings.json`):
+`hook:PreToolUse:AskUserQuestion`/`hook:PreToolUse:ExitPlanMode` → `awaiting-input` → `ask-question` (the `?`
+doubles for plan-approval), `hook:Notification:permission_prompt` → `attention` → `ask-attention`, and
+`hook:PostToolUse:AskUserQuestion`/`hook:PostToolUse:ExitPlanMode` → `working` (clear-on-answer, now SPLIT into
+two per-tool blocks). The `ask-*` glyphs are generated by `scripts/gen-ask-icons.py`. Spec:
 `docs/superpowers/specs/2026-06-21-awaiting-input-display-design.md`.
 
-**Weighted preference:** the random pick is weighted by `mcp_server/wait-weights.json`
-(relative weights; unlisted = 1; 0 disables). It's pure weighted random — exact odds,
-repeats allowed (no anti-repeat, which would fight a preference). Read at RUNTIME, so
-retuning the odds needs no rebuild/reconnect. Ships at `wait-claude:40, wait-rainbow:30,
-wait-orbit:20, working:10, claudesweep:20` (sum = 120; weights are relative, not
-percentages — recompute if you want exact odds). To honor a request like
-"show the rainbow 80% of the time," just edit this file (and recompute shares if the
-pool has grown). All three callers — `matrix_express("wait")`,
-`presence_set(intent:"working")`, and the prompt hook — use this picker.
+**Weighted preference:** weights live in the manifest pool entries (`{"name": {"weight": N}}` or shorthand
+`{"name": N}`; unlisted/absent = not in pool; pure weighted random, repeats allowed except the no-repeat guard).
+Read at RUNTIME (no rebuild/reconnect to retune). To honor "show the rainbow 80% of the time," edit the
+`working` pool weights in `shared/manifest.json`. Both callers — `matrix_express("wait")` and the prompt hook —
+use this pool.
 
-`matrix_idle` (MCP) puts a random PRE-APPROVED app on the board (fire / dance floor /
-fireworks / clock / frostbite / matrix rain / snow / claudesweep) at ambient brightness 5 — use it unprompted when
-idle/bored to show something cool. Lineup is a fixed const in `mcp_server/idle.ts` (edit + `npx
-tsc` + reconnect to change). Spec: `docs/superpowers/specs/2026-06-17-matrix-idle-design.md`.
+`matrix_idle` (MCP) resolves the manifest **`screensaver` intent** — a random PRE-APPROVED firmware app (fire /
+dance floor / fireworks / clock / frostbite / matrix rain / snow / claudesweep) at ambient brightness 5, no
+immediate repeat, launched **transiently** — use it unprompted when idle/bored. The lineup + params + brightness
+live in the `esp32-8x8` `screensaver` binding in `shared/manifest.json` (edit at runtime, no rebuild). NOTE the
+`idle` intent itself is the quiet `sleep` glyph (presence-idle); the screensaver is the separate `screensaver`
+intent. Spec: `docs/superpowers/specs/2026-06-17-matrix-idle-design.md`.
 
 ## Presence (semantic status — the protocol-in-embryo)
 
