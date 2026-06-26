@@ -25,10 +25,10 @@
 // Claude's expression channel: canned glyph library + text-art → wire conversion.
 import { CANNED, MAX_FRAMES, artToFrameHex, expressionToWire, type Expression } from "./expressions.js";
 import { decideRender, loadEngine, type RenderPlan } from "./engine.js";
+import { executePlan } from "./run-plan.js";
 import { normalizePresence } from "./presence.js";
 import { normalizeSettingsPatch } from "./settings.js";
 import { startEngineServer } from "./engine-server.js";
-import { planToDisplayEvent } from "./display-event.js";
 import type { SseHub } from "./sse.js";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
@@ -116,23 +116,16 @@ const renderCtx: { last: Record<string, string> } = { last: {} };
 let engineHub: SseHub | null = null;
 let engineUrl: string | null = null;
 
-// Execute a render plan against the board; returns a short note for the tool reply.
+// Execute a render plan against the board; returns a short note for the tool reply. The actual
+// orchestration lives in run-plan.ts (dependency-injected so it's unit-testable). It ALWAYS
+// broadcasts the intent to the virtual board — even when the board is unreachable (D2) — so
+// board.html keeps mirroring Claude's expression intents with no hardware present.
 async function runPlan(plan: RenderPlan): Promise<string> {
-  if (plan.kind === "noop") return "no binding";
-  if (plan.brightness != null) await post("/api/brightness", { level: plan.brightness });
-  if (plan.kind === "animation") {
-    const r = await post("/api/display/animation", { type: plan.type, ...plan.params, transient: true });
-    // Broadcast POST-result-independent: virtual board mirrors the panel even when the board POST fails or no hardware is present (D2).
-    engineHub?.broadcast(planToDisplayEvent(plan));
-    return r.ok ? `${plan.type} (transient anim)` : `anim error ${r.status}`;
-  }
-  const expr = CANNED[plan.name] ?? (await loadSavedExpression(plan.name));
-  if (!expr) return `no glyph for "${plan.name}"`;
-  const wire = expressionToWire(expr);
-  const r = await post("/api/display/frames", wire);
-  // Broadcast POST-result-independent: virtual board mirrors the panel even when the board POST fails or no hardware is present (D2).
-  engineHub?.broadcast(planToDisplayEvent(plan, wire));
-  return r.ok ? plan.name : `frames error ${r.status}`;
+  return executePlan(plan, {
+    post,
+    loadExpression: loadSavedExpression,
+    broadcast: (e) => engineHub?.broadcast(e),
+  });
 }
 
 // Resolve an intent (or moment) for the esp32-8x8 renderer and render it. Returns the note.
@@ -579,8 +572,16 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     switch (name) {
 
       case "matrix_status": {
-        const r = await get("/api/status");
-        return { content: [{ type: "text", text: r.ok ? r.body : `Error ${r.status}: ${r.body}` }] };
+        // Degrade gracefully like matrix_version: an unreachable board reports virtual mode
+        // (board.html still mirrors intents over SSE) rather than throwing to the catch below.
+        try {
+          const r = await get("/api/status");
+          return { content: [{ type: "text", text: r.ok ? r.body : `Error ${r.status}: ${r.body}` }] };
+        } catch (e) {
+          const why = e instanceof Error ? e.message : String(e);
+          const virt = engineUrl ? ` Virtual board still live: ${engineUrl}/studio/board.html` : "";
+          return { content: [{ type: "text", text: `Board unreachable at ${BOARD_URL} (${why}).${virt}` }] };
+        }
       }
 
       case "matrix_clear": {
