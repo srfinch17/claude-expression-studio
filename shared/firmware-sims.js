@@ -9,6 +9,8 @@ const nscale8 = ([r, g, b], s) => [scale8(r, s), scale8(g, s), scale8(b, s)];
 // beatsin8(bpm, lo, hi, phaseU8) — FastLED-style BPM sine helper.
 // phaseU8 is a 0-255 phase counter driving one full sine cycle (0=mid-rise, 64=peak,
 // 128=mid-fall, 192=trough). Output mapped to [lo, hi] inclusive.
+// `bpm` is kept for FastLED-signature parity; cycle speed is actually driven by how fast
+// each caller advances phaseU8, not by this argument.
 const beatsin8 = (bpm, lo, hi, phaseU8) => {
   const angle = (phaseU8 / 256) * 2 * Math.PI;
   const sin01 = (Math.sin(angle) + 1) / 2;  // 0..1
@@ -1289,11 +1291,11 @@ function makeLiquid(opts = {}) {
           const depth = Math.min(1.0, Math.max(0.0, (p - liquidLevel) / range));
           const isSurface = (p - liquidLevel) < surfaceBand;
 
-          // Gradient: deep→surface color by s (s=1 bright at surface, 0 dark at depth)
+          // Gradient: deep→surface color by s (s=1 bright at surface, 0 dark at depth).
+          // Reuse the shared blendRGB (deep at t=0, surface at t=255) for helper consistency
+          // with wave/spiral/starfield — identical math to the prior inline lerp.
           const s = 1.0 - depth;
-          let r = Math.round(deepColor[0] + (surfaceColor[0] - deepColor[0]) * s);
-          let g = Math.round(deepColor[1] + (surfaceColor[1] - deepColor[1]) * s);
-          let b = Math.round(deepColor[2] + (surfaceColor[2] - deepColor[2]) * s);
+          let [r, g, b] = blendRGB(deepColor, surfaceColor, s * 255);
 
           // Froth: boost moving-surface cells toward white (matches C++ qadd8 + turb*150)
           if (isSurface) {
