@@ -28,7 +28,27 @@ loop until final sign-off.
 4. **Read the PNG and score it against the rubric** (below). Be honest — find the flaw.
 5. **Iterate** the generator until it passes. Re-render each time.
 6. **Save** to `mcp_server/expressions/<name>.json`. (Main agent regenerates the gallery
-   once at the end via `npm run build:gallery` — don't do it per-animation in parallel.)
+   once at the end via `npm run build:gallery` — don't do it per-animation in parallel —
+   **and `git add studio/gallery-data.json` in that commit**: it is a *committed generated
+   artifact*, so changing source without committing the regen leaves the live Gallery stale.
+   Proven 2026-06-26: 8 sims passed every per-task review but didn't appear in the Gallery
+   because the regenerated `gallery-data.json` was never committed.)
+
+## Generative sims (continuous color, code-driven)
+
+The frames-JSON above is for hand-/script-authored char-art (a small palette via the
+`colors` map). A **generative sim** — a `make<Name>(opts) → {frame_ms, frame()}` factory in
+`shared/firmware-sims.js` that emits per-cell RGB (the firmware-sim ports of `anim_*.ino`) —
+can't be char-art (continuous color). Same build→render→LOOK→critique loop, different dump:
+
+```
+node scripts/dump-sim-frames.mjs <name> [frames] -o /tmp/<name>.json   # steps the registered sim → raw-RGB wire frames
+python scripts/render-contact-sheet.py /tmp/<name>.json -o /tmp/<name>.png   # raw-RGB branch renders it
+```
+
+`dump-sim-frames` reads `FIRMWARE_SIMS[name]`, so register the sim first. `render-contact-sheet.py`
+auto-detects a raw frame (a 384-char hex string = 64 `RRGGBB`, row-major) vs char-art. The sim
+emits raw per-cell RGB; the sheet (and the real Panel) add the bloom — keep glow OUT of the sim.
 
 ## Legibility rubric (the critic checklist)
 
