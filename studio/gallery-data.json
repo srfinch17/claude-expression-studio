@@ -10561,7 +10561,15 @@
     "matrix_rain",
     "snow",
     "fireworks",
-    "dancefloor"
+    "dancefloor",
+    "rainbow",
+    "breathe",
+    "wave",
+    "comet",
+    "spiral",
+    "starfield",
+    "sun",
+    "liquid"
   ],
   "groups": {
     "wait": [
