@@ -43,15 +43,18 @@
           statusEl.textContent = "● live — mirroring the board";
         } else {
           state.online = false;
-          statusEl.textContent = "○ virtual — board offline (showing intents)";
+          statusEl.textContent = "○ virtual — board offline (last frame held; intents will draw)";
         }
       } catch {
         state.online = false;
-        statusEl.textContent = "○ virtual — board offline (showing intents)";
+        statusEl.textContent = "○ virtual — board offline (last frame held; intents will draw)";
       }
     }
-    setInterval(pollFramebuffer, 150);
-    pollFramebuffer();
+    async function pollLoop() {
+      await pollFramebuffer();
+      setTimeout(pollLoop, 333);
+    }
+    pollLoop();
   </script>
 </body>
 </html>

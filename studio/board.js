@@ -23,7 +23,7 @@ export function framesFromPx(px) {
   if (!Array.isArray(px) || px.length < 64) return [];
   const out = [];
   for (let i = 0; i < 64; i++) {
-    const hex = px[i] || "000000";
+    const hex = String(px[i] || "000000");
     const r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16), b = parseInt(hex.slice(4, 6), 16);
     if (r || g || b) out.push({ x: i % 8, y: (i / 8) | 0, r, g, b });
   }
