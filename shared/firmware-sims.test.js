@@ -214,6 +214,23 @@ test("sun: a steady central disc with dots orbiting the ring", () => {
   assert.ok(moved, "ring dots orbit");
 });
 
+test("liquid: roughly half-filled fluid whose region shifts as gravity rotates", () => {
+  const sim = FIRMWARE_SIMS.liquid();
+  let counts = [];
+  const sets = [];
+  for (let i = 0; i < 80; i++) {
+    const f = sim.frame();
+    assertInBounds(f);
+    counts.push(f.length);
+    if (i % 20 === 0) sets.push(new Set(f.map((p) => `${p.x},${p.y}`)));
+  }
+  const avg = counts.reduce((a, c) => a + c, 0) / counts.length;
+  assert.ok(avg > 16 && avg < 56, `~half filled (avg ${avg.toFixed(1)})`);
+  // The filled region moves as the synthetic gravity rotates.
+  const same = [...sets[0]].filter((k) => sets[sets.length - 1].has(k)).length;
+  assert.ok(same < sets[0].size, "filled region shifts over time");
+});
+
 test("every FIRMWARE_SIMS entry is a factory that produces in-bounds frames", () => {
   for (const [name, make] of Object.entries(FIRMWARE_SIMS)) {
     const sim = make();

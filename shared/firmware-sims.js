@@ -1202,6 +1202,116 @@ function makeSun(opts = {}) {
   };
 }
 
+// ---- liquid (port of anim_liquid.ino stepLiquidFrame) ----
+// 2D closed-container fluid simulation. Gravity is a 2D vector in the matrix plane.
+// Each cell's potential p = x*gx + y*gy increases "downhill"; the 32 highest-potential
+// cells form the fluid body (half full). A damped spring drives liquidLevel toward the
+// equilibrium threshold Teq (the 32nd-largest potential), creating slosh as gravity
+// rotates. IMU input is replaced with a synthetic auto-rotating gravity vector.
+//
+// Rendering: depth-graded blue gradient (surface #46c8ff → deep #0a2864), with a froth
+// brightening boost at the moving surface proportional to spring velocity.
+function makeLiquid(opts = {}) {
+  const deepColor    = opts.deep    ? hexToRGB(opts.deep)    : hexToRGB('#0a2864');
+  const surfaceColor = opts.surface ? hexToRGB(opts.surface) : hexToRGB('#46c8ff');
+  const spin = opts.spin ?? 0.02;
+  const LIQUID_CELLS = 32;  // half the board = half fill
+
+  // Synthetic gravity: angle advances each frame; opts.gravity pins a fixed direction
+  let angle = 0;
+
+  // Low-pass filtered gravity direction (matches C++ 0.30 coefficient, smooths rotation)
+  let liquidGX = 1.0;
+  let liquidGY = 0.0;
+
+  // Damped-spring surface level
+  let liquidLevel    = 0;
+  let liquidLevelVel = 0;
+  const liquidDamping = 0.86;  // matches C++ liquidDamping
+
+  let initialized = false;
+
+  return {
+    frame_ms: opts.frame_ms || 60,
+    frame() {
+      // ── Gravity direction ────────────────────────────────────────
+      let gx, gy;
+      if (opts.gravity) {
+        gx = opts.gravity.x;
+        gy = opts.gravity.y;
+      } else {
+        angle += spin;
+        gx = Math.cos(angle);
+        gy = Math.sin(angle);
+      }
+      // Gentle low-pass toward new direction (matches C++ 0.30 weight)
+      liquidGX += (gx - liquidGX) * 0.30;
+      liquidGY += (gy - liquidGY) * 0.30;
+
+      // ── Potential field ──────────────────────────────────────────
+      const pot = new Float32Array(64);
+      for (let y = 0; y < 8; y++)
+        for (let x = 0; x < 8; x++)
+          pot[y * 8 + x] = x * liquidGX + y * liquidGY;
+
+      // Sort descending — O(64) in practice; matches C++ insertion sort logic
+      const sorted = Array.from(pot).sort((a, b) => b - a);
+      const Teq     = sorted[LIQUID_CELLS - 1];  // 32nd-largest: equilibrium level
+      const deepest = sorted[0];                  // most-downhill cell potential
+
+      // Seed level on first frame so the board starts ~half filled immediately
+      if (!initialized) {
+        liquidLevel = Teq;
+        initialized = true;
+      }
+
+      // ── Slosh: spring liquidLevel toward Teq with momentum ───────
+      // Synthetic gravity has mag=1 always → stiffness = 0.18 (floor 0.02 per C++)
+      const stiffness = 0.18;
+      liquidLevelVel += (Teq - liquidLevel) * stiffness;
+      liquidLevelVel *= liquidDamping;
+      liquidLevel    += liquidLevelVel;
+
+      // ── Froth amount and depth range ─────────────────────────────
+      const turb = Math.min(1.0, Math.abs(liquidLevelVel) * 1.6);  // 0–1
+      let range = deepest - liquidLevel;
+      if (range < 1.0) range = 1.0;                                 // guard div-by-zero
+      const surfaceBand = range / 8;                                 // MATRIX_H = 8
+
+      // ── Render fluid cells ───────────────────────────────────────
+      const px = [];
+      for (let y = 0; y < 8; y++) {
+        for (let x = 0; x < 8; x++) {
+          const p = pot[y * 8 + x];
+          if (p < liquidLevel) continue;  // above surface → empty
+
+          // depth: 0 = at surface, 1 = deepest cell
+          const depth = Math.min(1.0, Math.max(0.0, (p - liquidLevel) / range));
+          const isSurface = (p - liquidLevel) < surfaceBand;
+
+          // Gradient: deep→surface color by s (s=1 bright at surface, 0 dark at depth)
+          const s = 1.0 - depth;
+          let r = Math.round(deepColor[0] + (surfaceColor[0] - deepColor[0]) * s);
+          let g = Math.round(deepColor[1] + (surfaceColor[1] - deepColor[1]) * s);
+          let b = Math.round(deepColor[2] + (surfaceColor[2] - deepColor[2]) * s);
+
+          // Froth: boost moving-surface cells toward white (matches C++ qadd8 + turb*150)
+          if (isSurface) {
+            const f = Math.round(turb * 150);
+            r = qadd8(r, f);
+            g = qadd8(g, f);
+            b = qadd8(b, f);
+          }
+
+          px.push({ x, y, r, g, b });
+        }
+      }
+
+      return px;
+    },
+  };
+}
+
 export const FIRMWARE_SIMS = {
   claudesweep: makeClaudeSweep,
   frostbite: makeFrostbite,
@@ -1217,4 +1327,5 @@ export const FIRMWARE_SIMS = {
   spiral: makeSpiral,
   starfield: makeStarfield,
   sun: makeSun,
+  liquid: makeLiquid,
 };
