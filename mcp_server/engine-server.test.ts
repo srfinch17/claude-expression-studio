@@ -1,0 +1,57 @@
+// mcp_server/engine-server.test.ts
+import { test, after } from "node:test";
+import assert from "node:assert/strict";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+// NOTE: engine-server.ts uses .js imports (Node16/tsc convention), which Node's type-strip
+// runner cannot resolve to .ts sources. We import the compiled dist file instead; the
+// rebuild hook keeps dist/ current on every .ts edit.
+import { startEngineServer } from "./dist/engine-server.js";
+
+const MCP_DIR = path.dirname(fileURLToPath(import.meta.url)); // mcp_server/ ; repo root is ..
+
+test("serves studio index, GET manifest, and rejects a bad PUT", async () => {
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0 });
+  after(() => eng.close());
+
+  const idx = await fetch(`${eng.url}/studio/index.html`);
+  assert.equal(idx.status, 200);
+  assert.match(await idx.text(), /<!DOCTYPE html>|<html/i);
+
+  const mf = await fetch(`${eng.url}/api/manifest`);
+  assert.equal(mf.status, 200);
+  const json = await mf.json() as any;
+  assert.ok(json.intents && json.renderers);
+
+  const bad = await fetch(`${eng.url}/api/manifest`, {
+    method: "PUT", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ version: 1, intents: {}, harnesses: {}, renderers: {} }),
+  });
+  assert.equal(bad.status, 400);
+  assert.equal((await bad.json() as any).ok, false);
+});
+
+test("GET /events streams a DisplayEvent broadcast over SSE", async () => {
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0 });
+  after(() => eng.close());
+
+  const res = await fetch(`${eng.url}/events`, { headers: { accept: "text/event-stream" } });
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get("content-type") || "", /text\/event-stream/);
+
+  const reader = res.body!.getReader();
+  // wait until the server has registered our client, then broadcast
+  await new Promise((r) => setTimeout(r, 50));
+  eng.hub.broadcast({ kind: "frames", name: "done", wire: { frames: ["A"], frame_ms: 150, loop: 0 } });
+
+  // Collect chunks until the broadcast data arrives (skips the initial ': ok' comment)
+  let text = "";
+  while (!text.includes("data: ")) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    text += new TextDecoder().decode(value);
+  }
+  assert.match(text, /data: /);
+  assert.match(text, /"name":"done"/);
+  await reader.cancel();
+});

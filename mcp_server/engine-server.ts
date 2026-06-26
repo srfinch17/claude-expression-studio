@@ -1,0 +1,97 @@
+// mcp_server/engine-server.ts — the engine's localhost HTTP face. Coexists with the MCP
+// stdio transport (separate channel). Serves the Studio tree, a validated manifest API,
+// and an SSE stream of DisplayEvents to virtual boards. Binds 127.0.0.1 ONLY.
+import http from "node:http";
+import { SseHub } from "./sse.js";
+import { resolveStaticBase, serveStatic } from "./static-files.js";
+import { readManifest, writeManifestValidated } from "./manifest-api.js";
+import { engineDir } from "./engine.js";   // repo-first ../shared, else mcpDir/shared-runtime
+import path from "node:path";
+
+const HOST = "127.0.0.1";
+
+async function readBody(req: http.IncomingMessage): Promise<string> {
+  const chunks: Buffer[] = [];
+  for await (const c of req) chunks.push(c as Buffer);
+  return Buffer.concat(chunks).toString("utf8");
+}
+
+export async function startEngineServer(opts: { mcpDir: string; port?: number; manifestDir?: string; repoRoot?: string }) {
+  const { mcpDir } = opts;
+  const hub = new SseHub();
+  const base = resolveStaticBase(mcpDir);
+  const mfDir = opts.manifestDir ?? engineDir(mcpDir);   // shared/ in dev, shared-runtime/ when packed
+  const repoRoot = opts.repoRoot ?? path.join(mcpDir, "..");   // for the validator (validateManifest + collectAnimationNames)
+
+  const server = http.createServer(async (req, res) => {
+    try {
+      const url = req.url || "/";
+      const method = req.method || "GET";
+
+      if (url === "/" ) { res.writeHead(302, { location: "/studio/index.html" }); res.end(); return; }
+
+      if (url.startsWith("/events")) {
+        res.writeHead(200, {
+          "content-type": "text/event-stream",
+          "cache-control": "no-cache",
+          connection: "keep-alive",
+        });
+        res.write(": ok\n\n");
+        hub.addClient(res);
+        req.on("close", () => hub.removeClient(res));
+        return;
+      }
+
+      if (url.startsWith("/api/manifest")) {
+        if (method === "GET") {
+          const m = await readManifest(mfDir);
+          res.writeHead(200, { "content-type": "application/json" });
+          res.end(JSON.stringify(m));
+          return;
+        }
+        if (method === "PUT") {
+          let parsed: unknown;
+          try { parsed = JSON.parse(await readBody(req)); }
+          catch { res.writeHead(400, { "content-type": "application/json" }); res.end(JSON.stringify({ ok: false, errors: ["invalid JSON"] })); return; }
+          const result = await writeManifestValidated(mfDir, parsed, repoRoot);
+          res.writeHead(result.ok ? 200 : 400, { "content-type": "application/json" });
+          res.end(JSON.stringify(result));
+          return;
+        }
+        res.writeHead(405); res.end(); return;
+      }
+
+      const out = await serveStatic(url, base);
+      res.writeHead(out.status, { "content-type": out.type, "cache-control": "no-cache" });
+      res.end(out.body);
+    } catch (e) {
+      res.writeHead(500, { "content-type": "text/plain" });
+      res.end("engine error");
+    }
+  });
+
+  const wanted = opts.port ?? (Number(process.env.ENGINE_PORT) || 8787);
+  const port = await listen(server, wanted);
+  const url = `http://${HOST}:${port}`;
+  return {
+    url, port, hub,
+    close: () => new Promise<void>((resolve) => {
+      server.closeAllConnections(); // forcibly end keep-alive / SSE connections (Node 18.2+)
+      server.close(() => resolve());
+    }),
+  };
+}
+
+// Try the wanted port; on EADDRINUSE fall back to an OS-assigned ephemeral port.
+function listen(server: http.Server, wanted: number): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const onErr = (err: NodeJS.ErrnoException) => {
+      if (err.code === "EADDRINUSE" && wanted !== 0) {
+        server.removeListener("error", onErr);
+        server.listen(0, HOST, () => resolve((server.address() as any).port));
+      } else reject(err);
+    };
+    server.once("error", onErr);
+    server.listen(wanted, HOST, () => resolve((server.address() as any).port));
+  });
+}
