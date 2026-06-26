@@ -2,59 +2,169 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Virtual Board — Expression Studio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Claude's Face — Expression Studio</title>
   <style>
-    body { margin: 0; background: #060608; display: grid; place-items: center; height: 100vh; }
-    canvas { width: min(80vmin, 560px); height: min(80vmin, 560px); border-radius: 12px;
-      box-shadow: 0 0 60px var(--glow, rgba(255,80,8,.35)); image-rendering: pixelated; }
+    :root { --orange:#ff5008; --cyan:#22ddff; --bg:#060608; --dim:#8a8a96; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:#e8e8ef;
+      font-family: ui-monospace, "IBM Plex Mono", monospace;
+      min-height:100vh; display:flex; flex-direction:column; align-items:center;
+      justify-content:center; gap:18px; padding:24px; }
+    #stage { display:flex; flex-direction:column; align-items:center; gap:12px; }
+    canvas { width:min(82vmin,720px); height:min(82vmin,720px); border-radius:16px;
+      box-shadow:0 0 80px var(--glow, rgba(255,80,8,.35)); image-rendering:pixelated;
+      background:var(--bg); }
+    #status { font-size:13px; color:var(--dim); letter-spacing:.04em; min-height:1.2em; }
+    #status b { color:#e8e8ef; font-weight:500; }
+    #pins { display:flex; flex-wrap:wrap; gap:6px; justify-content:center;
+      max-width:min(82vmin,720px); max-height:124px; overflow-y:auto; padding:4px; }
+    #pins button { font:11px ui-monospace,monospace; color:var(--dim);
+      background:#111118; border:1px solid #22222c; border-radius:7px;
+      padding:4px 8px; cursor:pointer; transition:border-color .15s,color .15s; }
+    #pins button:hover { color:#e8e8ef; border-color:#33333f; }
+    #pins button.active { color:var(--orange); border-color:var(--orange); }
+    #pins button.resume { color:var(--cyan); border-color:#1c4a55; }
   </style>
 </head>
 <body>
-  <canvas id="board" width="512" height="512"></canvas>
-  <div id="status" style="position:fixed;bottom:10px;left:12px;font:12px ui-monospace,monospace;color:#888">connecting…</div>
+  <div id="stage">
+    <canvas id="board" width="720" height="720"></canvas>
+    <div id="status">starting…</div>
+  </div>
+  <div id="pins"></div>
+
   <script type="module">
     import { Panel } from "../shared/render.js";
     import { makeWebSimRenderer } from "../shared/renderers/web-sim.js";
     import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";
-    import { framesFromPx, connectMirror } from "./board.js";
+    import { resolveExpression } from "../shared/expressions.js";
+    import { framesFromPx, applyEvent, buildPlaylists, arbitrate, nextIndex, isEngineResponse, DECAY_MS } from "./board.js";
+    import { SHOWCASE } from "./showcase.js";
+
+    // Default params for the few firmware sims that take them (others -> {}).
+    const FW_DEFAULTS = {
+      frostbite:   { mist: 40, sparkle: 20 },
+      fire:        { palette: "classic", intensity: 6 },
+      matrix_rain: { theme: "classic", frame_ms: 60 },
+      snow:        { frame_ms: 110, flakeColor: "#dce6ff" },
+      dancefloor:  { palette: 0, hold: 6 },
+    };
+    const DWELL_MS = 7000;                 // ambient time per item
+    const REDUCE = matchMedia("(prefers-reduced-motion:reduce)").matches;
 
     const cv = document.getElementById("board");
     const statusEl = document.getElementById("status");
+    const pinsEl = document.getElementById("pins");
     const panel = new Panel(cv, { device: cv });
     const webSim = makeWebSimRenderer({ panel, loadExpression: () => null, firmwareSims: FIRMWARE_SIMS });
 
-    let last = performance.now();
-    (function loop(now) { panel.tick(now - last, now); last = now; requestAnimationFrame(loop); })(last);
+    // shared runtime state
+    let ambItems = [], byName = new Map();
+    let ambIdx = 0, ambNextAt = 0, curToken = null;
+    let pinned = null, lastSseAt = null, mirrorOk = false;
 
-    // shared state the poll loop flips; the SSE fallback reads it via connectMirror.
-    const state = { online: false };
-    connectMirror({ panel, webSim, source: new EventSource("/events"), state });
+    function setStatus(html) { statusEl.innerHTML = html; }
 
-    // Primary source: poll the engine's framebuffer proxy (the real panel). Skip when
-    // hidden so we don't hammer the single-client board (mirrors data/calendar.html).
-    async function pollFramebuffer() {
-      if (document.hidden) return;
-      try {
-        const r = await fetch("/api/framebuffer");
-        if (r.ok) {
-          const { px } = await r.json();
-          state.online = true;
-          panel.setFrames([framesFromPx(px)], 1000);   // single static frame; refreshed each poll
-          statusEl.textContent = "● live — mirroring the board";
-        } else {
-          state.online = false;
-          statusEl.textContent = "○ virtual — board offline (last frame held; intents will draw)";
-        }
-      } catch {
-        state.online = false;
-        statusEl.textContent = "○ virtual — board offline (last frame held; intents will draw)";
+    function playItem(item) {
+      if (!item) return;
+      if (item.kind === "firmware") {
+        const sim = FIRMWARE_SIMS[item.name](FW_DEFAULTS[item.name] || {});
+        panel.setStepper(() => sim.frame(), sim.frame_ms);
+      } else {
+        const ex = resolveExpression(item.entry);
+        panel.setFrames(ex.frames, ex.frame_ms);
       }
     }
-    async function pollLoop() {
-      await pollFramebuffer();
-      setTimeout(pollLoop, 333);
+
+    // Decide what should own the panel each frame and (for ambient/pin) feed it.
+    // Mirror + live feed themselves from the poll loop / SSE handler.
+    function control(now) {
+      const src = arbitrate({ mirrorOk, lastSseAt, now, pinned: !!pinned });
+      if (src === "mirror") { curToken = "mirror"; setStatus("● <b>live · board</b> — mirroring the panel"); return; }
+      if (src === "live")   { curToken = "live";   setStatus("● <b>live</b> — Claude is driving"); return; }
+      if (src === "pin") {
+        const want = "pin:" + pinned.name;
+        if (curToken !== want) { playItem(pinned); curToken = want; ambNextAt = 0; }
+        setStatus("◉ <b>pinned</b> · " + pinned.name);
+        return;
+      }
+      // ambient
+      const inAmbient = curToken && curToken.startsWith("amb:");
+      if (inAmbient && now < ambNextAt) return;              // keep showing current item
+      if (inAmbient) ambIdx = nextIndex(ambIdx, ambItems.length); // dwell elapsed -> advance
+      const it = ambItems[ambIdx];
+      if (it) { playItem(it); curToken = "amb:" + it.name; ambNextAt = now + DWELL_MS; setStatus("○ <b>ambient</b> · " + it.name); }
+      else setStatus("○ <b>ambient</b> — no library");
     }
-    pollLoop();
+
+    // --- build library + pin strip ---
+    try {
+      const data = await (await fetch("./gallery-data.json")).json();
+      const built = buildPlaylists(data, Object.keys(FIRMWARE_SIMS), SHOWCASE);
+      ambItems = built.ambient;
+      byName = new Map(built.all.map((it) => [it.name, it]));
+      // resume button + one button per renderable item
+      const resume = document.createElement("button");
+      resume.className = "resume"; resume.textContent = "↻ resume cycle";
+      resume.onclick = () => { pinned = null; curToken = null; renderPins(); };
+      function renderPins() {
+        pinsEl.innerHTML = "";
+        pinsEl.appendChild(resume);
+        for (const it of built.all) {
+          const b = document.createElement("button");
+          b.textContent = it.name;
+          if (pinned && pinned.name === it.name) b.className = "active";
+          b.onclick = () => { pinned = it; curToken = null; renderPins(); };
+          pinsEl.appendChild(b);
+        }
+      }
+      renderPins();
+    } catch (e) {
+      setStatus("○ could not load library (" + e.message + ")");
+    }
+
+    // --- reduced motion: show one static frame, no cycling, no engine wiring ---
+    if (REDUCE) {
+      const it = ambItems[0];
+      if (it && it.kind === "expression") { const ex = resolveExpression(it.entry); panel.setFrames(ex.frames.slice(0, 1), 1e9); }
+      else if (it) { const sim = FIRMWARE_SIMS[it.name](FW_DEFAULTS[it.name] || {}); panel.setFrames([sim.frame()], 1e9); }
+      setStatus("○ <b>ambient</b> · " + (it ? it.name : "—") + " (motion reduced)");
+    } else {
+      // main render + control loop
+      let last = performance.now();
+      (function loop(now) { panel.tick(now - last, now); last = now; control(now); requestAnimationFrame(loop); })(last);
+
+      // mirror + SSE wire up ONLY when an engine answers (static host -> pure showcase)
+      (async function detectEngineThenWire() {
+        let engine = false;
+        try { const r = await fetch("/api/framebuffer"); engine = isEngineResponse(r.status); } catch { engine = false; }
+        if (!engine) return;  // no engine: stay local-first, no polling, no SSE
+
+        const src = new EventSource("/events");
+        src.onmessage = (m) => {
+          lastSseAt = performance.now();
+          if (arbitrate({ mirrorOk, lastSseAt, now: lastSseAt, pinned: !!pinned }) === "live") {
+            try { applyEvent(JSON.parse(m.data), { panel, webSim }); } catch { /* ignore malformed */ }
+          }
+        };
+
+        async function pollFramebuffer() {
+          if (document.hidden) return;
+          try {
+            const r = await fetch("/api/framebuffer");
+            if (r.ok) {
+              const { px } = await r.json();
+              mirrorOk = true;
+              if (arbitrate({ mirrorOk, lastSseAt, now: performance.now(), pinned: !!pinned }) === "mirror") {
+                panel.setFrames([framesFromPx(px)], 1e9);  // static mirror frame, refreshed each poll
+              }
+            } else { mirrorOk = false; }
+          } catch { mirrorOk = false; }
+        }
+        (async function pollLoop() { await pollFramebuffer(); setTimeout(pollLoop, 333); })();
+      })();
+    }
   </script>
 </body>
 </html>
