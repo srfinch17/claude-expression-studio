@@ -27,6 +27,9 @@ import { CANNED, MAX_FRAMES, artToFrameHex, expressionToWire, type Expression } 
 import { decideRender, loadEngine, type RenderPlan } from "./engine.js";
 import { normalizePresence } from "./presence.js";
 import { normalizeSettingsPatch } from "./settings.js";
+import { startEngineServer } from "./engine-server.js";
+import { planToDisplayEvent } from "./display-event.js";
+import type { SseHub } from "./sse.js";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -108,17 +111,25 @@ function engine() { return (enginePromise ??= loadEngine(MCP_DIR)); }
 // noRepeat memory for pooled bindings (idle), shared across calls in this process.
 const renderCtx: { last: Record<string, string> } = { last: {} };
 
+// The engine's SSE hub, set once the HTTP server starts in main(). null until then (and
+// in any non-engine context); broadcasts are best-effort and never block a board render.
+let engineHub: SseHub | null = null;
+let engineUrl: string | null = null;
+
 // Execute a render plan against the board; returns a short note for the tool reply.
 async function runPlan(plan: RenderPlan): Promise<string> {
   if (plan.kind === "noop") return "no binding";
   if (plan.brightness != null) await post("/api/brightness", { level: plan.brightness });
   if (plan.kind === "animation") {
     const r = await post("/api/display/animation", { type: plan.type, ...plan.params, transient: true });
+    engineHub?.broadcast(planToDisplayEvent(plan));
     return r.ok ? `${plan.type} (transient anim)` : `anim error ${r.status}`;
   }
   const expr = CANNED[plan.name] ?? (await loadSavedExpression(plan.name));
   if (!expr) return `no glyph for "${plan.name}"`;
-  const r = await post("/api/display/frames", expressionToWire(expr));
+  const wire = expressionToWire(expr);
+  const r = await post("/api/display/frames", wire);
+  engineHub?.broadcast(planToDisplayEvent(plan, wire));
   return r.ok ? plan.name : `frames error ${r.status}`;
 }
 
@@ -535,6 +546,12 @@ If a drawing lands well (or the user likes it), re-call with save_as (kebab-case
         },
       },
     },
+    {
+      name: "matrix_studio",
+      description:
+        "Get the local URL of the Expression Studio served by this engine (open it in a browser to see the live virtual board mirror the display, and to view/edit the animation library). Returns the URL or a note if the engine HTTP server is not running.",
+      inputSchema: { type: "object", properties: {}, additionalProperties: false },
+    },
   ],
 }));
 
@@ -739,6 +756,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return { content: [{ type: "text", text: r.ok ? `Settings updated: ${r.body}` : `Error ${r.status}: ${r.body}` }] };
       }
 
+      case "matrix_studio": {
+        const text = engineUrl
+          ? `Expression Studio: ${engineUrl}/studio/index.html\nVirtual board (live mirror): ${engineUrl}/studio/board.html`
+          : "Engine HTTP server is not running (no Studio URL).";
+        return { content: [{ type: "text", text }] };
+      }
+
       default:
         return { content: [{ type: "text", text: `Unknown tool: ${name}` }] };
     }
@@ -765,6 +789,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
+  try {
+    const eng = await startEngineServer({ mcpDir: MCP_DIR });
+    engineHub = eng.hub;
+    engineUrl = eng.url;
+    await writeFile(path.join(MCP_DIR, ".engine-url"), eng.url, "utf8").catch(() => {});
+    console.error("Engine Studio on", `${eng.url}/studio/index.html`);
+  } catch (e) {
+    console.error("Engine HTTP server failed to start (MCP tools still work):", (e as Error).message);
+  }
   console.error("ESP32 Matrix MCP server running. Board:", BOARD_URL);
 }
 
