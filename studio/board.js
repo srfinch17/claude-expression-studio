@@ -78,3 +78,32 @@ export function connectMirror({ panel, webSim, source, state }) {
   };
   return source;
 }
+
+// How long (ms) a live SSE-driven expression latches before decaying to ambient.
+export const DECAY_MS = 25000;
+
+// The precedence state machine. A reachable board (mirror) is ground truth and never
+// decays; a live Claude session latches the face for DECAY_MS after the last intent;
+// a visitor pin holds otherwise; ambient is the resting floor.
+export function arbitrate({ mirrorOk, lastSseAt, now, pinned }) {
+  if (mirrorOk) return "mirror";
+  if (lastSseAt != null && now - lastSseAt < DECAY_MS) return "live";
+  if (pinned) return "pin";
+  return "ambient";
+}
+
+// Pick the next ambient index, never repeating the current one (unless there's only
+// one item). Uniform over the other length-1 slots; rng is injectable for tests.
+export function nextIndex(cur, length, rng = Math.random) {
+  if (length <= 1) return 0;
+  let n = Math.floor(rng() * (length - 1));
+  if (n >= cur) n++; // skip the current slot
+  return n;
+}
+
+// Does this HTTP status come from our engine routes? 200 = board live, 503 = engine
+// up but board unreachable. Anything else (e.g. 404 from a static host) means no
+// engine — the page runs as a pure local showcase (no mirror poll, no SSE).
+export function isEngineResponse(status) {
+  return status === 200 || status === 503;
+}
