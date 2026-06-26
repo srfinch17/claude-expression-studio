@@ -11,21 +11,47 @@
 </head>
 <body>
   <canvas id="board" width="512" height="512"></canvas>
+  <div id="status" style="position:fixed;bottom:10px;left:12px;font:12px ui-monospace,monospace;color:#888">connecting…</div>
   <script type="module">
     import { Panel } from "../shared/render.js";
     import { makeWebSimRenderer } from "../shared/renderers/web-sim.js";
     import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";
-    import { connectBoard } from "./board.js";
+    import { framesFromPx, connectMirror } from "./board.js";
 
     const cv = document.getElementById("board");
+    const statusEl = document.getElementById("status");
     const panel = new Panel(cv, { device: cv });
     const webSim = makeWebSimRenderer({ panel, loadExpression: () => null, firmwareSims: FIRMWARE_SIMS });
 
-    // drive the panel's animation clock
     let last = performance.now();
     (function loop(now) { panel.tick(now - last, now); last = now; requestAnimationFrame(loop); })(last);
 
-    connectBoard({ panel, webSim, source: new EventSource("/events") });
+    // shared state the poll loop flips; the SSE fallback reads it via connectMirror.
+    const state = { online: false };
+    connectMirror({ panel, webSim, source: new EventSource("/events"), state });
+
+    // Primary source: poll the engine's framebuffer proxy (the real panel). Skip when
+    // hidden so we don't hammer the single-client board (mirrors data/calendar.html).
+    async function pollFramebuffer() {
+      if (document.hidden) return;
+      try {
+        const r = await fetch("/api/framebuffer");
+        if (r.ok) {
+          const { px } = await r.json();
+          state.online = true;
+          panel.setFrames([framesFromPx(px)], 1000);   // single static frame; refreshed each poll
+          statusEl.textContent = "● live — mirroring the board";
+        } else {
+          state.online = false;
+          statusEl.textContent = "○ virtual — board offline (showing intents)";
+        }
+      } catch {
+        state.online = false;
+        statusEl.textContent = "○ virtual — board offline (showing intents)";
+      }
+    }
+    setInterval(pollFramebuffer, 150);
+    pollFramebuffer();
   </script>
 </body>
 </html>

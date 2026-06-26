@@ -43,3 +43,18 @@ export function connectBoard({ panel, webSim, source }) {
   };
   return source;
 }
+
+// When the board is reachable, its framebuffer poll is the source of truth (it already
+// reflects SSE-driven renders, since those also hit the board) — so SSE events are
+// ignored. Only when the board is offline does the SSE stream become the display.
+export function mirrorGate(boardOnline) { return !boardOnline; }
+
+// Wire the SSE fallback so it only draws while offline. `state` is a shared object the
+// poll loop (in board.html) flips: state.online = true on a good framebuffer poll.
+export function connectMirror({ panel, webSim, source, state }) {
+  source.onmessage = (m) => {
+    if (!mirrorGate(state.online)) return;          // board online → framebuffer owns the panel
+    try { applyEvent(JSON.parse(m.data), { panel, webSim }); } catch { /* ignore malformed */ }
+  };
+  return source;
+}

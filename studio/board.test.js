@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { framesFromWire, framesFromPx, applyEvent } from "./board.js";
+import { framesFromWire, framesFromPx, applyEvent, mirrorGate } from "./board.js";
 
 // one all-off frame except pixel (0,0) red: 64 hex strings
 function wireOneRed() {
@@ -45,4 +45,9 @@ test("framesFromPx drops off pixels and tolerates a bad px", () => {
   assert.deepEqual(framesFromPx(null), []);
   const allOff = Array.from({ length: 64 }, () => "000000");
   assert.deepEqual(framesFromPx(allOff), []);
+});
+
+test("mirrorGate: SSE draws only when the board is offline", () => {
+  assert.equal(mirrorGate(true), false);   // board online → framebuffer is the truth, ignore SSE
+  assert.equal(mirrorGate(false), true);    // board offline → SSE is the only source
 });
