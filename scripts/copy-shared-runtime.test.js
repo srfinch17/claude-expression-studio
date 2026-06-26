@@ -18,3 +18,11 @@ test("copySharedRuntime places the engine files in mcp_server/shared-runtime", (
   assert.ok(dst.endsWith(join("mcp_server", "shared-runtime")));
   assert.ok(dst.startsWith(ROOT));
 });
+
+test("copySharedRuntime stages the Studio tree into mcp_server/studio-dist", () => {
+  copySharedRuntime();
+  const distRoot = join(ROOT, "mcp_server", "studio-dist");
+  assert.ok(existsSync(join(distRoot, "studio", "index.html")), "studio/index.html staged");
+  assert.ok(existsSync(join(distRoot, "studio", "board.html")), "studio/board.html staged");
+  assert.ok(existsSync(join(distRoot, "shared", "render.js")), "shared/render.js staged");
+});

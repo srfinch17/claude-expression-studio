@@ -44,3 +44,7 @@ release/
 
 # Generated: shared engine copied into the MCP bundle for packing (see scripts/copy-shared-runtime.mjs)
 mcp_server/shared-runtime/
+# Generated: Studio tree staged into mcp_server/ for the .mcpb bundle
+mcp_server/studio-dist/
+# Engine's bound-port cache (written at runtime, machine-specific)
+mcp_server/.engine-url
