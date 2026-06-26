@@ -19,6 +19,11 @@ test("copySharedRuntime places the engine files in mcp_server/shared-runtime", (
   assert.ok(dst.startsWith(ROOT));
 });
 
+test("copySharedRuntime stages the repo VERSION into the bundle", () => {
+  const dst = copySharedRuntime();
+  assert.ok(existsSync(join(dst, "VERSION")));
+});
+
 test("copySharedRuntime stages the Studio tree into mcp_server/studio-dist", () => {
   copySharedRuntime();
   const distRoot = join(ROOT, "mcp_server", "studio-dist");

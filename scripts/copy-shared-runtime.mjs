@@ -13,6 +13,8 @@ export function copySharedRuntime() {
   const dst = join(root, "mcp_server", "shared-runtime");
   mkdirSync(dst, { recursive: true });
   for (const f of FILES) copyFileSync(join(src, f), join(dst, f));
+  // Stage the repo VERSION into the bundle so matrix_version reports correctly in the .mcpb.
+  copyFileSync(join(root, "VERSION"), join(dst, "VERSION"));
   // Stage the Studio tree into mcp_server/studio-dist/ for the .mcpb bundle. The packed
   // .mcpb contains only mcp_server/, so both studio/ and shared/ must be staged here.
   // static-files.ts falls back to studio-dist/ when the repo root is absent (packed context).

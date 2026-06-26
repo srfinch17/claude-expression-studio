@@ -188,7 +188,8 @@ function versionMark(reported: string | undefined, expected: string): string {
 
 async function versionReport(): Promise<string> {
   let expected = "unknown";
-  try { expected = readFileSync(path.join(REPO_ROOT, "VERSION"), "utf8").trim(); } catch { /* leave unknown */ }
+  try { expected = readFileSync(path.join(REPO_ROOT, "VERSION"), "utf8").trim(); }
+  catch { try { expected = readFileSync(path.join(MCP_DIR, "shared-runtime", "VERSION"), "utf8").trim(); } catch { /* leave unknown */ } }
   const lines = [`repo VERSION: ${expected}`];
   try {
     const r = await get("/api/status");
