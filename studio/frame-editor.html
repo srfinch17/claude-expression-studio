@@ -109,7 +109,7 @@
     let previewPanel = null, fpanels = [];
     const REDUCE = matchMedia("(prefers-reduced-motion:reduce)").matches;
 
-    function setDirty(d) { dirty = d; statusEl.textContent = readOnly ? "read-only (no engine)" : d ? "unsaved changes" : "saved"; saveBtn.disabled = readOnly || !d; }
+    function setDirty(d) { dirty = d; statusEl.textContent = readOnly ? "read-only" : d ? "unsaved changes" : "saved"; saveBtn.disabled = readOnly || !d; }
     function edit(fn) { expr = fn(expr); setDirty(true); renderAll(); }
 
     // Resolve a single frame to a flat lit-pixel array via the expression resolver.
@@ -117,7 +117,6 @@
 
     function renderGrid() {
       gridEl.innerHTML = "";
-      const lit = resolvedFrames()[activeFrame] || [];
       const cols = expr.colors || {};
       const rows = expr.frames[activeFrame];
       for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
@@ -188,12 +187,12 @@
     };
 
     // --- frame buttons + meta ---
-    document.getElementById("addF").onclick = () => { if (!readOnly) { edit((e) => addFrame(e, activeFrame + 1, activeFrame)); activeFrame++; renderAll(); } };
+    document.getElementById("addF").onclick = () => { if (!readOnly) { activeFrame++; edit((e) => addFrame(e, activeFrame, activeFrame - 1)); } };
     document.getElementById("dupF").onclick = () => { if (!readOnly) { edit((e) => duplicateFrame(e, activeFrame)); } };
     document.getElementById("delF").onclick = () => { if (!readOnly) { edit((e) => deleteFrame(e, activeFrame)); } };
-    document.getElementById("frameMs").addEventListener("change", (e) => edit((x) => setFrameMs(x, Number(e.target.value))));
-    document.getElementById("loop").addEventListener("change", (e) => edit((x) => setLoop(x, Number(e.target.value))));
-    document.getElementById("desc").addEventListener("change", (e) => edit((x) => setDescription(x, e.target.value)));
+    document.getElementById("frameMs").addEventListener("change", (e) => { if (!readOnly) edit((x) => setFrameMs(x, Number(e.target.value))); });
+    document.getElementById("loop").addEventListener("change", (e) => { if (!readOnly) edit((x) => setLoop(x, Number(e.target.value))); });
+    document.getElementById("desc").addEventListener("change", (e) => { if (!readOnly) edit((x) => setDescription(x, e.target.value)); });
 
     // --- save / revert ---
     saveBtn.onclick = async () => {
