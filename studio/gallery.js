@@ -2,7 +2,6 @@ import { resolveExpression } from "../shared/expressions.js";
 import { Panel } from "../shared/render.js";
 import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";
 
-const REDUCE = matchMedia("(prefers-reduced-motion:reduce)").matches;
 const GROUP_ORDER = ["orphan", "wired", "canned", "wait", "ask", "bored", "firmware"];
 const GROUP_TITLE = {
   orphan:   "Orphans — no rotation",
@@ -25,6 +24,12 @@ const FW_DEFAULTS = {
 
 const panels = [];
 
+// Edit affordances (✎ edit link, approve toggle) require BOTH a saved expression and a live
+// engine to write through. On a static host (no engine) the Gallery is purely browse.
+export function showEditAffordances(editable, hasEngine) {
+  return editable && hasEngine;
+}
+
 function cell(grid, name, desc, group, approved, editable, canApprove) {
   const el = document.createElement("div");
   el.className = "cell" + (group === "orphan" ? " orphan" : "") + (approved ? " approved" : "");
@@ -34,9 +39,10 @@ function cell(grid, name, desc, group, approved, editable, canApprove) {
   const cv = document.createElement("canvas"); cv.width = 128; cv.height = 128;
   el.appendChild(cv);
   const nm = document.createElement("div"); nm.className = "name"; nm.textContent = name; el.appendChild(nm);
-  if (editable) { const ed = document.createElement("a"); ed.className = "editlink"; ed.href = `./frame-editor.html?name=${encodeURIComponent(name)}`;
+  const showEdits = showEditAffordances(editable, canApprove);
+  if (showEdits) { const ed = document.createElement("a"); ed.className = "editlink"; ed.href = `./frame-editor.html?name=${encodeURIComponent(name)}`;
     ed.textContent = "✎ edit"; ed.title = "Edit this expression"; el.appendChild(ed); }
-  if (editable && canApprove) {
+  if (showEdits) {
     let isApproved = approved;
     const tg = document.createElement("button"); tg.className = "approvetoggle";
     const paint = () => { tg.textContent = isApproved ? "✓ approved" : "○ approve"; tg.classList.toggle("on", isApproved); };
@@ -110,6 +116,7 @@ async function build() {
     }
   }
 
+  const REDUCE = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion:reduce)").matches;
   if (!REDUCE) {
     let last = performance.now();
     (function loop(now) {
@@ -119,4 +126,4 @@ async function build() {
     })(performance.now());
   }
 }
-build();
+if (typeof document !== "undefined") build();
