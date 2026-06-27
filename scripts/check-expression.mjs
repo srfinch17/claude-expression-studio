@@ -22,7 +22,8 @@ export function validateExpression(name, expr) {
     });
   }
 
-  const cols = (colors && typeof colors === "object") ? colors : {};
+  if (colors != null && (typeof colors !== "object" || Array.isArray(colors))) errors.push("colors must be an object");
+  const cols = (colors && typeof colors === "object" && !Array.isArray(colors)) ? colors : {};
   for (const [k, v] of Object.entries(cols)) {
     if (typeof v !== "string" || !HEX_RE.test(v)) errors.push(`color '${k}': invalid hex`);
   }

@@ -30,3 +30,8 @@ test("rejects an invalid hex and bad frame_ms/loop", () => {
   assert.ok(errs.some((m) => /frame_ms/.test(m)));
   assert.ok(errs.some((m) => /loop/.test(m)));
 });
+
+test("rejects a non-object colors (array slips a bare typeof check)", () => {
+  const e = good(); e.colors = ["#ff0000"]; // an array is typeof 'object'
+  assert.ok(validateExpression("g", e).some((m) => /colors must be an object/.test(m)));
+});
