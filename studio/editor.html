@@ -29,6 +29,8 @@
     .tile canvas { width:72px; height:72px; border-radius:5px; background:#060608; display:block; }
     .tile .nm { font-size:.62rem; margin-top:4px; word-break:break-all; color:var(--text); line-height:1.1; }
     .tile .pct { font-size:.6rem; color:var(--cyan); }
+    .tile .editlink { display:inline-block; font-size:.58rem; color:var(--cyan); text-decoration:none; margin-top:2px; }
+    .tile .editlink:hover { text-decoration:underline; }
     .tile input[type=range] { width:72px; margin:2px 0 0; }
     .tile .x { position:absolute; top:3px; right:3px; width:15px; height:15px; line-height:13px;
       text-align:center; border-radius:50%; background:#000a; border:1px solid #333; cursor:pointer; font-size:.66rem; }
@@ -227,6 +229,9 @@
             const cv = document.createElement("canvas"); cv.width = 72; cv.height = 72; tile.appendChild(cv);
             panels.push(makePanel(cv, name));
             const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = name; tile.appendChild(nm);
+            if (byName.get(name)?.entry?.source === "saved") { const ed = document.createElement("a"); ed.className = "editlink";
+              ed.href = `./frame-editor.html?name=${encodeURIComponent(name)}`; ed.textContent = "✎"; ed.title = "Edit pixels";
+              ed.onclick = (ev) => ev.stopPropagation(); tile.appendChild(ed); }
             if (!readOnly) { const x = document.createElement("div"); x.className = "x"; x.textContent = "×";
               x.onclick = () => apply((m) => remove(m, RID, intent, name)); tile.appendChild(x); }
             if (poolMode) {

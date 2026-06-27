@@ -25,7 +25,7 @@ const FW_DEFAULTS = {
 
 const panels = [];
 
-function cell(grid, name, desc, group, approved) {
+function cell(grid, name, desc, group, approved, editable) {
   const el = document.createElement("div");
   el.className = "cell" + (group === "orphan" ? " orphan" : "") + (approved ? " approved" : "");
   if (approved) {
@@ -34,6 +34,8 @@ function cell(grid, name, desc, group, approved) {
   const cv = document.createElement("canvas"); cv.width = 128; cv.height = 128;
   el.appendChild(cv);
   const nm = document.createElement("div"); nm.className = "name"; nm.textContent = name; el.appendChild(nm);
+  if (editable) { const ed = document.createElement("a"); ed.className = "editlink"; ed.href = `./frame-editor.html?name=${encodeURIComponent(name)}`;
+    ed.textContent = "✎ edit"; ed.title = "Edit this expression"; el.appendChild(ed); }
   const ds = document.createElement("div"); ds.className = "desc"; ds.textContent = desc || ""; el.appendChild(ds);
   const bd = document.createElement("div"); bd.className = "badge " + group; bd.textContent = GROUP_TITLE[group]; el.appendChild(bd);
   grid.appendChild(el);
@@ -69,7 +71,7 @@ async function build() {
           const sim = FIRMWARE_SIMS[it.name](FW_DEFAULTS[it.name] || {});
           const p = new Panel(cv); p.setStepper(() => sim.frame(), sim.frame_ms); panels.push(p);
         } else {
-          const cv = cell(grid, it.name, it.description, group, it.approved);
+          const cv = cell(grid, it.name, it.description, group, it.approved, it.source === "saved");
           const expr = resolveExpression(it);
           const p = new Panel(cv); p.setFrames(expr.frames, expr.frame_ms); panels.push(p);
         }
