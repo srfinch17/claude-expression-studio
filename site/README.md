@@ -64,3 +64,19 @@ firmware needs to be served over `https` next to a manifest:
 
 Until then the offline `flash.bat` / `flash.sh` in the release is the working install
 path — which is what the page says.
+
+## Deploying the full studio to Pages
+
+The landing page here is the front door, but the Pages deploy publishes the **whole
+read-only showcase** — landing + Expression Studio Gallery + the desk/board sim —
+assembled by `scripts/build-pages.mjs` into a gitignored `pages-dist/` bundle.
+
+- **Workflow:** `.github/workflows/pages.yml` runs the build and deploys on every push to
+  `feat/expression-studio` and `master`, plus manual runs (Actions tab → "Run workflow").
+- **One-time repo setting:** Settings → Pages → **Source: "GitHub Actions"**.
+- **URLs:** `https://<user>.github.io/<repo>/` → landing · `/studio/` → Gallery ·
+  `/studio/board.html` → board sim.
+
+The site is read-only: there is no engine on a static host, so edit/approve affordances
+are hidden (they reappear only when the local engine is running). Build it locally with
+`npm run build:pages` and serve `pages-dist/` with any static server to preview.
