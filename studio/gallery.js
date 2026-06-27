@@ -25,7 +25,7 @@ const FW_DEFAULTS = {
 
 const panels = [];
 
-function cell(grid, name, desc, group, approved, editable) {
+function cell(grid, name, desc, group, approved, editable, canApprove) {
   const el = document.createElement("div");
   el.className = "cell" + (group === "orphan" ? " orphan" : "") + (approved ? " approved" : "");
   if (approved) {
@@ -36,6 +36,31 @@ function cell(grid, name, desc, group, approved, editable) {
   const nm = document.createElement("div"); nm.className = "name"; nm.textContent = name; el.appendChild(nm);
   if (editable) { const ed = document.createElement("a"); ed.className = "editlink"; ed.href = `./frame-editor.html?name=${encodeURIComponent(name)}`;
     ed.textContent = "✎ edit"; ed.title = "Edit this expression"; el.appendChild(ed); }
+  if (editable && canApprove) {
+    let isApproved = approved;
+    const tg = document.createElement("button"); tg.className = "approvetoggle";
+    const paint = () => { tg.textContent = isApproved ? "✓ approved" : "○ approve"; tg.classList.toggle("on", isApproved); };
+    paint();
+    tg.onclick = async () => {
+      tg.disabled = true;
+      try {
+        const r = await fetch(`/api/approval/${encodeURIComponent(name)}`, {
+          method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ approved: !isApproved }),
+        });
+        const res = await r.json();
+        if (res.ok) {
+          isApproved = res.approved;
+          el.classList.toggle("approved", isApproved);
+          let ck = el.querySelector(".check");
+          if (isApproved && !ck) { ck = document.createElement("div"); ck.className = "check"; ck.textContent = "✓"; ck.title = "Approved / done"; el.insertBefore(ck, el.firstChild); }
+          else if (!isApproved && ck) { ck.remove(); }
+          paint();
+        }
+      } catch { /* leave state unchanged on network error */ }
+      tg.disabled = false;
+    };
+    el.appendChild(tg);
+  }
   const ds = document.createElement("div"); ds.className = "desc"; ds.textContent = desc || ""; el.appendChild(ds);
   const bd = document.createElement("div"); bd.className = "badge " + group; bd.textContent = GROUP_TITLE[group]; el.appendChild(bd);
   grid.appendChild(el);
@@ -51,6 +76,10 @@ async function build() {
     root.innerHTML = `<p class="err">Could not load ./gallery-data.json — run <code>npm run build:gallery</code>. (${e.message})</p>`;
     return;
   }
+
+  // Approval needs the engine (the POST route). Probe once; if absent, the toggle is hidden.
+  let canApprove = false;
+  try { canApprove = (await fetch("/api/manifest")).ok; } catch { canApprove = false; }
 
   const byGroup = { orphan: [], wired: [], canned: [], wait: [], ask: [], bored: [], firmware: [] };
   for (const e of data.expressions) (byGroup[e.group] ||= []).push(e);
@@ -71,7 +100,7 @@ async function build() {
           const sim = FIRMWARE_SIMS[it.name](FW_DEFAULTS[it.name] || {});
           const p = new Panel(cv); p.setStepper(() => sim.frame(), sim.frame_ms); panels.push(p);
         } else {
-          const cv = cell(grid, it.name, it.description, group, it.approved, it.source === "saved");
+          const cv = cell(grid, it.name, it.description, group, it.approved, it.source === "saved", canApprove);
           const expr = resolveExpression(it);
           const p = new Panel(cv); p.setFrames(expr.frames, expr.frame_ms); panels.push(p);
         }

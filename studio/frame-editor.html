@@ -50,6 +50,7 @@
     <h1 id="title">Frame Editor</h1>
     <span id="banner"></span>
     <span id="status"></span>
+    <button id="approve">○ approve</button>
     <button id="revert">Revert</button>
     <button id="save" class="save">Save</button>
   </header>
@@ -102,11 +103,12 @@
     const statusEl = document.getElementById("status");
     const saveBtn = document.getElementById("save");
     const revertBtn = document.getElementById("revert");
+    const approveBtn = document.getElementById("approve");
     const gridEl = document.getElementById("grid");
     const swatchesEl = document.getElementById("swatches");
     const fstripEl = document.getElementById("fstrip");
 
-    let expr = null, original = null, activeFrame = 0, brush = ".", readOnly = false, dirty = false;
+    let expr = null, original = null, activeFrame = 0, brush = ".", readOnly = false, dirty = false, approved = false;
     let previewPanel = null, fpanels = [];
     const REDUCE = matchMedia("(prefers-reduced-motion:reduce)").matches;
 
@@ -201,11 +203,24 @@
       try {
         const r = await fetch(`/api/expression/${encodeURIComponent(NAME)}`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(expr) });
         const res = await r.json();
-        if (res.ok) { original = JSON.parse(JSON.stringify(expr)); setDirty(false); statusEl.textContent = "saved — now pending re-review (orange)"; }
+        if (res.ok) { original = JSON.parse(JSON.stringify(expr)); setDirty(false); approved = false; paintApprove(); statusEl.textContent = "saved — now pending re-review (orange)"; }
         else { statusEl.textContent = "save failed: " + (res.errors || []).join("; "); setDirty(true); }
       } catch (e) { statusEl.textContent = "save error: " + e.message; setDirty(true); }
     };
     revertBtn.onclick = () => { expr = JSON.parse(JSON.stringify(original)); activeFrame = 0; setDirty(false); renderAll(); };
+    function paintApprove() { approveBtn.textContent = approved ? "✓ approved" : "○ approve"; approveBtn.classList.toggle("save", approved); approveBtn.disabled = readOnly; }
+    approveBtn.onclick = async () => {
+      if (readOnly) return;
+      approveBtn.disabled = true;
+      try {
+        const r = await fetch(`/api/approval/${encodeURIComponent(NAME)}`, {
+          method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ approved: !approved }),
+        });
+        const res = await r.json();
+        if (res.ok) approved = res.approved;
+      } catch { /* leave state unchanged */ }
+      paintApprove();
+    };
 
     // --- boot ---
     previewPanel = new Panel(document.getElementById("preview"));
@@ -220,10 +235,11 @@
       if (found.source !== "saved") { readOnly = true; bannerEl.textContent = `"${NAME}" is a ${found.source} expression — not editable here (only saved expressions).`; }
       expr = { description: found.description || "", frames: found.frames, colors: found.colors || {}, frame_ms: found.frame_ms || 150, loop: found.loop ?? 0 };
       original = JSON.parse(JSON.stringify(expr));
+      approved = !!found.approved;
       // Engine gate: a save needs the engine. If /api/manifest isn't reachable, go read-only.
       try { const r = await fetch("/api/manifest"); if (!r.ok) throw 0; }
       catch { if (!readOnly) { readOnly = true; bannerEl.textContent = "Editing needs the live engine — launch the Studio via matrix_studio. (Read-only; Save disabled.)"; } }
-      setDirty(false); renderAll();
+      setDirty(false); renderAll(); paintApprove();
     }
     boot();
   </script>
