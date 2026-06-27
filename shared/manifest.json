@@ -62,7 +62,7 @@
           "noRepeat": true,
           "brightness": 5,
           "pool": {
-            "fire":        { "weight": 1, "params": { "speed": 50, "intensity": 70 }, "label": "🔥 fire" },
+            "fire":        { "weight": 1, "params": { "speed": 50, "intensity": 6 }, "label": "🔥 fire" },
             "dancefloor":  { "weight": 1, "params": { "palette": 0, "hold": 6 }, "label": "🪩 dance floor" },
             "fireworks":   { "weight": 1, "params": { "color1": "#ff0050", "color2": "#00e0ff", "color3": "#ffd000" }, "label": "🎆 fireworks" },
             "clock":       { "weight": 1, "params": { "color1": "#00ff88", "color2": "#0088ff", "color3": "#ff4040" }, "label": "🕐 clock" },
