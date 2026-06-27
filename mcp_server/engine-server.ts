@@ -5,6 +5,7 @@ import http from "node:http";
 import { SseHub } from "./sse.js";
 import { resolveStaticBase, serveStatic } from "./static-files.js";
 import { readManifest, writeManifestValidated } from "./manifest-api.js";
+import { writeExpressionValidated } from "./expression-api.js";
 import { engineDir } from "./engine.js";   // repo-first ../shared, else mcpDir/shared-runtime
 import path from "node:path";
 
@@ -60,6 +61,29 @@ export async function startEngineServer(opts: { mcpDir: string; port?: number; m
           return;
         }
         res.writeHead(405); res.end(); return;
+      }
+
+      if (url.startsWith("/api/expression/")) {
+        if (method !== "PUT") { res.writeHead(405); res.end(); return; }
+        const name = decodeURIComponent(url.slice("/api/expression/".length).split("?")[0]);
+        let expr: unknown;
+        try { expr = JSON.parse(await readBody(req)); }   // readBody: the same helper the manifest PUT uses
+        catch { res.writeHead(400, { "content-type": "application/json" }); res.end(JSON.stringify({ ok: false, errors: ["invalid JSON body"] })); return; }
+        const result = await writeExpressionValidated({
+          name, expr,
+          expressionsDir: path.join(mcpDir, "expressions"),
+          validatorPath: path.join(repoRoot, "scripts", "check-expression.mjs"),
+          generatorPath: path.join(repoRoot, "scripts", "build-gallery-data.mjs"),
+          cannedPath: path.join(mcpDir, "dist", "expressions.js"),
+          manifestPath: path.join(mfDir, "manifest.json"),
+          boredDir: path.join(repoRoot, "claude-hooks", "bored_animations"),
+          approvedPath: path.join(base, "studio", "approved.json"),
+          galleryDataPath: path.join(base, "studio", "gallery-data.json"),
+        });
+        const status = result.ok ? 200 : (result as any).status;
+        res.writeHead(status, { "content-type": "application/json" });
+        res.end(JSON.stringify(result.ok ? { ok: true } : { ok: false, errors: (result as any).errors }));
+        return;
       }
 
       if (url.startsWith("/api/framebuffer")) {

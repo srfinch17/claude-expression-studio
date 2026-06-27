@@ -8,6 +8,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import http from "node:http";
+import { readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
 // NOTE: engine-server.ts uses .js imports (Node16/tsc convention), which Node's type-strip
 // runner cannot resolve to .ts sources. We import the compiled dist file instead; the
 // rebuild hook keeps dist/ current on every .ts edit.
@@ -92,4 +93,48 @@ test("GET /api/framebuffer returns 503 reachable:false when the board is unreach
   const r = await fetch(`${eng.url}/api/framebuffer`);
   assert.equal(r.status, 503);
   assert.equal((await r.json() as any).reachable, false);
+});
+
+test("PUT /api/expression/:name writes the file, un-approves, regenerates gallery-data", async () => {
+  const repo = path.join(MCP_DIR, "..");
+  const exprPath = path.join(MCP_DIR, "expressions", "zzz-test.json");
+  const approvedPath = path.join(repo, "studio", "approved.json");
+  const galleryPath = path.join(repo, "studio", "gallery-data.json");
+  const blank = ["........","........","........","........","........","........","........","........"];
+  const seed = { frames: [blank], colors: {}, frame_ms: 150, loop: 0, description: "seed" };
+  writeFileSync(exprPath, JSON.stringify(seed, null, 2));
+  const approvedRaw = readFileSync(approvedPath, "utf8");
+  const approvedBefore = JSON.parse(approvedRaw); approvedBefore.approved.push("zzz-test");
+  writeFileSync(approvedPath, JSON.stringify(approvedBefore, null, 2));
+
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0 });
+  try {
+    const edited = { ...seed, frames: [["A.......", ...blank.slice(1)]], colors: { A: "#00ff00" }, description: "edited" };
+    const r = await fetch(`${eng.url}/api/expression/zzz-test`, {
+      method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(edited),
+    });
+    assert.equal(r.status, 200);
+    assert.deepEqual(await r.json() as any, { ok: true });
+    assert.equal(JSON.parse(readFileSync(exprPath, "utf8")).description, "edited");              // file written
+    assert.ok(!JSON.parse(readFileSync(approvedPath, "utf8")).approved.includes("zzz-test"));    // un-approved
+    const gd = JSON.parse(readFileSync(galleryPath, "utf8"));                                    // gallery regenerated
+    const e = gd.expressions.find((x: any) => x.name === "zzz-test");
+    assert.equal(e.description, "edited");
+    assert.equal(e.approved, false);
+
+    const bad = await fetch(`${eng.url}/api/expression/zzz-test`, {                              // bad shape -> 400
+      method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...edited, frames: [["x"]] }),
+    });
+    assert.equal(bad.status, 400);
+    assert.equal((await bad.json() as any).ok, false);
+
+    const missing = await fetch(`${eng.url}/api/expression/does-not-exist`, {                    // unknown -> 404
+      method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(edited),
+    });
+    assert.equal(missing.status, 404);
+  } finally {
+    await eng.close();
+    if (existsSync(exprPath)) rmSync(exprPath);          // remove the throwaway source
+    writeFileSync(approvedPath, approvedRaw);            // restore approved.json byte-for-byte
+  }
 });
