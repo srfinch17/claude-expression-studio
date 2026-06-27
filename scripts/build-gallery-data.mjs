@@ -6,21 +6,14 @@ import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";
 
 const FIRMWARE = Object.keys(FIRMWARE_SIMS);
 
-// User-approved ("done") expressions — the studio gallery renders a green ✓ on these.
-// Add a name when the user signs off. IMPORTANT: when an expression is EDITED/revisited,
-// REMOVE it here — revisiting requires fresh re-approval, so it must go back to orange.
-const APPROVED = new Set([
-  "aurora", "bloom", "claude-idle", "crystal-ball", "fireflies",
-  "idea", "inchworm", "soundwave", "task-complete",
-  "hourglass", "reticle", "skull", "spinning-coin",
-  "compactor", "confetti", "dusk",
-  "lightning", "warp-portal",
-  "goldfish", "lava-lamp", "ringed-planet", "swarm-merge",
-  "atom", "double-slit", "jupiter", "meteor", "ufo",
-  "black-hole", "butterfly", "galaxy", "jellyfish", "newtons-cradle", "rain", "tornado",
-  "jack-o-lantern", "mushroom-cloud", "volcano",
-  "bomb", "potion", "sunrise", "warrocket",
-]);
+// User-approved ("done") expressions live in studio/approved.json (the engine-owned approval
+// source). The studio gallery renders a green ✓ on these. The expression editor's save
+// auto-removes a name here (edit → orange / pending re-review). buildGalleryData reads the
+// file via the required `approvedPath` param.
+function readApproved(approvedPath) {
+  try { return new Set(JSON.parse(readFileSync(approvedPath, "utf8")).approved || []); }
+  catch { return new Set(); }
+}
 
 // Dynamic-import the COMPILED MCP module so canned data has a single source of
 // truth (never re-parse the .ts). Async; main() and tests await this first.
@@ -40,7 +33,8 @@ function readDir(dir, source) {
   return out;
 }
 
-export function buildGalleryData({ canned, savedDir, manifestPath, boredDir }) {
+export function buildGalleryData({ canned, savedDir, manifestPath, boredDir, approvedPath }) {
+  const approved = readApproved(approvedPath);
   const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
   const roles = manifestRoles(manifest);                       // name -> wait/ask/bored/wired
   const boredNames = new Set(readDir(boredDir, "bored").map(([n]) => n));
@@ -62,7 +56,7 @@ export function buildGalleryData({ canned, savedDir, manifestPath, boredDir }) {
   const ctx = { roles, boredNames, cannedNames };
   for (const [name, data] of byName) {
     const group = classifyExpression(name, ctx);
-    expressions.push({ name, ...data, group, approved: APPROVED.has(name) });
+    expressions.push({ name, ...data, group, approved: approved.has(name) });
     groups[group].push(name);
   }
 
@@ -77,6 +71,7 @@ async function main() {
     savedDir: join(root, "mcp_server/expressions"),
     manifestPath: join(root, "shared/manifest.json"),
     boredDir: join(root, "claude-hooks/bored_animations"),
+    approvedPath: join(root, "studio/approved.json"),
   });
   writeFileSync(join(root, "studio/gallery-data.json"), JSON.stringify(data, null, 2));
   console.log(`gallery-data.json: ${data.expressions.length} expressions, ${data.firmware.length} firmware sims`);
