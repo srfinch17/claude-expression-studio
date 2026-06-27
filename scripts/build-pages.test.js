@@ -11,8 +11,10 @@ test("rewriteLandingPaths strips ../ on sibling links", () => {
   );
   assert.ok(!out.includes("../studio"), "still has ../studio");
   assert.ok(!out.includes("../shared"), "still has ../shared");
-  assert.ok(out.includes('href="studio/index.html"'));
-  assert.ok(out.includes('"shared/render.js"'));
+  assert.ok(out.includes('href="./studio/index.html"'));
+  assert.ok(out.includes('"./shared/render.js"'));
+  // regression guard: rewritten module specifiers must NOT be bare (browser ESM rejects them)
+  assert.ok(!/from "studio\//.test(out) && !/from "shared\//.test(out), "bare module specifier");
 });
 
 test("buildPages mirrors the dev tree into outDir", () => {
@@ -34,6 +36,8 @@ test("buildPages mirrors the dev tree into outDir", () => {
     const root = readFileSync(path.join(out, "index.html"), "utf8");
     assert.ok(!root.includes("../studio"), "root index still has ../studio");
     assert.ok(!root.includes("../shared"), "root index still has ../shared");
+    // landing imports must be ./shared (explicit relative), never bare — browser ESM rule
+    assert.ok(root.includes('"./shared/render.js"'), "landing module import must be ./shared, not bare");
     // studio file keeps its own sibling import untouched
     assert.ok(
       readFileSync(path.join(out, "studio/gallery.js"), "utf8").includes("../shared/"),

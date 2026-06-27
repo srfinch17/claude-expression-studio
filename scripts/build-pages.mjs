@@ -10,10 +10,12 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 // Pure: rewrite the landing's sibling-relative links for life at the bundle root.
-// site/index.html lives in site/, so it references ../studio/ and ../shared/. At the
-// bundle root those are simply studio/ and shared/.
+// site/index.html lives in site/, so it references ../studio/ and ../shared/. At the bundle
+// root those become ./studio/ and ./shared/ — note the leading "./" is REQUIRED: the landing
+// has ES-module `import` statements, and a browser rejects a bare specifier ("shared/render.js"),
+// so the rewrite must keep an explicit relative prefix.
 export function rewriteLandingPaths(html) {
-  return html.replaceAll("../studio/", "studio/").replaceAll("../shared/", "shared/");
+  return html.replaceAll("../studio/", "./studio/").replaceAll("../shared/", "./shared/");
 }
 
 export function buildPages({ repoRoot = REPO_ROOT, outDir = path.join(REPO_ROOT, "pages-dist") } = {}) {
