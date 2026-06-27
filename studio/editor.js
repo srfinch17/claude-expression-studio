@@ -51,6 +51,17 @@ export function computeOrphans(manifest, rendererId, allNames) {
   return allNames.filter((n) => !bound.has(n));
 }
 
+// {name: count} — how many distinct intents bind each name (effective bindings).
+// Drives the palette's assigned/available color + the (N) badge. Orphans -> 0.
+export function assignmentCounts(manifest, rendererId, allNames) {
+  const counts = {};
+  for (const n of allNames) counts[n] = 0;
+  for (const b of Object.values(effectiveBindings(manifest, rendererId))) {
+    for (const n of new Set(bindingNames(b))) if (n in counts) counts[n] += 1;
+  }
+  return counts;
+}
+
 // --- mutation ops (each returns a new manifest; never mutates input) ---
 
 const clone = (m) => JSON.parse(JSON.stringify(m));

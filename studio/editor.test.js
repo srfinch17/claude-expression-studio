@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ownBindings, isPool, entryWeight, bindingEntries, poolPercentages, computeOrphans, assign, remove, reweight, move, singleToPool, poolToSingle, setPoolOption } from "./editor.js";
+import { ownBindings, isPool, entryWeight, bindingEntries, poolPercentages, computeOrphans, assignmentCounts, assign, remove, reweight, move, singleToPool, poolToSingle, setPoolOption } from "./editor.js";
 
 const M = {
   intents: { working: {}, idle: {} },
@@ -124,4 +124,25 @@ test("edits preserve untouched intents-vocab and the card renderer (lossless)", 
   assert.deepEqual(m.intents, fresh().intents);
   assert.deepEqual(m.renderers.card, fresh().renderers.card);
   assert.deepEqual(m.renderers["esp32-8x8"].bindings.idle, fresh().renderers["esp32-8x8"].bindings.idle);
+});
+
+// --- assignmentCounts tests ---
+
+test("assignmentCounts: distinct-intent count per name; orphan -> 0", () => {
+  const c = assignmentCounts(fresh(), "esp32-8x8", ["smiley", "wait-claude", "fire", "galaxy"]);
+  assert.equal(c.smiley, 1);        // info: "smiley"
+  assert.equal(c["wait-claude"], 1); // working pool
+  assert.equal(c.fire, 1);           // idle pool
+  assert.equal(c.galaxy, 0);         // bound nowhere
+});
+
+test("assignmentCounts counts a name bound to multiple intents", () => {
+  let m = fresh();
+  m = assign(m, "esp32-8x8", "done", "smiley"); // smiley now in info AND done
+  assert.equal(assignmentCounts(m, "esp32-8x8", ["smiley"]).smiley, 2);
+});
+
+test("assignmentCounts returns 0 for names in allNames not bound anywhere, only for listed names", () => {
+  const c = assignmentCounts(fresh(), "esp32-8x8", ["galaxy"]);
+  assert.deepEqual(c, { galaxy: 0 });
 });
