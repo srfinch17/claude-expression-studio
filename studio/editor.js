@@ -184,7 +184,7 @@ export function setEntryParamsRaw(manifest, rendererId = "esp32-8x8", intent, na
     const cur = b[intent];
     if (!isPool(cur) || !(name in cur.pool)) return;
     const nonEmpty = paramsObj && typeof paramsObj === "object" && Object.keys(paramsObj).length > 0;
-    if (nonEmpty) { asEntryObject(cur.pool, name).params = paramsObj; }
+    if (nonEmpty) { asEntryObject(cur.pool, name).params = { ...paramsObj }; }  // copy: don't alias the caller's object
     else { const e = cur.pool[name]; if (e && typeof e === "object") delete e.params; } // bare number -> no-op
   });
 }

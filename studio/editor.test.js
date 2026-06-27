@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { ownBindings, isPool, entryWeight, bindingEntries, poolPercentages, computeOrphans, assignmentCounts, assign, remove, reweight, move, singleToPool, poolToSingle, setPoolOption } from "./editor.js";
+import { ownBindings, isPool, entryWeight, bindingEntries, poolPercentages, computeOrphans, assignmentCounts, assign, remove, reweight, move, singleToPool, poolToSingle, setPoolOption,
+         setEntryParam, removeEntryParam, setEntryParamsRaw, setLabel } from "./editor.js";
 
 const M = {
   intents: { working: {}, idle: {} },
@@ -146,8 +147,6 @@ test("assignmentCounts returns 0 for names in allNames not bound anywhere, only 
   const c = assignmentCounts(fresh(), "esp32-8x8", ["galaxy"]);
   assert.deepEqual(c, { galaxy: 0 });
 });
-
-import { setEntryParam, removeEntryParam, setEntryParamsRaw, setLabel } from "./editor.js";
 
 test("setEntryParam converts a bare-number entry to object, preserving weight", () => {
   const m = setEntryParam(fresh(), "esp32-8x8", "working", "wait-claude", "intensity", 6);
