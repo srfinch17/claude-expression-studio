@@ -104,6 +104,7 @@ test("PUT /api/expression/:name writes the file, un-approves, regenerates galler
   const seed = { frames: [blank], colors: {}, frame_ms: 150, loop: 0, description: "seed" };
   writeFileSync(exprPath, JSON.stringify(seed, null, 2));
   const approvedRaw = readFileSync(approvedPath, "utf8");
+  const galleryRaw = readFileSync(galleryPath, "utf8");   // the engine regenerates this mid-test — restore it too
   const approvedBefore = JSON.parse(approvedRaw); approvedBefore.approved.push("zzz-test");
   writeFileSync(approvedPath, JSON.stringify(approvedBefore, null, 2));
 
@@ -136,5 +137,6 @@ test("PUT /api/expression/:name writes the file, un-approves, regenerates galler
     await eng.close();
     if (existsSync(exprPath)) rmSync(exprPath);          // remove the throwaway source
     writeFileSync(approvedPath, approvedRaw);            // restore approved.json byte-for-byte
+    writeFileSync(galleryPath, galleryRaw);              // restore gallery-data.json byte-for-byte (engine regen added zzz-test)
   }
 });

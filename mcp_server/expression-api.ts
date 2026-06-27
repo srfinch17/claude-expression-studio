@@ -32,8 +32,9 @@ export async function writeExpressionValidated(opts: ExprWriteOpts): Promise<Res
   const errors: string[] = validateExpression(opts.name, opts.expr);
   if (errors.length) return { ok: false, status: 400, errors };
 
-  // 1. write the source JSON (pretty, 2-space)
-  await writeFile(file, JSON.stringify(opts.expr, null, 2) + "\n", "utf8");
+  // 1. write the source JSON (pretty, 2-space) — NO trailing newline, matching the canonical
+  //    MCP save_as writer (index.ts) and the existing expressions/*.json, so an edit doesn't flip EOF.
+  await writeFile(file, JSON.stringify(opts.expr, null, 2), "utf8");
 
   // 2. un-approve (edit -> pending re-review / orange)
   try {
