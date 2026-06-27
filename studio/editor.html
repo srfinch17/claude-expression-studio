@@ -8,7 +8,7 @@
     :root { --bg:#0a0a0e; --panel:#111118; --sub:#15151b; --text:#e8e8ef; --dim:#9a9aa8;
       --faint:#5a5a68; --orange:#ff5008; --cyan:#22ddff; --green:#16a34a;
       --mono:'IBM Plex Mono',ui-monospace,monospace; }
-    * { box-sizing:border-box; }
+    * { box-sizing: border-box; }
     body { margin:0; background:var(--bg); color:var(--text); font:14px var(--mono); padding:0 0 40px; }
     header { position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid #1e1e26;
       display:flex; align-items:center; gap:12px; padding:12px 18px; }
@@ -19,30 +19,36 @@
     button:disabled { opacity:.4; cursor:not-allowed; }
     button.save { border-color:var(--green); color:#9affc8; }
     #status { font-size:.76rem; color:var(--dim); min-width:14ch; }
-    main { display:grid; grid-template-columns:1fr 240px; gap:18px; padding:18px; align-items:start; }
-    .intent { background:var(--panel); border:1px solid #1c1c24; border-radius:12px; padding:12px; margin-bottom:12px; }
+    main { display:grid; grid-template-columns:minmax(0,1fr) minmax(360px,46%); gap:16px; padding:16px; align-items:start; }
+    .intent { background:var(--panel); border:1px solid #1c1c24; border-radius:10px; padding:10px; margin-bottom:10px; }
     .intent.drop { border-color:var(--cyan); box-shadow:0 0 0 1px var(--cyan); }
     .intent h2 { font-size:.82rem; margin:0 0 2px; }
-    .intent .meta { font-size:.68rem; color:var(--faint); margin-bottom:8px; }
-    .pool { display:flex; flex-wrap:wrap; gap:10px; align-items:flex-start; }
-    .tile { width:104px; background:var(--sub); border:1px solid #22222c; border-radius:9px; padding:7px; position:relative; }
-    .tile canvas { width:90px; height:90px; border-radius:6px; background:#060608; display:block; }
-    .tile .nm { font-size:.66rem; margin-top:5px; word-break:break-all; color:var(--text); }
-    .tile .pct { font-size:.62rem; color:var(--cyan); }
-    .tile input[type=range] { width:90px; margin:3px 0 0; }
-    .tile .x { position:absolute; top:4px; right:4px; width:16px; height:16px; line-height:14px;
-      text-align:center; border-radius:50%; background:#000a; border:1px solid #333; cursor:pointer; font-size:.7rem; }
-    .empty { font-size:.7rem; color:var(--faint); padding:14px; border:1px dashed #2a2a34; border-radius:8px; }
-    .opts { margin-top:8px; font-size:.7rem; color:var(--dim); display:flex; gap:14px; align-items:center; }
-    .opts input[type=number] { width:52px; font:inherit; background:#000; color:var(--text); border:1px solid #2a2a34; border-radius:4px; }
-    .fire { margin-top:8px; display:flex; gap:8px; align-items:center; }
+    .intent .meta { font-size:.66rem; color:var(--faint); margin-bottom:7px; line-height:1.35; }
+    .pool { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; }
+    .tile { width:84px; background:var(--sub); border:1px solid #22222c; border-radius:8px; padding:6px; position:relative; }
+    .tile canvas { width:72px; height:72px; border-radius:5px; background:#060608; display:block; }
+    .tile .nm { font-size:.62rem; margin-top:4px; word-break:break-all; color:var(--text); line-height:1.1; }
+    .tile .pct { font-size:.6rem; color:var(--cyan); }
+    .tile input[type=range] { width:72px; margin:2px 0 0; }
+    .tile .x { position:absolute; top:3px; right:3px; width:15px; height:15px; line-height:13px;
+      text-align:center; border-radius:50%; background:#000a; border:1px solid #333; cursor:pointer; font-size:.66rem; }
+    .empty { font-size:.68rem; color:var(--faint); padding:12px; border:1px dashed #2a2a34; border-radius:8px; }
+    .opts { margin-top:7px; font-size:.68rem; color:var(--dim); display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .opts input[type=number] { width:50px; font:inherit; background:#000; color:var(--text); border:1px solid #2a2a34; border-radius:4px; }
+    .fire { margin-top:7px; display:flex; gap:8px; align-items:center; }
     .fire canvas { width:46px; height:46px; border-radius:5px; background:#060608; }
-    aside { position:sticky; top:64px; background:var(--panel); border:1px solid #1c1c24; border-radius:12px; padding:12px; }
-    aside h2 { font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); margin:0 0 10px; }
-    .tray { display:flex; flex-wrap:wrap; gap:7px; max-height:78vh; overflow-y:auto; }
-    .chip { font-size:.66rem; color:var(--dim); background:var(--sub); border:1px solid #22222c;
-      border-radius:6px; padding:4px 7px; cursor:grab; }
-    .chip.orphan { color:var(--orange); border-color:var(--orange); background:rgba(255,80,8,.08); }
+    aside { position:sticky; top:64px; background:var(--panel); border:1px solid #1c1c24; border-radius:10px; padding:12px; }
+    aside h2 { font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); margin:0 0 4px; }
+    .legend { font-size:.64rem; color:var(--dim); margin-bottom:10px; display:flex; gap:14px; }
+    .legend .sw { display:inline-block; width:9px; height:9px; border-radius:2px; border:2px solid; margin-right:4px; vertical-align:middle; }
+    .legend .av { border-color:var(--green); }
+    .legend .as { border-color:var(--orange); }
+    .tray { display:flex; flex-wrap:wrap; gap:8px; max-height:82vh; overflow-y:auto; align-content:flex-start; }
+    .ptile { width:62px; background:var(--sub); border:2px solid var(--green); border-radius:8px; padding:4px; cursor:grab; text-align:center; }
+    .ptile.assigned { border-color:var(--orange); }
+    .ptile canvas { width:46px; height:46px; border-radius:5px; background:#060608; display:block; margin:0 auto; }
+    .ptile .nm { font-size:.56rem; margin-top:3px; word-break:break-all; color:var(--dim); line-height:1.05; }
+    .ptile .cnt { font-size:.56rem; color:var(--orange); }
   </style>
 </head>
 <body>
@@ -56,7 +62,8 @@
   <main>
     <div id="intents"></div>
     <aside>
-      <h2>Library <span id="orphanCount" style="color:var(--orange)"></span></h2>
+      <h2>Animations</h2>
+      <div class="legend"><span><span class="sw av"></span>available</span><span><span class="sw as"></span>assigned (N&nbsp;events)</span></div>
       <div id="tray" class="tray"></div>
     </aside>
   </main>
@@ -67,8 +74,9 @@
     import { resolveExpression } from "../shared/expressions.js";
     import { pickWeighted } from "../shared/resolver.js";
     import { buildPlaylists } from "./board.js";
-    import { ownBindings, isPool, bindingEntries, poolPercentages, computeOrphans,
+    import { ownBindings, isPool, bindingEntries, poolPercentages, assignmentCounts,
              assign, remove, reweight, move, singleToPool, poolToSingle, setPoolOption } from "./editor.js";
+    import { INTENT_FIRES } from "./intent-info.js";
 
     const RID = "esp32-8x8";
     const FW_DEFAULTS = { frostbite:{mist:40,sparkle:20}, fire:{palette:"classic",intensity:6},
@@ -79,7 +87,6 @@
     const trayEl = document.getElementById("tray");
     const statusEl = document.getElementById("status");
     const bannerEl = document.getElementById("banner");
-    const orphanCountEl = document.getElementById("orphanCount");
     const saveBtn = document.getElementById("save");
     const revertBtn = document.getElementById("revert");
 
@@ -97,7 +104,6 @@
 
     function setDirty(d) { dirty = d; statusEl.textContent = readOnly ? "read-only (no engine)" : d ? "unsaved changes" : "saved"; saveBtn.disabled = readOnly || !d; }
 
-    // --- one rAF loop ticks all live tile Panels ---
     if (!REDUCE) { let last = performance.now(); (function loop(now){ for (const p of panels) p.tick(now-last, now); last=now; requestAnimationFrame(loop); })(last); }
 
     function apply(fn) { manifest = fn(manifest); setDirty(true); render(); }
@@ -111,8 +117,8 @@
         const sec = document.createElement("div");
         sec.className = "intent";
         const def = manifest.intents[intent] || {};
-        const fb = binding == null && def.fallback ? ` — falls back to ${def.fallback}` : "";
-        sec.innerHTML = `<h2>${intent}</h2><div class="meta">${(def.doc||"")}${fb}</div>`;
+        const desc = INTENT_FIRES[intent] || def.doc || "";
+        sec.innerHTML = `<h2>${intent}</h2><div class="meta">${desc}</div>`;
 
         if (binding == null) {
           const e = document.createElement("div"); e.className = "empty"; e.textContent = "drop an animation here to bind"; sec.appendChild(e);
@@ -123,7 +129,7 @@
           for (const { name, weight } of bindingEntries(binding)) {
             const tile = document.createElement("div"); tile.className = "tile"; tile.draggable = true;
             tile.addEventListener("dragstart", (ev) => ev.dataTransfer.setData("text/plain", JSON.stringify({ name, from: intent })));
-            const cv = document.createElement("canvas"); cv.width = 90; cv.height = 90; tile.appendChild(cv);
+            const cv = document.createElement("canvas"); cv.width = 72; cv.height = 72; tile.appendChild(cv);
             panels.push(makePanel(cv, name));
             const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = name; tile.appendChild(nm);
             if (!readOnly) { const x = document.createElement("div"); x.className = "x"; x.textContent = "×";
@@ -175,15 +181,20 @@
       renderTray();
     }
 
+    // The palette: every animation as a mini live-preview tile, color-coded by assignment.
     function renderTray() {
       trayEl.innerHTML = "";
-      const orphans = new Set(computeOrphans(manifest, RID, allItems.map((i) => i.name)));
-      orphanCountEl.textContent = orphans.size ? `(${orphans.size} orphan)` : "";
+      const counts = assignmentCounts(manifest, RID, allItems.map((i) => i.name));
       for (const it of allItems) {
-        const chip = document.createElement("div"); chip.className = "chip" + (orphans.has(it.name) ? " orphan" : "");
-        chip.textContent = it.name; chip.draggable = true;
-        chip.addEventListener("dragstart", (ev) => ev.dataTransfer.setData("text/plain", JSON.stringify({ name: it.name, from: null })));
-        trayEl.appendChild(chip);
+        const n = counts[it.name] || 0;
+        const t = document.createElement("div"); t.className = "ptile" + (n > 0 ? " assigned" : "");
+        t.draggable = true;
+        t.addEventListener("dragstart", (ev) => ev.dataTransfer.setData("text/plain", JSON.stringify({ name: it.name, from: null })));
+        const cv = document.createElement("canvas"); cv.width = 46; cv.height = 46; t.appendChild(cv);
+        panels.push(makePanel(cv, it.name));
+        const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = it.name; t.appendChild(nm);
+        if (n > 0) { const c = document.createElement("div"); c.className = "cnt"; c.textContent = `(${n})`; t.appendChild(c); }
+        trayEl.appendChild(t);
       }
     }
 
