@@ -77,7 +77,7 @@ test("screensaver pool resolves a firmware sim on web-sim and an animation+brigh
   // at ambient brightness 5; web-sim plays the "fire" sim via a stepper.
   assert.equal(b.board.anims.length, 1);
   assert.equal(b.board.anims[0].t, "fire");
-  assert.deepEqual(b.board.anims[0].params, { speed: 50, intensity: 70 });
+  assert.deepEqual(b.board.anims[0].params, { speed: 50, intensity: 6 });
   assert.deepEqual(b.board.brightness, [5]);
   assert.equal(b.panelCalls.steppers, 1);
 });

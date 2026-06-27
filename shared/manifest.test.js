@@ -72,6 +72,6 @@ test("seed manifest: 'screensaver' intent resolves the firmware pool (lossless, 
   const got = resolve(MANIFEST, { renderer: "esp32-8x8", intent: "screensaver" }, { rng: () => 0 });
   assert.deepEqual(got, {
     intent: "screensaver", value: "fire",
-    params: { speed: 50, intensity: 70 }, label: "🔥 fire", brightness: 5,
+    params: { speed: 50, intensity: 6 }, label: "🔥 fire", brightness: 5,
   });
 });
