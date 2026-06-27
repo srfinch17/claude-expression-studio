@@ -173,3 +173,47 @@ not a generator input here, so no regen. No new runtime dependencies; native ES 
 4. **Test-fire:** included in v1 (chosen) as a client-side weighted-pick preview.
 5. **Target:** dev engine + `shared/manifest.json` (chosen); installed-`.mcpb` editing is a
    follow-on (needs the validator packaged).
+
+---
+
+## Iteration 1 — post-first-test feedback (2026-06-27)
+
+v1 was built and live-tested; the user approved the direction and the per-category test
+preview / weights / brightness / noRepeat, and asked for the following changes before the
+next test run. The intent-pool editing, validated Save, engine gate, and lossless contract
+are unchanged.
+
+1. **Palette of mini-preview tiles (replaces the text chips).** The right-hand tray becomes a
+   **persistent palette of ALL animations**, each a small **live-animating tile** the same
+   size as the test-fire preview (~46px) **+ its name**, draggable. A one-word chip is too
+   ambiguous to categorize from — you need to see the motion. Dragging a palette tile **COPIES**
+   it into a category (assign); the tile **stays in the palette** (an animation can be bound to
+   several events — the existing `assign` no-op-on-duplicate guard already supports this).
+
+2. **Assignment legend (replaces "orphan").** Each palette tile gets a **colored border** —
+   **green = available** (bound to 0 events), **orange = assigned** — plus a **`(N)` count** of
+   how many events it's bound to (since one animation can serve many). A small legend
+   ("● available  ● assigned (N)") replaces the orphan ring/label. The category pool tiles are
+   unchanged.
+
+3. **Precise category descriptions.** Each intent shows a real "fires when…" description of the
+   circumstance that triggers it, derived from the harness moment map
+   (`manifest.harnesses["claude-code"].moments`, `hook:*` → intent) and Claude Code hook
+   semantics — e.g. `awaiting-input`: *"Fires when Claude requests a human decision; the harness
+   pauses until you answer (AskUserQuestion / plan approval)."* Hook-fired intents name their
+   trigger; discretionary intents (`celebrate`/`fatal`/`screensaver`) and fallback-only intents
+   are labeled as such. These curated strings live in a new editor data module
+   (`studio/intent-info.js`), with the manifest `doc` as fallback for any unlisted intent.
+
+4. **Layout rebalance.** Categories are vertically expensive while most hold only 1–2 animations,
+   and the palette is cramped. Make the **palette wider** (it's the working area) and the category
+   sections **more compact**. Keep the test preview, sliders, brightness, and noRepeat.
+
+**New pure helper (TDD):** `assignmentCounts(manifest, rendererId, allNames) -> {name: count}` in
+`editor.js` — count of distinct intents whose binding references each name (via `bindingNames`
+over `effectiveBindings`). Drives the palette color + `(N)`. (`computeOrphans` stays; orphans =
+count 0.)
+
+**Files this iteration touches:** `studio/editor.js` (add `assignmentCounts` + test), new
+`studio/intent-info.js` (curated descriptions), `studio/editor.html` (palette mini-tiles + color/
+count + descriptions + layout). Build discipline unchanged.
