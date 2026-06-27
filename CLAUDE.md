@@ -45,7 +45,10 @@ starfield/sun/liquid; sims emit per-cell RGB, the bloom renderer adds the glow �
 `make*` + one registry line**, the Gallery's firmware list derives from `Object.keys(FIRMWARE_SIMS)`;
 `liquid` substitutes the IMU with a synthetic auto-rotating gravity vector; critique a generative sim
 board-free via `node scripts/dump-sim-frames.mjs <name> -o x.json` → `render-contact-sheet.py` raw-RGB),
-`catalog.js` (rotation-role classify), `desk-sim.js` (the floating desk companion). Pure-logic
+`catalog.js` (rotation-role classify), `desk-sim.js` (the floating desk companion), `presence-card.js`
+(the presence-card render core: pure `vocabFor`/`dataBlock`/`sparklinePoints`/`motionClass`/`formatAge` +
+DOM `renderPresenceCard` — extracted from the board's card so the web surface isn't a 3rd copy) + its
+`presence-vocab.js` (parity-tested vs the board's `data/presence-vocab.js`). Pure-logic
 files are unit-tested (`node --test`); `render.js`/`desk-sim.js` are DOM and covered by Playwright
 smoke checks. **`studio/`** = the **Expression Studio** tool (`studio/index.html` + `gallery.js`):
 a static Gallery showing the WHOLE animation library — canned + saved + bored + the 15 firmware
@@ -54,9 +57,23 @@ unwired, currently `{claude-idle, idea}`) ring-flagged. Its `gallery-data.json` 
 `scripts/build-gallery-data.mjs` (`npm run build:gallery`) — don't hand-edit, **and commit the
 regenerated file** when source changes (it's a committed generated artifact — an uncommitted regen
 leaves the live Gallery stale, as 8 new sims did until caught at the taste gate). Preview both:
-`python -m http.server 8766` from repo root → `/studio/index.html` and `/site/index.html`. Studio
-is **web-only** (v1); v2 Workshop will add a bundled Node studio server for file-writing. Spec/plan:
-`docs/superpowers/specs|plans/2026-06-23-expression-studio-*`.
+`python -m http.server 8766` from repo root → `/studio/index.html` and `/site/index.html`. **Studio
+surfaces now (all under `studio/`):** `index.html` (Gallery) · `editor.html` (binding/pool/weight +
+params/labels editor over the manifest) · `frame-editor.html` (paint/edit a saved expression) ·
+`board.html` (local-first virtual board — native render, SSE/framebuffer mirror behind an engine probe) ·
+`presence.html` (the presence card + playground + best-effort live `/api/presence`). A shared self-injecting
+`studio-nav.js` links them; engine-write features gate on a `/api/manifest` probe and degrade to read-only.
+**The "v2 Workshop / Node studio server" is BUILT — it's the engine** (`mcp_server/engine-server.ts`, the
+MCP server's `startEngineServer`; `matrix_studio` prints its localhost URL): serves `/studio/`+`/shared/`,
+`GET/PUT /api/manifest`, `PUT /api/expression/:name`, `POST /api/approval/:name`, `/api/framebuffer` +
+`/api/presence` board proxies, and `/events` SSE (the no-board virtual board — `index.ts` broadcasts resolved
+renders here even when the board is unreachable). **Pages-deployable:** `scripts/build-pages.mjs`
+(`npm run build:pages`) assembles a read-only `pages-dist/` (landing + studio + shared, mirroring the dev
+layout; `.test.js` excluded); `.github/workflows/pages.yml` deploys it (one-time repo setting:
+Settings→Pages→Source=GitHub Actions). The **goal this all serves** = a stranger-installable, board-OPTIONAL
+product (see auto-memory `installable-product-target`). Spec/plan:
+`docs/superpowers/specs|plans/2026-06-23-expression-studio-*`, `…/2026-06-27-pages-showcase-*`,
+`…/2026-06-27-presence-card-web-surface-*`.
 
 **Never claim a change "works" until you've confirmed it on hardware.** I can
 reason about correctness, but "compiles in my head" ≠ "runs on the board."
