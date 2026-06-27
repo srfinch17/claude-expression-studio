@@ -178,15 +178,16 @@ const ageEl = cardEl.querySelector(".age");
 let live = false, timer = null, ageTimer = null, lastTs = 0;
 
 async function poll() {
-  if (document.hidden) return;
+  if (!live || document.hidden) return;
   try {
     const r = await fetch("/api/presence", { cache: "no-store" });
     if (r.ok) {
       const m = await r.json();
+      if (!live) return;            // toggled off while this poll was in flight
       renderPresenceCard(cardEl, m, PRESENCE_VOCAB);
       lastTs = Number(m.ts) > 1e9 ? Number(m.ts) : 0;
     }
-  } catch { /* unreachable — keep last render */ }
+  } catch { /* network/404 — keep last render */ }
 }
 function tickAge() { ageEl.textContent = live ? formatAge(lastTs, Date.now()) : "—"; }
 
