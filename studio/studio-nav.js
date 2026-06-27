@@ -7,6 +7,7 @@ const PAGES = [
   { file: "index.html", label: "Gallery" },
   { file: "editor.html", label: "Editor" },
   { file: "board.html", label: "Board" },
+  { file: "presence.html", label: "Presence" },
 ];
 // frame-editor.html is a leaf reached via "✎ edit" — it shows the nav (to get back out) but
 // highlights its parent, the Gallery.
