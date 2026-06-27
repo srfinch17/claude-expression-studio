@@ -22,9 +22,11 @@ export function buildPages({ repoRoot = REPO_ROOT, outDir = path.join(REPO_ROOT,
   rmSync(outDir, { recursive: true, force: true });
   mkdirSync(outDir, { recursive: true });
 
-  // 1. studio/ and shared/ copied as siblings (preserve the dev layout so ../shared resolves)
-  cpSync(path.join(repoRoot, "studio"), path.join(outDir, "studio"), { recursive: true });
-  cpSync(path.join(repoRoot, "shared"), path.join(outDir, "shared"), { recursive: true });
+  // 1. studio/ and shared/ copied as siblings (preserve the dev layout so ../shared resolves).
+  //    Skip *.test.js — dev unit tests aren't loaded by any page and don't belong in the public bundle.
+  const skipTests = (src) => !src.endsWith(".test.js");
+  cpSync(path.join(repoRoot, "studio"), path.join(outDir, "studio"), { recursive: true, filter: skipTests });
+  cpSync(path.join(repoRoot, "shared"), path.join(outDir, "shared"), { recursive: true, filter: skipTests });
 
   // 2. landing at the clean bundle root, its sibling paths rewritten
   const landing = readFileSync(path.join(repoRoot, "site", "index.html"), "utf8");

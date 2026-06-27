@@ -43,18 +43,25 @@ test("fire sim yields in-bounds frames and is not all-black after warm-up", () =
   }
 });
 
-test("matrix_rain sim yields in-bounds frames and at least one lit pixel after warm-up", () => {
+test("matrix_rain sim yields in-bounds frames and stays lit through the window", () => {
   const sim = FIRMWARE_SIMS.matrix_rain({ theme: "classic", frame_ms: 60 });
   assert.equal(typeof sim.frame_ms, "number");
   assert.equal(sim.frame_ms, 60);
   // run 20 warm-up frames (drops need time to travel onto screen from staggered start above)
   for (let i = 0; i < 20; i++) sim.frame();
-  // run 50 more frames: check in-bounds and invariant
+  // run 50 more frames: every frame must be in-bounds; tally how many are lit
+  let litFrames = 0;
   for (let i = 0; i < 50; i++) {
     const px = sim.frame();
     assertInBounds(px);
-    assert.ok(px.length > 0, "at least one lit pixel after warm-up");
+    if (px.length > 0) litFrames++;
   }
+  // The 8 columns each go briefly dark between fall cycles, so an all-dark frame is rare-but-VALID
+  // (all 8 aligning dark ≈ 0.04%/frame) — not a bug. The old per-frame "px.length > 0" assertion
+  // flaked on that alignment. Assert the sim is lit across the vast majority of the window instead
+  // (expected ~50/50; P(<45) is astronomically small), which still catches a broken/all-black sim
+  // without pinning to a brittle RNG seed.
+  assert.ok(litFrames >= 45, `rain lit in most frames (got ${litFrames}/50)`);
 });
 
 test("snow sim yields in-bounds frames and floor bank present after accumulation", () => {

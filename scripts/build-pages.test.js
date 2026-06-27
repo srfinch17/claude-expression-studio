@@ -43,6 +43,10 @@ test("buildPages mirrors the dev tree into outDir", () => {
       readFileSync(path.join(out, "studio/gallery.js"), "utf8").includes("../shared/"),
       "studio import was wrongly rewritten",
     );
+    // dev unit tests are excluded from the public bundle
+    for (const t of ["studio/gallery.test.js", "shared/presence-card.test.js"]) {
+      assert.ok(!existsSync(path.join(out, t)), `test file leaked into bundle: ${t}`);
+    }
   } finally {
     rmSync(out, { recursive: true, force: true });
   }
