@@ -98,6 +98,10 @@
     <div class="pg">
       <h2>Playground</h2>
       <div class="row">
+        <div class="rl">Source</div>
+        <div class="chips"><button class="chip" id="livebtn">○ Live (board)</button></div>
+      </div>
+      <div class="row">
         <div class="rl">Intent</div>
         <div class="chips" id="intents"></div>
       </div>
@@ -115,7 +119,7 @@
 </div>
 
 <script type="module">
-import { renderPresenceCard } from "../shared/presence-card.js";
+import { renderPresenceCard, formatAge } from "../shared/presence-card.js";
 import { PRESENCE_VOCAB } from "../shared/presence-vocab.js";
 import { sampleData } from "./presence-samples.js";
 
@@ -165,7 +169,41 @@ chips("intents", INTENTS, "intent");
 chips("datakinds", DATAKINDS, "dataKind");
 chips("urgencies", URGENCIES, "urgency");
 apply();
-window.__presenceApply = apply; // hook for Task 3's live toggle
+
+// ── Best-effort live mode ── poll a real /api/presence on this origin (the board today, or a
+// future presence-proxying engine). Any failure (404/unreachable — e.g. engine/Pages) silently
+// keeps the playground render; no error surfaces. Toggling off restores the playground.
+const liveBtn = document.getElementById("livebtn");
+const ageEl = cardEl.querySelector(".age");
+let live = false, timer = null, ageTimer = null, lastTs = 0;
+
+async function poll() {
+  if (document.hidden) return;
+  try {
+    const r = await fetch("/api/presence", { cache: "no-store" });
+    if (r.ok) {
+      const m = await r.json();
+      renderPresenceCard(cardEl, m, PRESENCE_VOCAB);
+      lastTs = Number(m.ts) > 1e9 ? Number(m.ts) : 0;
+    }
+  } catch { /* unreachable — keep last render */ }
+}
+function tickAge() { ageEl.textContent = live ? formatAge(lastTs, Date.now()) : "—"; }
+
+liveBtn.onclick = () => {
+  live = !live;
+  liveBtn.classList.toggle("on", live);
+  liveBtn.textContent = (live ? "● " : "○ ") + "Live (board)";
+  document.getElementById("hint").textContent = live
+    ? "Polling /api/presence on this origin — falls back to the demo if none."
+    : "Self-driven demo — no board or engine required.";
+  if (live) { poll(); timer = setInterval(poll, 1500); ageTimer = setInterval(tickAge, 1000); }
+  else {
+    clearInterval(timer); clearInterval(ageTimer); timer = ageTimer = null;
+    lastTs = 0; ageEl.textContent = "—"; apply(); // restore playground render
+  }
+};
+window.__presenceApply = apply;
 </script>
 </body>
 </html>
