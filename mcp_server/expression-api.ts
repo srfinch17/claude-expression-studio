@@ -44,6 +44,18 @@ export async function writeExpressionValidated(opts: ExprWriteOpts): Promise<Res
   } catch { /* if approved.json is missing, nothing to un-approve */ }
 
   // 3. regenerate studio/gallery-data.json in-process (matches the CLI output exactly)
+  await regenerateGalleryData(opts);
+
+  return { ok: true };
+}
+
+// Shared gallery-data regen used by both write surfaces. Reads the compiled canned module + the
+// manifest + bored dir + approved.json via the dynamic-imported generator, and writes the studio
+// artifact with the SAME bytes the CLI `npm run build:gallery` produces (no trailing newline).
+async function regenerateGalleryData(opts: {
+  generatorPath: string; cannedPath: string; expressionsDir: string;
+  manifestPath: string; boredDir: string; approvedPath: string; galleryDataPath: string;
+}): Promise<void> {
   const gen = await import(pathToFileURL(opts.generatorPath).href);
   const canned = await gen.loadCanned(opts.cannedPath);
   const data = gen.buildGalleryData({
@@ -51,6 +63,37 @@ export async function writeExpressionValidated(opts: ExprWriteOpts): Promise<Res
     boredDir: opts.boredDir, approvedPath: opts.approvedPath,
   });
   await writeFile(opts.galleryDataPath, JSON.stringify(data, null, 2), "utf8");
+}
 
-  return { ok: true };
+export interface ApprovalOpts {
+  name: string;
+  approved: boolean;
+  expressionsDir: string;
+  approvalHelperPath: string;
+  generatorPath: string;
+  cannedPath: string;
+  manifestPath: string;
+  boredDir: string;
+  approvedPath: string;
+  galleryDataPath: string;
+}
+
+// Mark a saved expression approved (green) or not (orange). Edit-only: an unknown name is 404.
+// Idempotent via the pure setApproval helper. Persists approved.json + regenerates gallery-data.
+export async function setApprovalValidated(
+  opts: ApprovalOpts,
+): Promise<{ ok: true; approved: boolean } | { ok: false; status: number; errors: string[] }> {
+  const file = path.join(opts.expressionsDir, `${opts.name}.json`);
+  if (!existsSync(file)) return { ok: false, status: 404, errors: [`unknown expression: ${opts.name}`] };
+  if (typeof opts.approved !== "boolean") return { ok: false, status: 400, errors: ["'approved' must be a boolean"] };
+
+  const { setApproval } = await import(pathToFileURL(opts.approvalHelperPath).href);
+  let approvedObj: any;
+  try { approvedObj = JSON.parse(await readFile(opts.approvedPath, "utf8")); }
+  catch { approvedObj = { approved: [] }; }
+  const next = setApproval(approvedObj, opts.name, opts.approved);
+  await writeFile(opts.approvedPath, JSON.stringify(next, null, 2) + "\n", "utf8");
+
+  await regenerateGalleryData(opts);
+  return { ok: true, approved: opts.approved };
 }

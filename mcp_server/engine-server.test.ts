@@ -140,3 +140,50 @@ test("PUT /api/expression/:name writes the file, un-approves, regenerates galler
     writeFileSync(galleryPath, galleryRaw);              // restore gallery-data.json byte-for-byte (engine regen added zzz-test)
   }
 });
+
+test("POST /api/approval/:name toggles approved.json + regenerates gallery-data", async () => {
+  const repo = path.join(MCP_DIR, "..");
+  const exprPath = path.join(MCP_DIR, "expressions", "zzz-approve.json");
+  const approvedPath = path.join(repo, "studio", "approved.json");
+  const galleryPath = path.join(repo, "studio", "gallery-data.json");
+  const blank = ["........","........","........","........","........","........","........","........"];
+  writeFileSync(exprPath, JSON.stringify({ frames: [blank], colors: {}, frame_ms: 150, loop: 0, description: "seed" }, null, 2));
+  const approvedRaw = readFileSync(approvedPath, "utf8");
+  const galleryRaw = readFileSync(galleryPath, "utf8");
+
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0 });
+  try {
+    // approve
+    const a = await fetch(`${eng.url}/api/approval/zzz-approve`, {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ approved: true }),
+    });
+    assert.equal(a.status, 200);
+    assert.deepEqual(await a.json() as any, { ok: true, approved: true });
+    assert.ok(JSON.parse(readFileSync(approvedPath, "utf8")).approved.includes("zzz-approve"));
+    assert.equal(JSON.parse(readFileSync(galleryPath, "utf8")).expressions.find((e: any) => e.name === "zzz-approve").approved, true);
+
+    // un-approve
+    const u = await fetch(`${eng.url}/api/approval/zzz-approve`, {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ approved: false }),
+    });
+    assert.equal(u.status, 200);
+    assert.ok(!JSON.parse(readFileSync(approvedPath, "utf8")).approved.includes("zzz-approve"));
+
+    // non-boolean body -> 400
+    const bad = await fetch(`${eng.url}/api/approval/zzz-approve`, {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ approved: "yes" }),
+    });
+    assert.equal(bad.status, 400);
+
+    // unknown name -> 404
+    const missing = await fetch(`${eng.url}/api/approval/does-not-exist`, {
+      method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ approved: true }),
+    });
+    assert.equal(missing.status, 404);
+  } finally {
+    await eng.close();
+    if (existsSync(exprPath)) rmSync(exprPath);
+    writeFileSync(approvedPath, approvedRaw);   // restore byte-for-byte
+    writeFileSync(galleryPath, galleryRaw);     // restore byte-for-byte (engine regen mutated it)
+  }
+});
