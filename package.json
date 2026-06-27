@@ -14,6 +14,7 @@
     "test": "node scripts/check-manifest.mjs && cd mcp_server && npx tsc --project tsconfig.json && cd .. && node --test \"scripts/**/*.test.js\" \"mcp_server/**/*.test.ts\" \"shared/**/*.test.js\" \"studio/**/*.test.js\"",
     "build:mcpb": "node scripts/build-gallery-data.mjs && node scripts/copy-shared-runtime.mjs && node -e \"require('fs').rmSync('mcp_server/dist',{recursive:true,force:true})\" && cd mcp_server && npx tsc --project tsconfig.json && cd .. && node -e \"require('fs').mkdirSync('release',{recursive:true})\" && npx @anthropic-ai/mcpb pack mcp_server release/esp32-matrix.mcpb",
     "build:gallery": "node scripts/build-gallery-data.mjs",
+    "build:pages": "node scripts/build-pages.mjs",
     "build:release": "node scripts/build-release.mjs"
   }
 }

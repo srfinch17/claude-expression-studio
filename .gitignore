@@ -48,3 +48,6 @@ mcp_server/shared-runtime/
 mcp_server/studio-dist/
 # Engine's bound-port cache (written at runtime, machine-specific)
 mcp_server/.engine-url
+
+# Generated: read-only static showcase bundle for GitHub Pages (scripts/build-pages.mjs)
+pages-dist/
