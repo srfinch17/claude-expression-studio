@@ -148,3 +148,52 @@ export function setPoolOption(manifest, rendererId = "esp32-8x8", intent, key, v
     else cur[key] = value;
   });
 }
+
+// Ensure pool[name] is an entry object {weight,...} so params/label can hang off it; a bare
+// number `w` becomes {weight:w}. Only call when ADDING params/label (never for clear/no-op).
+function asEntryObject(pool, name) {
+  const v = pool[name];
+  if (v && typeof v === "object") return v;
+  pool[name] = { weight: typeof v === "number" ? v : 1 };
+  return pool[name];
+}
+
+export function setEntryParam(manifest, rendererId = "esp32-8x8", intent, name, key, value) {
+  return withBindings(manifest, rendererId, (b) => {
+    const cur = b[intent];
+    if (!isPool(cur) || !(name in cur.pool)) return;
+    const e = asEntryObject(cur.pool, name);
+    e.params = e.params || {};
+    e.params[key] = value;
+  });
+}
+
+export function removeEntryParam(manifest, rendererId = "esp32-8x8", intent, name, key) {
+  return withBindings(manifest, rendererId, (b) => {
+    const cur = b[intent];
+    if (!isPool(cur) || !(name in cur.pool)) return;
+    const e = cur.pool[name];
+    if (!e || typeof e !== "object" || !e.params) return; // bare number / no params -> no-op
+    delete e.params[key];
+    if (Object.keys(e.params).length === 0) delete e.params;
+  });
+}
+
+export function setEntryParamsRaw(manifest, rendererId = "esp32-8x8", intent, name, paramsObj) {
+  return withBindings(manifest, rendererId, (b) => {
+    const cur = b[intent];
+    if (!isPool(cur) || !(name in cur.pool)) return;
+    const nonEmpty = paramsObj && typeof paramsObj === "object" && Object.keys(paramsObj).length > 0;
+    if (nonEmpty) { asEntryObject(cur.pool, name).params = paramsObj; }
+    else { const e = cur.pool[name]; if (e && typeof e === "object") delete e.params; } // bare number -> no-op
+  });
+}
+
+export function setLabel(manifest, rendererId = "esp32-8x8", intent, name, label) {
+  return withBindings(manifest, rendererId, (b) => {
+    const cur = b[intent];
+    if (!isPool(cur) || !(name in cur.pool)) return;
+    if (label == null || label === "") { const e = cur.pool[name]; if (e && typeof e === "object") delete e.label; } // bare number -> no-op
+    else { asEntryObject(cur.pool, name).label = label; }
+  });
+}

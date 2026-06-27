@@ -146,3 +146,50 @@ test("assignmentCounts returns 0 for names in allNames not bound anywhere, only 
   const c = assignmentCounts(fresh(), "esp32-8x8", ["galaxy"]);
   assert.deepEqual(c, { galaxy: 0 });
 });
+
+import { setEntryParam, removeEntryParam, setEntryParamsRaw, setLabel } from "./editor.js";
+
+test("setEntryParam converts a bare-number entry to object, preserving weight", () => {
+  const m = setEntryParam(fresh(), "esp32-8x8", "working", "wait-claude", "intensity", 6);
+  assert.deepEqual(m.renderers["esp32-8x8"].bindings.working.pool["wait-claude"], { weight: 40, params: { intensity: 6 } });
+});
+
+test("setEntryParam on an object entry preserves weight/label/other params", () => {
+  const m = setEntryParam(fresh(), "esp32-8x8", "idle", "fire", "intensity", 7);
+  assert.deepEqual(m.renderers["esp32-8x8"].bindings.idle.pool.fire,
+    { weight: 2, params: { speed: 50, intensity: 7 }, label: "🔥" });
+});
+
+test("setEntryParam does not mutate the input manifest", () => {
+  const m = fresh(); const snap = JSON.stringify(m);
+  setEntryParam(m, "esp32-8x8", "idle", "fire", "intensity", 7);
+  assert.equal(JSON.stringify(m), snap);
+});
+
+test("removeEntryParam deletes a param and drops emptied params; bare-number is a no-op", () => {
+  let m = removeEntryParam(fresh(), "esp32-8x8", "idle", "fire", "speed");
+  assert.deepEqual(m.renderers["esp32-8x8"].bindings.idle.pool.fire, { weight: 2, label: "🔥" });
+  m = removeEntryParam(fresh(), "esp32-8x8", "working", "wait-claude", "x"); // bare number -> unchanged
+  assert.equal(m.renderers["esp32-8x8"].bindings.working.pool["wait-claude"], 40);
+});
+
+test("setEntryParamsRaw replaces params; empty object drops the params key", () => {
+  let m = setEntryParamsRaw(fresh(), "esp32-8x8", "idle", "fire", { color: "#fff" });
+  assert.deepEqual(m.renderers["esp32-8x8"].bindings.idle.pool.fire, { weight: 2, params: { color: "#fff" }, label: "🔥" });
+  m = setEntryParamsRaw(m, "esp32-8x8", "idle", "fire", {});
+  assert.deepEqual(m.renderers["esp32-8x8"].bindings.idle.pool.fire, { weight: 2, label: "🔥" });
+});
+
+test("setLabel sets and clears a label; clearing a bare-number entry is a no-op", () => {
+  let m = setLabel(fresh(), "esp32-8x8", "working", "wait-claude", "my wait");
+  assert.deepEqual(m.renderers["esp32-8x8"].bindings.working.pool["wait-claude"], { weight: 40, label: "my wait" });
+  m = setLabel(fresh(), "esp32-8x8", "idle", "fire", "");
+  assert.deepEqual(m.renderers["esp32-8x8"].bindings.idle.pool.fire, { weight: 2, params: { speed: 50 } });
+  m = setLabel(fresh(), "esp32-8x8", "working", "wait-claude", ""); // bare number, clear -> no-op
+  assert.equal(m.renderers["esp32-8x8"].bindings.working.pool["wait-claude"], 40);
+});
+
+test("entry-edit ops no-op on a string (single) binding", () => {
+  const m = setEntryParam(fresh(), "esp32-8x8", "info", "smiley", "x", 1);
+  assert.equal(m.renderers["esp32-8x8"].bindings.info, "smiley");
+});
