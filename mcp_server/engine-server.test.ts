@@ -95,6 +95,36 @@ test("GET /api/framebuffer returns 503 reachable:false when the board is unreach
   assert.equal((await r.json() as any).reachable, false);
 });
 
+test("GET /api/presence proxies the board's presence message", async () => {
+  const msg = { intent: "working", headline: "Refactoring", urgency: "ambient", ts: 1719500000 };
+  const board = http.createServer((req, res) => {
+    if (req.url === "/api/presence") {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify(msg));
+    } else { res.writeHead(404); res.end(); }
+  });
+  await new Promise<void>((r) => board.listen(0, "127.0.0.1", () => r()));
+  const boardUrl = `http://127.0.0.1:${(board.address() as any).port}`;
+
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0, boardUrl });
+  after(() => { eng.close(); board.close(); });
+
+  const r = await fetch(`${eng.url}/api/presence`);
+  assert.equal(r.status, 200);
+  const body = await r.json() as any;
+  assert.equal(body.intent, "working");
+  assert.equal(body.headline, "Refactoring");
+  assert.equal(body.ts, 1719500000);
+});
+
+test("GET /api/presence returns 503 reachable:false when the board is unreachable", async () => {
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0, boardUrl: "http://127.0.0.1:1" });
+  after(() => eng.close());
+  const r = await fetch(`${eng.url}/api/presence`);
+  assert.equal(r.status, 503);
+  assert.equal((await r.json() as any).reachable, false);
+});
+
 test("PUT /api/expression/:name writes the file, un-approves, regenerates gallery-data", async () => {
   const repo = path.join(MCP_DIR, "..");
   const exprPath = path.join(MCP_DIR, "expressions", "zzz-test.json");
