@@ -182,10 +182,17 @@
     }
 
     // The palette: every animation as a mini live-preview tile, color-coded by assignment.
+    // Sort: available (green, 0 events) first alphabetically, then assigned (orange) below.
     function renderTray() {
       trayEl.innerHTML = "";
       const counts = assignmentCounts(manifest, RID, allItems.map((i) => i.name));
-      for (const it of allItems) {
+      const ordered = [...allItems].sort((a, b) => {
+        const aAssigned = (counts[a.name] || 0) > 0 ? 1 : 0;
+        const bAssigned = (counts[b.name] || 0) > 0 ? 1 : 0;
+        if (aAssigned !== bAssigned) return aAssigned - bAssigned;   // available before assigned
+        return a.name.localeCompare(b.name);                        // then alphabetical
+      });
+      for (const it of ordered) {
         const n = counts[it.name] || 0;
         const t = document.createElement("div"); t.className = "ptile" + (n > 0 ? " assigned" : "");
         t.draggable = true;
