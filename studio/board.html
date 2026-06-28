@@ -25,6 +25,21 @@
     #pins button:hover { color:#e8e8ef; border-color:#33333f; }
     #pins button.active { color:var(--orange); border-color:var(--orange); }
     #pins button.resume { color:var(--cyan); border-color:#1c4a55; }
+    #about { display:flex; gap:16px; align-items:center; max-width:min(82vmin,720px);
+      background:#0d0d12; border:1px solid #22222c; border-radius:14px; padding:14px 16px; }
+    #about img { width:150px; height:auto; border-radius:10px; background:#fff; flex:none; }
+    #about .meta { display:flex; flex-direction:column; gap:7px; min-width:0; }
+    #about h2 { margin:0; font-size:15px; font-weight:600; letter-spacing:.02em; }
+    #about p { margin:0; font-size:12px; line-height:1.55; color:var(--dim); }
+    #about .links { display:flex; flex-wrap:wrap; gap:8px; margin-top:2px; }
+    #about a.btn { font:12px ui-monospace,monospace; text-decoration:none; color:var(--dim);
+      background:#111118; border:1px solid #22222c; border-radius:8px; padding:5px 10px;
+      transition:border-color .15s,color .15s; white-space:nowrap; }
+    #about a.btn:hover { color:#e8e8ef; border-color:#33333f; }
+    #about a.buy { color:var(--orange); border-color:#5a2a10; }
+    #about a.buy:hover { border-color:var(--orange); }
+    #about a .net { opacity:.55; }
+    @media (max-width:520px){ #about { flex-direction:column; text-align:center; align-items:center; } }
   </style>
 </head>
 <body>
@@ -34,6 +49,24 @@
     <div id="status">starting…</div>
   </div>
   <div id="pins"></div>
+
+  <section id="about">
+    <img src="./assets/board.webp"
+         alt="Waveshare ESP32-S3-Matrix — an 8×8 (64) WS2812B RGB LED grid on a USB-C ESP32-S3 dev board" />
+    <div class="meta">
+      <h2>Waveshare ESP32-S3-Matrix</h2>
+      <p>The physical panel this mirrors: 64 WS2812B RGB LEDs (8×8) on an ESP32-S3 with a 6-axis IMU.
+         Flash the firmware and Claude drives it live — or just watch it here, no hardware needed.</p>
+      <div class="links">
+        <a class="btn buy" target="_blank" rel="noopener noreferrer"
+           href="https://www.amazon.com/Waveshare-ESP32-S3-Matrix-Development-QMI8658C-Bluetooth/dp/B0D3DPLFL8">Buy on Amazon ↗</a>
+        <a class="btn" target="_blank" rel="noopener noreferrer"
+           href="https://www.amazon.com/vdp/0dd7ba9df4964fdcabd069c1d28e0f5e?aci=amzn1.ive.seller.video.0dd7ba9df4964fdcabd069c1d28e0f5e&product=B0D3DPLFL8&ref=cm_sw_cp_r_ib_dt_1ldndjFwNdf2Z">Watch video ↗</a>
+        <a class="btn" target="_blank" rel="noopener noreferrer"
+           href="http://esp32matrix.local">Open board UI <span class="net">· your network</span></a>
+      </div>
+    </div>
+  </section>
 
   <script type="module">
     import { Panel } from "../shared/render.js";
