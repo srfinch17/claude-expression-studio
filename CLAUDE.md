@@ -354,6 +354,17 @@ fill doesn't read on 8×8; see `anim_presence.ino` `PRES_PROGRESS`)**, `series` 
 `values` as a cycling 3×5 number, all in the intent's color (`anim_presence.ino`). The desktop card always renders the full rich message. Spec:
 `docs/superpowers/specs/2026-06-17-presence-protocol-v0-design.md`.
 
+**Presence is now hook-driven (lifecycle, not just explicit `presence_set`).** The Claude Code hooks
+(`claude-hooks/matrix_signal.py`) ALSO `POST /api/presence` per moment so the card tracks Claude's state
+instead of going stale: `UserPromptSubmit`/`PostToolUse:*`→`working`, `PreToolUse:Ask|ExitPlan`→`question`,
+`Notification:permission_prompt`→`alert`, `Stop`→`done`, and `matrix_idle.py`→`idle` when the bored watcher
+is idle (`MOMENT_PRESENCE` map + `post_presence()`). Best-effort/fail-silent; the board's `POST /api/presence`
+is a **pure store** (no LED render, no screensaver disarm — `handlePresencePost`), so this never touches the
+display (the glyph is still rendered separately by `render_moment`). An explicit `presence_set` (rich
+data/headline) still wins while it's the most recent write. ⚠ board-only today (no-board users' card won't get
+lifecycle presence until the engine grows a presence store — a named follow-up). Spec:
+`docs/superpowers/specs/2026-06-28-presence-lifecycle-design.md`.
+
 ## Versioning (know what's actually deployed)
 
 One canonical version in the repo-root **`VERSION`** file (SemVer, currently **0.12.0**),
