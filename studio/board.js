@@ -92,6 +92,16 @@ export function arbitrate({ mirrorOk, lastSseAt, now, pinned }) {
   return "ambient";
 }
 
+// Hysteresis for the mirror: the board's framebuffer endpoint is heavy and a single poll often
+// fails (503) or lags. Without a grace window, one miss instantly drops `mirrorOk` and a latched
+// LIVE render (e.g. a wait spinner) flashes through before the next good poll restores the mirror.
+// Treat the mirror as still valid for MIRROR_GRACE_MS after the last GOOD poll, so transient
+// hiccups hold the last frame instead of surrendering the panel. lastMirrorAt = 0 means never.
+export const MIRROR_GRACE_MS = 1500;
+export function mirrorOkAt(lastMirrorAt, now) {
+  return lastMirrorAt > 0 && now - lastMirrorAt < MIRROR_GRACE_MS;
+}
+
 // Pick the next ambient index, never repeating the current one (unless there's only
 // one item). Uniform over the other length-1 slots; rng is injectable for tests.
 export function nextIndex(cur, length, rng = Math.random) {

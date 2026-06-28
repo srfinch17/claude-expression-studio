@@ -40,7 +40,7 @@
     import { makeWebSimRenderer } from "../shared/renderers/web-sim.js";
     import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";
     import { resolveExpression } from "../shared/expressions.js";
-    import { framesFromPx, applyEvent, buildPlaylists, arbitrate, nextIndex, isEngineResponse } from "./board.js";
+    import { framesFromPx, applyEvent, buildPlaylists, arbitrate, nextIndex, isEngineResponse, mirrorOkAt } from "./board.js";
     import { SHOWCASE } from "./showcase.js";
 
     // Default params for the few firmware sims that take them (others -> {}).
@@ -63,7 +63,7 @@
     // shared runtime state
     let ambItems = [];
     let ambIdx = 0, ambNextAt = 0, curToken = null;
-    let pinned = null, lastSseAt = null, mirrorOk = false;
+    let pinned = null, lastSseAt = null, lastMirrorAt = 0;  // lastMirrorAt: time of the last GOOD framebuffer poll (grace window)
 
     // control() runs every rAF frame; skip the innerHTML re-parse when unchanged.
     let lastStatus = null;
@@ -83,7 +83,7 @@
     // Decide what should own the panel each frame and (for ambient/pin) feed it.
     // Mirror + live feed themselves from the poll loop / SSE handler.
     function control(now) {
-      const src = arbitrate({ mirrorOk, lastSseAt, now, pinned: !!pinned });
+      const src = arbitrate({ mirrorOk: mirrorOkAt(lastMirrorAt, now), lastSseAt, now, pinned: !!pinned });
       if (src === "mirror") { curToken = "mirror"; setStatus("● <b>live · board</b> — mirroring the panel"); return; }
       if (src === "live")   { curToken = "live";   setStatus("● <b>live</b> — Claude is driving"); return; }
       if (src === "pin") {
@@ -146,7 +146,7 @@
         const src = new EventSource("/events");
         src.onmessage = (m) => {
           lastSseAt = performance.now();
-          if (arbitrate({ mirrorOk, lastSseAt, now: lastSseAt, pinned: !!pinned }) === "live") {
+          if (arbitrate({ mirrorOk: mirrorOkAt(lastMirrorAt, lastSseAt), lastSseAt, now: lastSseAt, pinned: !!pinned }) === "live") {
             try { applyEvent(JSON.parse(m.data), { panel, webSim }); } catch { /* ignore malformed */ }
           }
         };
@@ -157,12 +157,14 @@
             const r = await fetch("/api/framebuffer");
             if (r.ok) {
               const { px } = await r.json();
-              mirrorOk = true;
-              if (arbitrate({ mirrorOk, lastSseAt, now: performance.now(), pinned: !!pinned }) === "mirror") {
+              lastMirrorAt = performance.now();
+              if (arbitrate({ mirrorOk: mirrorOkAt(lastMirrorAt, lastMirrorAt), lastSseAt, now: lastMirrorAt, pinned: !!pinned }) === "mirror") {
                 panel.setFrames([framesFromPx(px)], 1e9);  // static mirror frame, refreshed each poll
               }
-            } else { mirrorOk = false; }
-          } catch { mirrorOk = false; }
+            }
+            // a non-ok (503) status is NOT a reset: the grace window in mirrorOkAt() holds the last
+            // mirror through transient board hiccups, so a brief miss no longer flashes the LIVE layer.
+          } catch { /* transient fetch failure — same: let the grace window hold the mirror */ }
         }
         (async function pollLoop() { await pollFramebuffer(); setTimeout(pollLoop, 333); })();
       })();

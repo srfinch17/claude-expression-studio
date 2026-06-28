@@ -1,6 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { framesFromWire, framesFromPx, applyEvent, mirrorGate, buildPlaylists } from "./board.js";
+import { framesFromWire, framesFromPx, applyEvent, mirrorGate, buildPlaylists, mirrorOkAt, MIRROR_GRACE_MS } from "./board.js";
+
+test("mirrorOkAt holds the mirror through brief gaps, drops after the grace window", () => {
+  assert.equal(mirrorOkAt(0, 1000), false);                           // never polled → not ok
+  assert.equal(mirrorOkAt(1000, 1000), true);                         // just polled
+  assert.equal(mirrorOkAt(1000, 1000 + MIRROR_GRACE_MS - 1), true);   // within grace → still ok (rides a hiccup)
+  assert.equal(mirrorOkAt(1000, 1000 + MIRROR_GRACE_MS), false);      // grace elapsed → drop
+  assert.equal(mirrorOkAt(1000, 1000 + 5000), false);                 // long gone
+});
 
 // one all-off frame except pixel (0,0) red: 64 hex strings
 function wireOneRed() {
