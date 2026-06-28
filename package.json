@@ -8,6 +8,7 @@
     "bump:patch": "node scripts/version-bump.js patch",
     "bump:minor": "node scripts/version-bump.js minor",
     "bump:major": "node scripts/version-bump.js major",
+    "setup": "node scripts/setup.mjs",
     "stamp": "node scripts/version-stamp.js",
     "check": "node scripts/version-check.js",
     "check:manifest": "node scripts/check-manifest.mjs",

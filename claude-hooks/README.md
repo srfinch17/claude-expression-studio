@@ -26,6 +26,13 @@ scripts fail silently — a turn is never blocked or broken.
 
 ## Setup on a new machine ("customer's Claude")
 
+> **The supported path is `npm run setup` from the repo root** — it does every step
+> below for you (deploys these scripts to `~/.claude/hooks/`, writes a `matrix_config.json`
+> pointing at the repo, and merges the hooks + MCP server into your global config, with
+> backups and idempotent re-runs). A board is optional. The manual steps below are the
+> under-the-hood reference for what the installer does. See the repo README's
+> "Install for Claude Code" section.
+
 1. **Have a reachable board** running the firmware in this repo, exposing
    `POST /api/display/frames`, at a known URL. Default is `http://esp32matrix.local`.
 2. **Copy this folder's contents into `~/.claude/hooks/`** — both `.py` scripts
@@ -35,8 +42,13 @@ scripts fail silently — a turn is never blocked or broken.
    into `~/.claude/settings.json`. Fix the absolute path to the scripts, and use
    `python` or `python3` to match your system. (Uses only the Python stdlib — no
    pip installs.)
-4. **If your board isn't at `esp32matrix.local`,** set `ESP32_URL` in your
-   environment (e.g. `ESP32_URL=http://192.168.1.50`).
+4. **Point the scripts at the repo:** the hooks resolve `mcp_dir` (for the manifest +
+   expressions) and `board_url` from, in order: environment vars (`MATRIX_MCP_DIR` /
+   `ESP32_URL`), then `~/.claude/hooks/matrix_config.json`, then defaults. Either set
+   `MATRIX_MCP_DIR=<repo>/mcp_server` in your environment, or drop a
+   `matrix_config.json` next to the scripts: `{"mcp_dir": "<repo>/mcp_server",
+   "board_url": null}`. If your board isn't at `esp32matrix.local`, also set `ESP32_URL`
+   (or `board_url`). **`npm run setup` writes this config file for you.**
 5. **Restart Claude Code.** Hooks are read at session start, so registering them
    (and any later edit to the `hooks` block) only takes effect next session.
 

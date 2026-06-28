@@ -30,6 +30,16 @@ pre-merged binary (app + web UI) from `install/` — no LittleFS upload step.
 That binary is produced by `npm run build:release` (`scripts/build-release.mjs`).
 The MCP extension for Claude Desktop is packed by `npm run build:mcpb`.
 
+**Claude Code onboarding = `npm run setup`** (`scripts/setup.mjs` + pure `scripts/setup-lib.mjs`,
+unit-tested): the turnkey installer that wires the hooks into `~/.claude/settings.json` AND
+registers the MCP server in `~/.claude.json` (each backed-up + idempotently merged — touches only
+its own entries), deploys the hook scripts to `~/.claude/hooks/`, and writes
+`~/.claude/hooks/matrix_config.json` (`mcp_dir`/`board_url`) so the hooks find this repo — which is
+how `matrix_signal.py` now resolves `MCP_DIR`/`BOARD_URL` (env → that config → default; the old
+hardcoded maintainer path is GONE). **Board-OPTIONAL** (panel-first; `--board <url>` opts hardware in).
+`--dry-run` previews, `--uninstall` reverses. Serves the [[installable-product-target]] "turnkey
+onboarding" gap. Spec/plan: `docs/superpowers/specs|plans/2026-06-27-onboarding-installer*`.
+
 **`site/`** = the public **showcase / landing page** (`site/index.html`, self-contained,
 GitHub-Pages-deployable): a live in-browser 8×8 LED simulation that plays the real
 expression frames + an interactive playground + the presence-protocol pitch. No build

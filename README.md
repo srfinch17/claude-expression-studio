@@ -134,6 +134,38 @@ Double-click `install/esp32-matrix.mcpb` (or `release/esp32-matrix.mcpb` from th
 
 ---
 
+## Install for Claude Code (the ambient companion — board optional)
+
+This is the path that makes the matrix **react automatically** to your Claude Code
+session (prompts, turns, questions, idle "bored" animations) and lets you use the
+**Studio** to choose which animation fires on which hook. **You don't need a board** —
+without one, a web panel mirrors exactly what a board would show.
+
+From a clone of this repo:
+
+```bash
+npm install          # once, in the repo root
+npm run setup        # wires hooks + the MCP server into your ~/.claude config
+```
+
+`npm run setup` is turnkey and safe:
+
+- Deploys the hook scripts to `~/.claude/hooks/` and points them at this repo.
+- Merges the hooks into `~/.claude/settings.json` and registers the MCP server in
+  `~/.claude.json` — **backing up each file first** and only ever touching its own
+  entries (re-running is idempotent; your other settings are preserved).
+- Assumes **no board** by default. Have one? `npm run setup -- --board http://<board-ip>`.
+
+Then **restart Claude Code**. The MCP `matrix_studio` tool prints the local Studio/panel
+URL — open it to watch the companion and assign animations to hooks.
+
+- Preview what setup will do without writing anything: `npm run setup -- --dry-run`
+- Remove it all (with backups): `npm run setup -- --uninstall`
+- Silence the board/panel instantly, no restart: `touch ~/.claude/hooks/.matrix_off`
+  (delete the file to re-enable).
+
+---
+
 ## Developing / building from source
 
 The steps below are for contributors and maintainers building from the Arduino sketch and TypeScript source. **End users should use the Install steps above instead.**
