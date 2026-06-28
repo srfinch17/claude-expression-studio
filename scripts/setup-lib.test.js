@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   MOMENTS,
   detectPython,
+  pythonCandidatesFor,
   buildHookCommand,
   hooksBlock,
   mergeHooks,
@@ -28,6 +29,12 @@ test("detectPython prefers earlier candidates", () => {
 
 test("detectPython throws when nothing resolves", () => {
   assert.throws(() => detectPython(["python", "python3"], () => false), /python/i);
+});
+
+test("pythonCandidatesFor tries `python` first on win32 (avoids the Store alias)", () => {
+  assert.deepEqual(pythonCandidatesFor("win32"), ["python", "python3"]);
+  assert.deepEqual(pythonCandidatesFor("linux"), ["python3", "python"]);
+  assert.deepEqual(pythonCandidatesFor("darwin"), ["python3", "python"]);
 });
 
 // --- buildHookCommand / hooksBlock ---
@@ -175,6 +182,15 @@ test("removeMcp drops only our server", () => {
   const out = removeMcp(existing);
   assert.ok(out.mcpServers.playwright);
   assert.equal(out.mcpServers["esp32-matrix"], undefined);
+});
+
+test("removeMcp prunes an emptied mcpServers for a clean round-trip", () => {
+  // a .claude.json that had no mcpServers, after install (mergeMcp) then uninstall (removeMcp),
+  // must not be left with a dangling {"mcpServers":{}}
+  const reg = mcpRegistration({ platform: "linux", mcpDir: "/r/mcp_server", distIndexPath: "/r/mcp_server/dist/index.js", nodePath: "/node", launchCmdPath: "/x", boardUrl: null });
+  const installed = mergeMcp({ otherKey: 1 }, reg);
+  const restored = removeMcp(installed);
+  assert.deepEqual(restored, { otherKey: 1 });
 });
 
 // --- launchCmdContents ---

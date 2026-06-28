@@ -13,6 +13,7 @@ import { execFileSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
   detectPython,
+  pythonCandidatesFor,
   hooksBlock,
   mergeHooks,
   removeHooks,
@@ -43,11 +44,16 @@ function readJsonOrEmpty(file) {
   if (!fs.existsSync(file)) return {};
   const raw = fs.readFileSync(file, "utf8");
   if (raw.trim() === "") return {};
+  let parsed;
   try {
-    return JSON.parse(raw);
+    parsed = JSON.parse(raw);
   } catch (e) {
     throw new Error(`Refusing to touch ${file}: it exists but does not parse as JSON (${e.message}). Fix or move it, then re-run.`);
   }
+  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error(`Refusing to touch ${file}: it parsed as JSON but is not an object. Fix or move it, then re-run.`);
+  }
+  return parsed;
 }
 
 function backupAndWrite(file, obj, backups, log) {
@@ -68,10 +74,10 @@ export async function run(opts) {
     repoDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."),
     platform = process.platform,
     nodePath = process.execPath,
-    pythonCandidates = ["python3", "python"],
     exists,
     log = console.log,
   } = opts;
+  const pythonCandidates = opts.pythonCandidates || pythonCandidatesFor(platform);
 
   const args = parseArgs(argv);
   if (args.help) {
@@ -131,7 +137,7 @@ export async function run(opts) {
   if (!fs.existsSync(distIndex)) {
     log("Building the MCP server (dist/index.js missing)…");
     try {
-      execFileSync("node", [path.join(repoDir, "scripts", "copy-shared-runtime.mjs")], { cwd: repoDir, stdio: "inherit" });
+      execFileSync(nodePath, [path.join(repoDir, "scripts", "copy-shared-runtime.mjs")], { cwd: repoDir, stdio: "inherit" });
       execFileSync("npx", ["tsc", "--project", "tsconfig.json"], { cwd: mcpServerDir, stdio: "inherit", shell: platform === "win32" });
     } catch (e) {
       throw new Error(`MCP server build failed (${e.message}). Run \`npm run build:mcpb\` manually, then re-run setup.`);

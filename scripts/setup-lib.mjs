@@ -30,6 +30,13 @@ export function detectPython(candidates, exists) {
   );
 }
 
+// Interpreter probe order. On Windows `python` is the real interpreter while a bare `python3`
+// is usually the Microsoft Store app-execution-alias stub (opens the Store, doesn't run) — so
+// try `python` first there. On posix `python3` is the canonical name.
+export function pythonCandidatesFor(platform) {
+  return platform === "win32" ? ["python", "python3"] : ["python3", "python"];
+}
+
 export function buildHookCommand(pythonCmd, signalScriptPath, momentKey) {
   return `${pythonCmd} "${signalScriptPath}" ${momentKey}`;
 }
@@ -94,7 +101,10 @@ export function mergeMcp(claudeJson, registration) {
 
 export function removeMcp(claudeJson) {
   const out = clone(claudeJson);
-  if (out.mcpServers) delete out.mcpServers[MCP_KEY];
+  if (out.mcpServers) {
+    delete out.mcpServers[MCP_KEY];
+    if (Object.keys(out.mcpServers).length === 0) delete out.mcpServers; // clean round-trip
+  }
   return out;
 }
 
