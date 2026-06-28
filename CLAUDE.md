@@ -75,8 +75,10 @@ params/labels editor over the manifest) · `frame-editor.html` (paint/edit a sav
 `studio-nav.js` links them; engine-write features gate on a `/api/manifest` probe and degrade to read-only.
 **The "v2 Workshop / Node studio server" is BUILT — it's the engine** (`mcp_server/engine-server.ts`, the
 MCP server's `startEngineServer`; `matrix_studio` prints its localhost URL): serves `/studio/`+`/shared/`,
-`GET/PUT /api/manifest`, `PUT /api/expression/:name`, `POST /api/approval/:name`, `/api/framebuffer` +
-`/api/presence` board proxies, and `/events` SSE (the no-board virtual board — `index.ts` broadcasts resolved
+`GET/PUT /api/manifest`, `PUT /api/expression/:name`, `POST /api/approval/:name`, the `/api/framebuffer` board
+proxy, **`GET/POST /api/presence`** (GET = board-preferred with an in-memory STORE fallback so a board-LESS
+card still shows lifecycle presence; POST = a localhost relay the hooks mirror to — see the No-board presence
+note below), and `/events` SSE (the no-board virtual board — `index.ts` broadcasts resolved
 renders here even when the board is unreachable). **Pages-deployable:** `scripts/build-pages.mjs`
 (`npm run build:pages`) assembles a read-only `pages-dist/` (landing + studio + shared, mirroring the dev
 layout; `.test.js` excluded); `.github/workflows/pages.yml` deploys it (one-time repo setting:
@@ -361,9 +363,19 @@ instead of going stale: `UserPromptSubmit`/`PostToolUse:*`→`working`, `PreTool
 is idle (`MOMENT_PRESENCE` map + `post_presence()`). Best-effort/fail-silent; the board's `POST /api/presence`
 is a **pure store** (no LED render, no screensaver disarm — `handlePresencePost`), so this never touches the
 display (the glyph is still rendered separately by `render_moment`). An explicit `presence_set` (rich
-data/headline) still wins while it's the most recent write. ⚠ board-only today (no-board users' card won't get
-lifecycle presence until the engine grows a presence store — a named follow-up). Spec:
+data/headline) still wins while it's the most recent write. Spec:
 `docs/superpowers/specs/2026-06-28-presence-lifecycle-design.md`.
+
+**No-board presence (DONE 2026-06-28) — the engine now HOLDS presence.** The lifecycle caveat above
+("board-only") is resolved: the engine (`mcp_server/engine-server.ts`) has an **in-memory presence STORE** —
+`POST /api/presence` (localhost relay like `POST /api/render`: validates object+non-empty-`intent`, stamps
+epoch `ts` if absent → 204; non-GET/POST → 405), and `GET /api/presence` now **prefers the live BOARD when
+reachable, falls back to the STORE when the board is unreachable/errors, and only 503 `{reachable:false}`
+when board-down AND store-empty** (the card's honest "no source"). The hook's `post_presence()` **mirrors the
+same body to BOTH the board and the engine** (`_engine_url()`, independent fail-silent try/excepts so a down
+board never skips the engine mirror; `matrix_idle.py` inherits it). So a board-LESS user's `studio/presence.html`
+card now shows Claude's lifecycle. Board stays SOURCE-OF-TRUTH. ⚠ Engine (TS) change → the **running engine must
+be RESTARTED** to pick up the new routes. Spec/plan: `docs/superpowers/specs|plans/2026-06-28-no-board-presence-*`.
 
 ## Versioning (know what's actually deployed)
 
