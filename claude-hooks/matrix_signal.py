@@ -30,10 +30,27 @@ exit. See matrix_idle.py. The whole thing is silenced by the .matrix_off kill sw
 """
 import sys, os, json, urllib.request, subprocess, time, random
 
-BOARD_URL = os.environ.get("ESP32_URL", "http://esp32matrix.local")
 TIMEOUT = 2.5  # seconds; keep short so hooks stay snappy
 
 HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+def _load_config():
+    """Resolve (board_url, mcp_dir): env vars win, then ~/.claude/hooks/matrix_config.json
+    (written by `npm run setup`), then neutral defaults. Keeps any machine-specific repo
+    path OUT of source — the installer injects it, so the hooks run on any machine."""
+    cfg = {}
+    try:
+        with open(os.path.join(HOOK_DIR, "matrix_config.json"), "r", encoding="utf-8") as f:
+            cfg = json.load(f) or {}
+    except Exception:
+        cfg = {}
+    board = os.environ.get("ESP32_URL") or cfg.get("board_url") or "http://esp32matrix.local"
+    mcp_dir = os.environ.get("MATRIX_MCP_DIR") or cfg.get("mcp_dir") or ""
+    return board, mcp_dir
+
+
+BOARD_URL, MCP_DIR = _load_config()
 FLAG_OFF = os.path.join(HOOK_DIR, ".matrix_off")        # kill switch
 ACTIVITY_FILE = os.path.join(HOOK_DIR, ".matrix_activity")  # last-activity token
 IDLE_WATCHER = os.path.join(HOOK_DIR, "matrix_idle.py")     # the "bored" watcher
@@ -50,10 +67,6 @@ FIRMWARE_NAMES = {
     "comet", "sun", "frostbite", "calendar", "sound", "claudesweep",
 }
 
-MCP_DIR = os.environ.get(
-    "MATRIX_MCP_DIR",
-    r"C:\Users\srfin\Dropbox\Dev\repos\peckworks-esp32s3matrix\mcp_server",
-)
 EXPR_DIR = os.path.join(MCP_DIR, "expressions")
 
 
