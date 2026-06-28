@@ -127,14 +127,15 @@ test("mergeHooks does not mutate its input", () => {
 test("mcpRegistration on win32 uses the cmd.exe wrapper", () => {
   const reg = mcpRegistration({
     platform: "win32",
-    repoDir: "C:/repo",
-    nodePath: "C:/node/node.exe",
-    launchCmdPath: "C:/repo/mcp_server/mcp_launch.cmd",
+    mcpDir: "C:\\repo\\mcp_server",
+    distIndexPath: "C:\\repo\\mcp_server\\dist\\index.js",
+    nodePath: "C:\\node\\node.exe",
+    launchCmdPath: "C:\\repo\\mcp_server\\mcp_launch.cmd",
     boardUrl: null,
   });
   assert.equal(reg.command, "cmd.exe");
-  assert.deepEqual(reg.args, ["/c", "C:/repo/mcp_server/mcp_launch.cmd"]);
-  assert.equal(reg.env.MATRIX_MCP_DIR.replace(/\\/g, "/"), "C:/repo/mcp_server");
+  assert.deepEqual(reg.args, ["/c", "C:\\repo\\mcp_server\\mcp_launch.cmd"]);
+  assert.equal(reg.env.MATRIX_MCP_DIR, "C:\\repo\\mcp_server");
   assert.equal(reg.env.ESP32_URL, undefined); // no board
   assert.equal(reg.type, "stdio");
 });
@@ -142,7 +143,8 @@ test("mcpRegistration on win32 uses the cmd.exe wrapper", () => {
 test("mcpRegistration on posix launches node directly with dist/index.js", () => {
   const reg = mcpRegistration({
     platform: "linux",
-    repoDir: "/home/u/repo",
+    mcpDir: "/home/u/repo/mcp_server",
+    distIndexPath: "/home/u/repo/mcp_server/dist/index.js",
     nodePath: "/usr/bin/node",
     launchCmdPath: "/home/u/repo/mcp_server/mcp_launch.cmd",
     boardUrl: "http://192.168.1.5",
@@ -159,7 +161,7 @@ test("mergeMcp preserves other servers and replaces a prior esp32-matrix", () =>
       "esp32-matrix": { command: "OLD" },
     },
   };
-  const reg = mcpRegistration({ platform: "linux", repoDir: "/r", nodePath: "/node", launchCmdPath: "/x", boardUrl: null });
+  const reg = mcpRegistration({ platform: "linux", mcpDir: "/r/mcp_server", distIndexPath: "/r/mcp_server/dist/index.js", nodePath: "/node", launchCmdPath: "/x", boardUrl: null });
   const out = mergeMcp(existing, reg);
   assert.ok(out.mcpServers.playwright); // preserved
   assert.equal(out.mcpServers["esp32-matrix"].command, "/node"); // replaced

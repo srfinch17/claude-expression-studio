@@ -75,14 +75,14 @@ export function removeHooks(settings) {
 
 // The MCP server registration value. Windows keeps the cmd.exe wrapper (spawn is finicky
 // there — documented in mcp_launch.cmd); posix launches the compiled server with node.
-export function mcpRegistration({ platform, repoDir, nodePath, launchCmdPath, boardUrl }) {
-  const mcpDir = `${repoDir}/mcp_server`;
+// Paths arrive already joined by the caller (native separators) — this stays IO/path-free.
+export function mcpRegistration({ platform, mcpDir, distIndexPath, nodePath, launchCmdPath, boardUrl }) {
   const env = { MATRIX_MCP_DIR: mcpDir };
   if (boardUrl) env.ESP32_URL = boardUrl;
   if (platform === "win32") {
     return { type: "stdio", command: "cmd.exe", args: ["/c", launchCmdPath], env };
   }
-  return { type: "stdio", command: nodePath, args: [`${mcpDir}/dist/index.js`], env };
+  return { type: "stdio", command: nodePath, args: [distIndexPath], env };
 }
 
 export function mergeMcp(claudeJson, registration) {
