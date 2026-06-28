@@ -34,6 +34,8 @@ class MainDispatchTests(unittest.TestCase):
         self._orig = {k: getattr(ms, k) for k in
                       ("render_moment", "post_presence", "write_activity_token",
                        "arm_board_idle", "spawn_idle_watcher")}
+        self._orig_exists = os.path.exists
+        os.path.exists = lambda p: False   # ignore a stray .matrix_off kill switch during these tests
         ms.render_moment = lambda m: None
         ms.post_presence = lambda intent, **kw: self._calls.append(intent)
         ms.write_activity_token = lambda: "tok"
@@ -44,6 +46,7 @@ class MainDispatchTests(unittest.TestCase):
     def tearDown(self):
         for k, v in self._orig.items():
             setattr(ms, k, v)
+        os.path.exists = self._orig_exists
         sys.argv = self._argv
 
     def run_moment(self, moment):
@@ -66,7 +69,9 @@ class FailSilentTests(unittest.TestCase):
     def test_post_presence_swallows_errors(self):
         import urllib.request
         orig = urllib.request.urlopen
-        urllib.request.urlopen = lambda *a, **k: (_ for _ in ()).throw(OSError("boom"))
+        def _raise(*a, **k):
+            raise OSError("boom")
+        urllib.request.urlopen = _raise
         try:
             ms.post_presence("working")  # must NOT raise
         finally:

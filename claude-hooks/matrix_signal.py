@@ -70,7 +70,8 @@ FIRMWARE_NAMES = {
 EXPR_DIR = os.path.join(MCP_DIR, "expressions")
 
 # Which presence intent each lifecycle moment stamps into /api/presence (the card mirrors it).
-# All five intents exist in PRESENCE_VOCAB (shared/presence-vocab.js) so the card can render them.
+# The intents used here (plus `idle`, stamped in matrix_idle.py) all exist in PRESENCE_VOCAB
+# (shared/presence-vocab.js) so the card can render them.
 MOMENT_PRESENCE = {
     "hook:UserPromptSubmit": "working",
     "hook:PostToolUse:AskUserQuestion": "working",   # resumed after answering

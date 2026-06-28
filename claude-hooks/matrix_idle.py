@@ -131,11 +131,11 @@ def main():
         if current_token() != my_token:
             return 0                      # the user's back, or a newer watcher owns the board
         if time.monotonic() - start >= CAP_SECS:
-            ms.post_presence("idle")
             play(REST)                    # idle too long — settle on a calm face and stop
+            ms.post_presence("idle")      # display first; presence is best-effort (matches matrix_signal)
             return 0
-        ms.post_presence("idle")
         play(random.choice(load_pool()))  # reload each time so dropped-in JSONs appear live
+        ms.post_presence("idle")          # after the render, so a slow/offline board never delays the goof
     return 0
 
 
