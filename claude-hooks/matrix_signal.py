@@ -57,6 +57,38 @@ MCP_DIR = os.environ.get(
 EXPR_DIR = os.path.join(MCP_DIR, "expressions")
 
 
+def _engine_url():
+    """Where the local Studio engine listens — for mirroring hook renders to its SSE virtual
+    board so the web panel (board.html) shows them even with NO board. Override with
+    MATRIX_ENGINE_URL; else read the engine's port cache (.engine-url); else the default."""
+    u = os.environ.get("MATRIX_ENGINE_URL")
+    if u:
+        return u.rstrip("/")
+    try:
+        with open(os.path.join(MCP_DIR, ".engine-url"), "r", encoding="utf-8") as f:
+            cached = f.read().strip()
+        if cached:
+            return cached.rstrip("/")
+    except Exception:
+        pass
+    return "http://127.0.0.1:8787"
+
+
+def broadcast_engine(event):
+    """Best-effort: mirror a DisplayEvent ({"kind":"frames","wire":{...}} or
+    {"kind":"animation","type":...}) to the engine's POST /api/render so board.html (the no-board
+    web panel) shows hook-driven renders. NEVER blocks or raises — the board path is primary."""
+    try:
+        data = json.dumps(event).encode("utf-8")
+        req = urllib.request.Request(
+            _engine_url() + "/api/render", data=data,
+            headers={"Content-Type": "application/json"}, method="POST",
+        )
+        urllib.request.urlopen(req, timeout=1.0).read()
+    except Exception:
+        pass  # engine not running / unreachable — the board is still the primary target
+
+
 def load_manifest():
     # Repo-first (sibling of mcp_server/), then the in-bundle copy (installed .mcpb).
     for cand in (os.path.join(MCP_DIR, "..", "shared", "manifest.json"),
@@ -163,6 +195,8 @@ def post_frames(frames_hex, frame_ms, loop, idle=False):
     idle=True marks the payload as idle content (keeps the board's dead-man's-switch
     armed). Default False so all normal expressions (working/done) disarm as usual.
     """
+    # mirror to the engine's virtual board first, so the web panel updates even if the board hangs
+    broadcast_engine({"kind": "frames", "wire": {"frames": frames_hex, "frame_ms": frame_ms, "loop": loop}})
     body = {"frames": frames_hex, "frame_ms": frame_ms, "loop": loop, "idle": idle}
     data = json.dumps(body).encode("utf-8")
     req = urllib.request.Request(
@@ -187,6 +221,8 @@ def post_brightness(level):
 
 def post_animation(anim_type, params=None, transient=True):
     """Best-effort POST /api/display/animation for a firmware-animation pick (transient)."""
+    # mirror to the engine's virtual board so the no-board web panel shows the animation
+    broadcast_engine({"kind": "animation", "type": anim_type})
     try:
         body = {"type": anim_type, "transient": transient}
         if params:

@@ -125,6 +125,44 @@ test("GET /api/presence returns 503 reachable:false when the board is unreachabl
   assert.equal((await r.json() as any).reachable, false);
 });
 
+test("POST /api/render fans a DisplayEvent out to SSE virtual boards", async () => {
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0 });
+  after(() => eng.close());
+
+  const res = await fetch(`${eng.url}/events`, { headers: { accept: "text/event-stream" } });
+  assert.equal(res.status, 200);
+  const reader = res.body!.getReader();
+  await new Promise((r) => setTimeout(r, 50)); // let the server register our client
+
+  const post = await fetch(`${eng.url}/api/render`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ kind: "animation", type: "fire" }),
+  });
+  assert.equal(post.status, 204);
+
+  let text = "";
+  const deadline = Date.now() + 5000;
+  while (!text.includes("data: ")) {
+    if (Date.now() > deadline) throw new Error("SSE: render event not received within 5s");
+    const { value, done } = await reader.read();
+    if (done) break;
+    text += new TextDecoder().decode(value);
+  }
+  assert.match(text, /"kind":"animation"/);
+  assert.match(text, /"fire"/);
+  await reader.cancel();
+});
+
+test("POST /api/render with an unparseable body returns 400", async () => {
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0 });
+  after(() => eng.close());
+  const r = await fetch(`${eng.url}/api/render`, {
+    method: "POST", headers: { "content-type": "application/json" }, body: "not json",
+  });
+  assert.equal(r.status, 400);
+});
+
 test("PUT /api/expression/:name writes the file, un-approves, regenerates gallery-data", async () => {
   const repo = path.join(MCP_DIR, "..");
   const exprPath = path.join(MCP_DIR, "expressions", "zzz-test.json");

@@ -51,3 +51,6 @@ mcp_server/.engine-url
 
 # Generated: read-only static showcase bundle for GitHub Pages (scripts/build-pages.mjs)
 pages-dist/
+
+# Hook runtime artifacts (activity token / kill switch) — created when the hook runs
+claude-hooks/.matrix_*

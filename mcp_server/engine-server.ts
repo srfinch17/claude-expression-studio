@@ -140,6 +140,20 @@ export async function startEngineServer(opts: { mcpDir: string; port?: number; m
         return;
       }
 
+      if (url.startsWith("/api/render")) {
+        // Receive an already-resolved DisplayEvent (from the Claude Code hook, which renders to the
+        // board directly) and fan it out to the SSE virtual boards — so board.html shows hook-driven
+        // renders even with NO board. Localhost-only (the server binds 127.0.0.1); best-effort relay.
+        try {
+          const ev = JSON.parse(await readBody(req));
+          hub.broadcast(ev);
+          res.writeHead(204); res.end();
+        } catch {
+          res.writeHead(400, { "content-type": "application/json" }); res.end(JSON.stringify({ ok: false }));
+        }
+        return;
+      }
+
       const out = await serveStatic(url, base);
       res.writeHead(out.status, { "content-type": out.type, "cache-control": "no-cache" });
       res.end(out.body);
