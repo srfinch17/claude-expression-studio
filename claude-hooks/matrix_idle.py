@@ -131,8 +131,10 @@ def main():
         if current_token() != my_token:
             return 0                      # the user's back, or a newer watcher owns the board
         if time.monotonic() - start >= CAP_SECS:
+            ms.post_presence("idle")
             play(REST)                    # idle too long — settle on a calm face and stop
             return 0
+        ms.post_presence("idle")
         play(random.choice(load_pool()))  # reload each time so dropped-in JSONs appear live
     return 0
 
