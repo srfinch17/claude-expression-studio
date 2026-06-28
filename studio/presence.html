@@ -77,7 +77,10 @@
   <h1>Presence</h1>
   <p class="sub">Claude's semantic status, rendered the same way everywhere from one
     <code>PresenceMessage</code>. This is the desktop card — board-independent. Drive it below,
-    or flip on Live to mirror a real board's <code>/api/presence</code>.</p>
+    or flip on Live to mirror a real board's last presence message (<code>GET /api/presence</code>).
+    Note: that's Claude's <em>status message</em> (set by <code>presence_set</code>), <em>not</em> the
+    LEDs' current animation — a board running the clock or idle screensaver still reports its last
+    presence here, and the age shows how stale it is. The <strong>Board</strong> page mirrors the live display.</p>
 
   <div class="stage">
     <div id="card" class="m-breathe u-ambient">
@@ -99,7 +102,7 @@
       <h2>Playground</h2>
       <div class="row">
         <div class="rl">Source</div>
-        <div class="chips"><button class="chip" id="livebtn">○ Live (board)</button></div>
+        <div class="chips"><button class="chip" id="livebtn">○ Live (board presence)</button></div>
       </div>
       <div class="row">
         <div class="rl">Intent</div>
@@ -193,7 +196,7 @@ async function poll() {
       renderPresenceCard(cardEl, m, PRESENCE_VOCAB);
       lastTs = Number(m.ts) > 1e9 ? Number(m.ts) : 0;
       everOk = true; fails = 0;
-      hintEl.textContent = "● Live — mirroring the board's /api/presence.";
+      hintEl.textContent = "● Live — mirroring the board's last presence message (not the LED display; see Board for that).";
       return;
     } catch { /* body wasn't JSON — treat as a failure below */ }
   }
@@ -211,7 +214,7 @@ function tickAge() { ageEl.textContent = (live && everOk) ? formatAge(lastTs, Da
 liveBtn.onclick = () => {
   live = !live;
   liveBtn.classList.toggle("on", live);
-  liveBtn.textContent = (live ? "● " : "○ ") + "Live (board)";
+  liveBtn.textContent = (live ? "● " : "○ ") + "Live (board presence)";
   if (live) {
     everOk = false; fails = 0;
     hintEl.textContent = "Connecting to /api/presence…";
