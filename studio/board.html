@@ -64,6 +64,7 @@
     let ambItems = [];
     let ambIdx = 0, ambNextAt = 0, curToken = null;
     let pinned = null, lastSseAt = null, lastMirrorAt = 0;  // lastMirrorAt: time of the last GOOD framebuffer poll (grace window)
+    let liveAnim = null;  // {type,params} the board is running per the last engine render -> lets the mirror play it locally & smooth
 
     // control() runs every rAF frame; skip the innerHTML re-parse when unchanged.
     let lastStatus = null;
@@ -84,7 +85,24 @@
     // Mirror + live feed themselves from the poll loop / SSE handler.
     function control(now) {
       const src = arbitrate({ mirrorOk: mirrorOkAt(lastMirrorAt, now), lastSseAt, now, pinned: !!pinned });
-      if (src === "mirror") { curToken = "mirror"; setStatus("● <b>live · board</b> — mirroring the panel"); return; }
+      if (src === "mirror") {
+        // Smooth path: if the engine told us the board is running a firmware animation we have a JS
+        // port of, play that sim LOCALLY at full framerate instead of the choppy ~3fps framebuffer
+        // sample. Glyphs / un-ported firmware fall back to the framebuffer static-frame mirror.
+        if (liveAnim && FIRMWARE_SIMS[liveAnim.type]) {
+          const want = "msim:" + liveAnim.type;
+          if (curToken !== want) {
+            const sim = FIRMWARE_SIMS[liveAnim.type](liveAnim.params || FW_DEFAULTS[liveAnim.type] || {});
+            panel.setStepper(() => sim.frame(), sim.frame_ms);
+            curToken = want;
+          }
+          setStatus("● <b>live · board</b> — mirroring <b>" + liveAnim.type + "</b>");
+        } else {
+          curToken = "mirror";
+          setStatus("● <b>live · board</b> — mirroring the panel");
+        }
+        return;
+      }
       if (src === "live")   { curToken = "live";   setStatus("● <b>live</b> — Claude is driving"); return; }
       if (src === "pin") {
         const want = "pin:" + pinned.name;
@@ -146,8 +164,13 @@
         const src = new EventSource("/events");
         src.onmessage = (m) => {
           lastSseAt = performance.now();
+          let ev; try { ev = JSON.parse(m.data); } catch { return; }  // ignore malformed
+          // Track what the board is showing so the mirror can play firmware locally (see control()):
+          // an animation event we can sim -> remember it; a frames event = board switched to a glyph.
+          if (ev.kind === "animation" && FIRMWARE_SIMS[ev.type]) liveAnim = { type: ev.type, params: ev.params };
+          else if (ev.kind === "frames") liveAnim = null;
           if (arbitrate({ mirrorOk: mirrorOkAt(lastMirrorAt, lastSseAt), lastSseAt, now: lastSseAt, pinned: !!pinned }) === "live") {
-            try { applyEvent(JSON.parse(m.data), { panel, webSim }); } catch { /* ignore malformed */ }
+            applyEvent(ev, { panel, webSim });
           }
         };
 
@@ -158,7 +181,11 @@
             if (r.ok) {
               const { px } = await r.json();
               lastMirrorAt = performance.now();
-              if (arbitrate({ mirrorOk: mirrorOkAt(lastMirrorAt, lastMirrorAt), lastSseAt, now: lastMirrorAt, pinned: !!pinned }) === "mirror") {
+              // Don't clobber a locally-played mirror sim with a static framebuffer frame — that
+              // 333ms reset is exactly what made firmware mirrors choppy. Only push the static frame
+              // when the mirror is showing a glyph / un-ported firmware (no local sim running).
+              const liveSim = liveAnim && FIRMWARE_SIMS[liveAnim.type];
+              if (!liveSim && arbitrate({ mirrorOk: mirrorOkAt(lastMirrorAt, lastMirrorAt), lastSseAt, now: lastMirrorAt, pinned: !!pinned }) === "mirror") {
                 panel.setFrames([framesFromPx(px)], 1e9);  // static mirror frame, refreshed each poll
               }
             }
