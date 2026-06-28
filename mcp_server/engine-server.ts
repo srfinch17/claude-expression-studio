@@ -24,6 +24,10 @@ export async function startEngineServer(opts: { mcpDir: string; port?: number; m
   const mfDir = opts.manifestDir ?? engineDir(mcpDir);   // shared/ in dev, shared-runtime/ when packed
   const repoRoot = opts.repoRoot ?? path.join(mcpDir, "..");   // for the validator (validateManifest + collectAnimationNames)
   const boardUrl = opts.boardUrl;
+  // In-memory presence fallback store: the hooks mirror their lifecycle presence here (POST), so a
+  // user with NO board still sees presence on the engine-served card. The board stays source-of-truth
+  // when reachable; this is only consulted as a fallback. Volatile (RAM), like the board's own store.
+  let storedPresence: Record<string, unknown> | null = null;
 
   const server = http.createServer(async (req, res) => {
     try {
@@ -124,21 +128,49 @@ export async function startEngineServer(opts: { mcpDir: string; port?: number; m
       }
 
       if (url.startsWith("/api/presence")) {
-        // Relay the board's current PresenceMessage so the engine-served presence card can show
-        // live presence without talking to the board directly. Mirrors /api/framebuffer; the board
-        // stays the presence source (presence_set posts there). No board -> 503, card fails closed.
-        if (!boardUrl) { res.writeHead(503, { "content-type": "application/json" }); res.end(JSON.stringify({ reachable: false })); return; }
-        try {
-          // 3000ms (not 1500): the board stalls ~every 12s (GC/render) and a poll caught in a stall
-          // exceeds 1500ms → a spurious 503 that blanks the live card. 3000ms rides the stall.
-          const pr = await fetch(`${boardUrl}/api/presence`, { signal: AbortSignal.timeout(3000) });
-          if (!pr.ok) { res.writeHead(503, { "content-type": "application/json" }); res.end(JSON.stringify({ reachable: false })); return; }
-          const body = await pr.text();
-          res.writeHead(200, { "content-type": "application/json", "cache-control": "no-cache" });
-          res.end(body);
-        } catch {
-          res.writeHead(503, { "content-type": "application/json" }); res.end(JSON.stringify({ reachable: false }));
+        if (method === "POST") {
+          // Localhost relay (like POST /api/render): the hooks mirror their lifecycle presence here
+          // so a no-board user's card still updates. Save it as the engine's last-known presence;
+          // stamp ts (epoch seconds, matching the board) if the body doesn't carry one.
+          let msg: any;
+          try { msg = JSON.parse(await readBody(req)); }
+          catch { res.writeHead(400, { "content-type": "application/json" }); res.end(JSON.stringify({ ok: false })); return; }
+          // Mirror the board's POST contract: must be an object carrying a non-empty string intent.
+          // (Also avoids a strict-mode TypeError stamping ts onto a primitive, which would 500.)
+          if (!msg || typeof msg !== "object" || Array.isArray(msg) || typeof msg.intent !== "string" || msg.intent.length === 0) {
+            res.writeHead(400, { "content-type": "application/json" }); res.end(JSON.stringify({ ok: false })); return;
+          }
+          if (msg.ts == null) msg.ts = Math.floor(Date.now() / 1000);
+          storedPresence = msg;
+          res.writeHead(204); res.end();
+          return;
         }
+        if (method !== "GET") { res.writeHead(405); res.end(); return; }   // only GET/POST (mirrors /api/manifest)
+        // GET: board is source-of-truth when reachable; else fall back to the stored presence; else
+        // 503 (honest "no source" so the card's no-presence messaging still works). Mirrors
+        // /api/framebuffer but with the store fallback added.
+        if (boardUrl) {
+          try {
+            // 3000ms (not 1500): the board stalls ~every 12s (GC/render) and a poll caught in a stall
+            // exceeds 1500ms → a spurious 503 that blanks the live card. 3000ms rides the stall.
+            const pr = await fetch(`${boardUrl}/api/presence`, { signal: AbortSignal.timeout(3000) });
+            if (pr.ok) {
+              const body = await pr.text();
+              res.writeHead(200, { "content-type": "application/json", "cache-control": "no-cache" });
+              res.end(body);
+              return;
+            }
+            // board reachable but errored → fall through to the store
+          } catch {
+            // board unreachable → fall through to the store
+          }
+        }
+        if (storedPresence) {
+          res.writeHead(200, { "content-type": "application/json", "cache-control": "no-cache" });
+          res.end(JSON.stringify(storedPresence));
+          return;
+        }
+        res.writeHead(503, { "content-type": "application/json" }); res.end(JSON.stringify({ reachable: false }));
         return;
       }
 

@@ -255,16 +255,27 @@ def presence_body(intent, **fields):
 
 
 def post_presence(intent, **fields):
-    """Best-effort POST /api/presence — keep the board's SEMANTIC status store in sync with
-    Claude's lifecycle so the presence card mirrors it. The board's POST is a pure store (no
-    LED render, no screensaver disarm), so this never affects the display. Fail-silent."""
+    """Best-effort POST /api/presence — keep the SEMANTIC status store in sync with Claude's
+    lifecycle so the presence card mirrors it. Posted to TWO independent targets:
+      1) the board (source-of-truth when present); its POST is a pure store (no LED render, no
+         screensaver disarm), so this never affects the display.
+      2) the local Studio engine, so a NO-BOARD user's card still updates (the engine's
+         GET /api/presence falls back to this stored copy when the board is unreachable).
+    Each target is its own try/except so a down board never skips the engine mirror, and neither
+    ever blocks a hook/turn. Fail-silent."""
+    data = json.dumps(presence_body(intent, **fields)).encode("utf-8")
     try:
-        data = json.dumps(presence_body(intent, **fields)).encode("utf-8")
         req = urllib.request.Request(BOARD_URL + "/api/presence", data=data,
             headers={"Content-Type": "application/json"}, method="POST")
         urllib.request.urlopen(req, timeout=TIMEOUT).read()
     except Exception:
         pass  # board offline / unreachable — never block a turn
+    try:
+        req = urllib.request.Request(_engine_url() + "/api/presence", data=data,
+            headers={"Content-Type": "application/json"}, method="POST")
+        urllib.request.urlopen(req, timeout=1.0).read()
+    except Exception:
+        pass  # engine not running / unreachable — the board path is still primary
 
 
 def post_animation(anim_type, params=None, transient=True):

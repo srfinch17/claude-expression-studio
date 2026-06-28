@@ -117,12 +117,146 @@ test("GET /api/presence proxies the board's presence message", async () => {
   assert.equal(body.ts, 1719500000);
 });
 
-test("GET /api/presence returns 503 reachable:false when the board is unreachable", async () => {
+test("GET /api/presence returns 503 reachable:false when the board is unreachable and nothing stored", async () => {
+  // Honest "no source": unreachable board AND an empty store → 503 (the card's no-source messaging).
   const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0, boardUrl: "http://127.0.0.1:1" });
   after(() => eng.close());
   const r = await fetch(`${eng.url}/api/presence`);
   assert.equal(r.status, 503);
   assert.equal((await r.json() as any).reachable, false);
+});
+
+test("POST /api/presence stores a message; GET returns it (no board) with a stamped ts", async () => {
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0 }); // no boardUrl configured
+  after(() => eng.close());
+
+  const before = Math.floor(Date.now() / 1000);
+  const post = await fetch(`${eng.url}/api/presence`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ intent: "working", headline: "Building" }),
+  });
+  assert.equal(post.status, 204);
+
+  const r = await fetch(`${eng.url}/api/presence`);
+  assert.equal(r.status, 200);
+  const body = await r.json() as any;
+  assert.equal(body.intent, "working");
+  assert.equal(body.headline, "Building");
+  assert.ok(body.ts >= before, "engine stamps ts in epoch seconds so the card's age reads correctly");
+});
+
+test("GET /api/presence prefers the live board over the stored message", async () => {
+  // Board stays source-of-truth: a reachable board wins even when the engine store is newer.
+  const boardMsg = { intent: "done", headline: "from board", ts: 1719500000 };
+  const board = http.createServer((req, res) => {
+    if (req.url === "/api/presence") {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify(boardMsg));
+    } else { res.writeHead(404); res.end(); }
+  });
+  await new Promise<void>((r) => board.listen(0, "127.0.0.1", () => r()));
+  const boardUrl = `http://127.0.0.1:${(board.address() as any).port}`;
+
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0, boardUrl });
+  after(() => { eng.close(); board.close(); });
+
+  // Store a DIFFERENT message first; the board must still win.
+  await fetch(`${eng.url}/api/presence`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ intent: "working", headline: "from store" }),
+  });
+
+  const r = await fetch(`${eng.url}/api/presence`);
+  assert.equal(r.status, 200);
+  const body = await r.json() as any;
+  assert.equal(body.intent, "done");
+  assert.equal(body.headline, "from board");
+});
+
+test("/api/presence rejects non-GET/POST verbs with 405", async () => {
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0 });
+  after(() => eng.close());
+  const r = await fetch(`${eng.url}/api/presence`, {
+    method: "PUT", headers: { "content-type": "application/json" }, body: "{}",
+  });
+  assert.equal(r.status, 405);
+});
+
+test("GET /api/presence falls back to the store when the board responds non-2xx", async () => {
+  // The board is reachable but errors (e.g. its own 503 low-memory guard) — the engine must treat
+  // that like unreachable and serve the stored copy, not relay the error as authoritative.
+  const board = http.createServer((req, res) => {
+    if (req.url === "/api/presence") {
+      res.writeHead(503, { "content-type": "application/json" });
+      res.end(JSON.stringify({ error: "low memory" }));
+    } else { res.writeHead(404); res.end(); }
+  });
+  await new Promise<void>((r) => board.listen(0, "127.0.0.1", () => r()));
+  const boardUrl = `http://127.0.0.1:${(board.address() as any).port}`;
+
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0, boardUrl });
+  after(() => { eng.close(); board.close(); });
+
+  await fetch(`${eng.url}/api/presence`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ intent: "working", headline: "stored" }),
+  });
+  const r = await fetch(`${eng.url}/api/presence`);
+  assert.equal(r.status, 200);
+  const body = await r.json() as any;
+  assert.equal(body.intent, "working");
+  assert.equal(body.headline, "stored");
+});
+
+test("GET /api/presence falls back to the stored message when the board is unreachable", async () => {
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0, boardUrl: "http://127.0.0.1:1" });
+  after(() => eng.close());
+
+  await fetch(`${eng.url}/api/presence`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ intent: "idle", headline: "stored" }),
+  });
+
+  const r = await fetch(`${eng.url}/api/presence`);
+  assert.equal(r.status, 200);
+  const body = await r.json() as any;
+  assert.equal(body.intent, "idle");
+  assert.equal(body.headline, "stored");
+});
+
+test("POST /api/presence with a non-JSON body returns 400 and does not corrupt the store", async () => {
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0 });
+  after(() => eng.close());
+
+  await fetch(`${eng.url}/api/presence`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ intent: "working" }),
+  });
+  const bad = await fetch(`${eng.url}/api/presence`, {
+    method: "POST", headers: { "content-type": "application/json" }, body: "not json",
+  });
+  assert.equal(bad.status, 400);
+
+  const r = await fetch(`${eng.url}/api/presence`);
+  assert.equal(r.status, 200);
+  assert.equal((await r.json() as any).intent, "working");
+});
+
+test("POST /api/presence rejects a non-object or intent-less body with 400 and stores nothing", async () => {
+  const eng = await startEngineServer({ mcpDir: MCP_DIR, port: 0 });
+  after(() => eng.close());
+
+  // JSON-but-not-a-presence: primitives/arrays (would TypeError on ts-stamp → 500) and an
+  // intent-less object (would store renderable garbage). All must be a clean 400.
+  for (const bad of ["5", "\"hi\"", "null", "[1,2]", JSON.stringify({ headline: "no intent" })]) {
+    const r = await fetch(`${eng.url}/api/presence`, {
+      method: "POST", headers: { "content-type": "application/json" }, body: bad,
+    });
+    assert.equal(r.status, 400, `body ${bad} -> 400`);
+  }
+  // Nothing valid was ever stored → GET (no board) is the honest 503.
+  const g = await fetch(`${eng.url}/api/presence`);
+  assert.equal(g.status, 503);
 });
 
 test("POST /api/render fans a DisplayEvent out to SSE virtual boards", async () => {

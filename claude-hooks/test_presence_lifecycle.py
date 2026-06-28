@@ -1,4 +1,4 @@
-import os, sys, unittest
+import os, sys, json, unittest
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import matrix_signal as ms
 
@@ -76,6 +76,66 @@ class FailSilentTests(unittest.TestCase):
             ms.post_presence("working")  # must NOT raise
         finally:
             urllib.request.urlopen = orig
+
+
+class _FakeResp:
+    def read(self):
+        return b""
+
+
+class EngineMirrorTests(unittest.TestCase):
+    """post_presence mirrors to the engine too, so a NO-BOARD user's card still updates."""
+
+    def setUp(self):
+        import urllib.request
+        self._urllib = urllib.request
+        self._orig = urllib.request.urlopen
+        self._hits = []  # (full_url, body_dict)
+        def _capture(req, *a, **k):
+            self._hits.append((req.full_url, json.loads(req.data)))
+            return _FakeResp()
+        urllib.request.urlopen = _capture
+        self._orig_env = os.environ.get("MATRIX_ENGINE_URL")
+        os.environ["MATRIX_ENGINE_URL"] = "http://127.0.0.1:9999"
+
+    def tearDown(self):
+        self._urllib.urlopen = self._orig
+        if self._orig_env is None:
+            os.environ.pop("MATRIX_ENGINE_URL", None)
+        else:
+            os.environ["MATRIX_ENGINE_URL"] = self._orig_env
+
+    def test_posts_to_both_board_and_engine(self):
+        ms.post_presence("working")
+        urls = [u for (u, _b) in self._hits]
+        self.assertIn(ms.BOARD_URL + "/api/presence", urls)
+        self.assertIn("http://127.0.0.1:9999/api/presence", urls)
+
+    def test_same_intent_body_on_both(self):
+        ms.post_presence("done")
+        self.assertEqual(len(self._hits), 2)
+        for _u, body in self._hits:
+            self.assertEqual(body["intent"], "done")
+
+    def test_engine_mirror_happens_even_when_board_is_down(self):
+        # The no-board case: the board POST raises, the engine mirror must still fire.
+        def _board_down(req, *a, **k):
+            if "9999" not in req.full_url:   # the board target
+                raise OSError("board offline")
+            self._hits.append((req.full_url, json.loads(req.data)))
+            return _FakeResp()
+        self._urllib.urlopen = _board_down
+        ms.post_presence("working")  # must NOT raise
+        urls = [u for (u, _b) in self._hits]
+        self.assertIn("http://127.0.0.1:9999/api/presence", urls)
+
+    def test_engine_failure_is_silent(self):
+        def _engine_down(req, *a, **k):
+            if "9999" in req.full_url:
+                raise OSError("engine offline")
+            return _FakeResp()
+        self._urllib.urlopen = _engine_down
+        ms.post_presence("working")  # must NOT raise
 
 
 if __name__ == "__main__":
