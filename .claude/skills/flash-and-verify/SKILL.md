@@ -32,6 +32,20 @@ round-trips as the scarce resource:
     `browser_evaluate` to call the page's own functions and confirm they drive the
     board (cross-check the framebuffer). Catches JS errors and dead controls before
     the user ever looks.
+    - **Engine origin, not just the board.** The Studio/panel surfaces (`studio/board.html`,
+      `studio/presence.html`) are served by the MCP server's ENGINE at `http://127.0.0.1:8787`, and
+      ONLY there do its proxies (`/api/framebuffer`, `/api/presence`) + `/events` SSE exist. Verify
+      them at the engine URL (the `matrix_studio` tool prints it / `mcp_server/.engine-url`) — any
+      other origin (a stray http-server, `file://`, Pages) silently 404s those routes. A "Live does
+      nothing" / "panel shows random stuff" report is often just the wrong origin, not a bug.
+    - **Instrument INTERMITTENT symptoms over a window that spans the period — don't eyeball.** A
+      short check sails straight through a periodic fault and gives false confidence (a 4s glance
+      missed the board's ~12s `/api/framebuffer` stall → I shipped a WRONG fix and told the user it
+      was done). In ONE `browser_evaluate`, loop ~20-30s logging each poll's status + the longest gap
+      + the FULL causal chain (e.g. the SSE event count, which disproved a wrong root-cause theory),
+      then size any hysteresis/timeout to the measured FAILURE cost, not the happy-path interval. And
+      make best-effort UI **surface its state** so silence ≠ broken (see `feedback-live-instrumentation`,
+      `feedback-surface-degraded-state`).
     - ⚠️ **Stale-cache trap (bites .js AND .css):** after a LittleFS upload, the browser
       may still use the OLD cached asset while `curl`/`fetch` returns the NEW one — so the
       file "looks deployed" but the page behaves/renders old. **(Mostly FIXED 2026-06-22:**

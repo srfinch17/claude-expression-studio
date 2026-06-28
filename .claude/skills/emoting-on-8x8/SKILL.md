@@ -70,10 +70,13 @@ star, etc.); reuse those shapes.
   field**: falling confetti, drifting mist, a sweep. Celebration reads through color +
   continuous motion, no fragile silhouette needed. Make it loop seamlessly (shift every
   row by 1 each frame over N frames).
-- **Attention-grab = photo-negative blink, not on/off flash.** Alternate the glyph with
-  its inverse (every lit cell off, every off cell lit), ~3 blinks, then settle on the
-  solid glyph (last frame, `loop: 1`). Reads as a deliberate "look here," far calmer and
-  clearer than blanking the panel.
+- **Attention-grab = a GLOW pulse, NOT a photo-negative blink.** (Earlier advice said invert the
+  glyph — every lit cell off, every off cell lit — for ~3 blinks. **CORRECTED:** the inverse of a
+  glyph is a *different, wrong shape*, so the blink reads as two things flickering, not one thing
+  pulsing.) Instead pulse the glyph's own brightness up→down (a non-inverting glow), ~3 pulses, then
+  settle on the solid glyph (last frame, `loop: 1`). Reads as a deliberate, calm "look here." (This
+  matured into the canonical `building-8x8-animations` skill; `alert`/`cross` were reworked from
+  inverts into glows.)
 - **Fake brightness gradients with one hue at fixed steps.** Bake the dim values into the
   hex (per the band table) rather than relying on FastLED dimming, so trails/glows
   survive bri 5.
