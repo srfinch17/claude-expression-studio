@@ -129,7 +129,9 @@ export async function startEngineServer(opts: { mcpDir: string; port?: number; m
         // stays the presence source (presence_set posts there). No board -> 503, card fails closed.
         if (!boardUrl) { res.writeHead(503, { "content-type": "application/json" }); res.end(JSON.stringify({ reachable: false })); return; }
         try {
-          const pr = await fetch(`${boardUrl}/api/presence`, { signal: AbortSignal.timeout(1500) });
+          // 3000ms (not 1500): the board stalls ~every 12s (GC/render) and a poll caught in a stall
+          // exceeds 1500ms → a spurious 503 that blanks the live card. 3000ms rides the stall.
+          const pr = await fetch(`${boardUrl}/api/presence`, { signal: AbortSignal.timeout(3000) });
           if (!pr.ok) { res.writeHead(503, { "content-type": "application/json" }); res.end(JSON.stringify({ reachable: false })); return; }
           const body = await pr.text();
           res.writeHead(200, { "content-type": "application/json", "cache-control": "no-cache" });

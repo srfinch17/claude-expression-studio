@@ -170,38 +170,55 @@ chips("datakinds", DATAKINDS, "dataKind");
 chips("urgencies", URGENCIES, "urgency");
 apply();
 
-// ── Best-effort live mode ── poll a real /api/presence on this origin (the board today, or a
-// future presence-proxying engine). Any failure (404/unreachable — e.g. engine/Pages) silently
-// keeps the playground render; no error surfaces. Toggling off restores the playground.
+// ── Best-effort live mode ── poll a real /api/presence on this origin (the board, or the engine's
+// board-proxy). Crucially this REPORTS its own state in the hint, so it never silently looks dead:
+// "connecting" → "live · mirroring" on success, or a specific reason on failure (wrong origin =
+// 404, no/offline board = 503, unreachable = network). A transient miss after a good render keeps
+// the last board frame (the board hiccups ~every 12s). Toggling off restores the playground.
 const liveBtn = document.getElementById("livebtn");
+const hintEl = document.getElementById("hint");
 const ageEl = cardEl.querySelector(".age");
-let live = false, timer = null, ageTimer = null, lastTs = 0;
+const DEMO_HINT = "Self-driven demo — no board or engine required.";
+let live = false, timer = null, ageTimer = null, lastTs = 0, everOk = false, fails = 0;
 
 async function poll() {
   if (!live || document.hidden) return;
-  try {
-    const r = await fetch("/api/presence", { cache: "no-store" });
-    if (r.ok) {
+  let r = null;
+  try { r = await fetch("/api/presence", { cache: "no-store" }); } catch { r = null; }
+  if (!live) return;                                  // toggled off while this poll was in flight
+  if (r && r.ok) {
+    try {
       const m = await r.json();
-      if (!live) return;            // toggled off while this poll was in flight
+      if (!live) return;
       renderPresenceCard(cardEl, m, PRESENCE_VOCAB);
       lastTs = Number(m.ts) > 1e9 ? Number(m.ts) : 0;
-    }
-  } catch { /* network/404 — keep last render */ }
+      everOk = true; fails = 0;
+      hintEl.textContent = "● Live — mirroring the board's /api/presence.";
+      return;
+    } catch { /* body wasn't JSON — treat as a failure below */ }
+  }
+  fails++;
+  if (everOk) return;                                 // had a live board; ride a transient miss, keep last frame
+  if (fails >= 2) {                                   // give it a beat before declaring no source
+    const why = !r ? "can't reach this origin."
+      : r.status === 404 ? "no /api/presence here — open the Studio via the matrix_studio URL (the engine serves the proxy)."
+      : "board not reachable (no board, or it's offline).";
+    hintEl.textContent = "○ Live: " + why + " Showing the demo.";
+  }
 }
-function tickAge() { ageEl.textContent = live ? formatAge(lastTs, Date.now()) : "—"; }
+function tickAge() { ageEl.textContent = (live && everOk) ? formatAge(lastTs, Date.now()) : "—"; }
 
 liveBtn.onclick = () => {
   live = !live;
   liveBtn.classList.toggle("on", live);
   liveBtn.textContent = (live ? "● " : "○ ") + "Live (board)";
-  document.getElementById("hint").textContent = live
-    ? "Polling /api/presence on this origin — falls back to the demo if none."
-    : "Self-driven demo — no board or engine required.";
-  if (live) { poll(); timer = setInterval(poll, 1500); ageTimer = setInterval(tickAge, 1000); }
-  else {
+  if (live) {
+    everOk = false; fails = 0;
+    hintEl.textContent = "Connecting to /api/presence…";
+    poll(); timer = setInterval(poll, 1500); ageTimer = setInterval(tickAge, 1000);
+  } else {
     clearInterval(timer); clearInterval(ageTimer); timer = ageTimer = null;
-    lastTs = 0; ageEl.textContent = "—"; apply(); // restore playground render
+    lastTs = 0; ageEl.textContent = "—"; hintEl.textContent = DEMO_HINT; apply(); // restore playground render
   }
 };
 window.__presenceApply = apply;
