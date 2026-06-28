@@ -17,6 +17,14 @@
       background:var(--bg); }
     #status { font-size:13px; color:var(--dim); letter-spacing:.04em; min-height:1.2em; }
     #status b { color:#e8e8ef; font-weight:500; }
+    #intro { text-align:center; max-width:min(82vmin,720px);
+      display:flex; flex-direction:column; gap:7px; }
+    #intro h1 { margin:0; font-size:22px; font-weight:600; letter-spacing:.04em; }
+    #intro h1 .accent { color:var(--orange); }
+    #intro p { margin:0; font-size:12.5px; line-height:1.6; color:var(--dim); }
+    #intro p b { color:#e8e8ef; font-weight:500; }
+    .pins-label { font-size:11px; color:var(--dim); letter-spacing:.08em;
+      text-transform:uppercase; margin-bottom:-6px; }
     #pins { display:flex; flex-wrap:wrap; gap:6px; justify-content:center;
       max-width:min(82vmin,720px); max-height:124px; overflow-y:auto; padding:4px; }
     #pins button { font:11px ui-monospace,monospace; color:var(--dim);
@@ -44,10 +52,16 @@
 </head>
 <body>
   <script type="module" src="./studio-nav.js"></script>
+  <header id="intro">
+    <h1>Claude<span class="accent">'</span>s Face</h1>
+    <p>A live 8×8 window into what Claude is doing. With a board connected this <b>mirrors the physical
+       panel</b>; with none, it plays the same animation library Claude drives — <b>no hardware needed</b>.</p>
+  </header>
   <div id="stage">
     <canvas id="board" width="720" height="720"></canvas>
     <div id="status">starting…</div>
   </div>
+  <div class="pins-label">pin an animation</div>
   <div id="pins"></div>
 
   <section id="about">
