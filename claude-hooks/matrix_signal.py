@@ -69,6 +69,18 @@ FIRMWARE_NAMES = {
 
 EXPR_DIR = os.path.join(MCP_DIR, "expressions")
 
+# Which presence intent each lifecycle moment stamps into /api/presence (the card mirrors it).
+# All five intents exist in PRESENCE_VOCAB (shared/presence-vocab.js) so the card can render them.
+MOMENT_PRESENCE = {
+    "hook:UserPromptSubmit": "working",
+    "hook:PostToolUse:AskUserQuestion": "working",   # resumed after answering
+    "hook:PostToolUse:ExitPlanMode": "working",
+    "hook:PreToolUse:AskUserQuestion": "question",   # blocked on the user
+    "hook:PreToolUse:ExitPlanMode": "question",
+    "hook:Notification:permission_prompt": "alert",
+    "hook:Stop": "done",
+}
+
 
 def _engine_url():
     """Where the local Studio engine listens — for mirroring hook renders to its SSE virtual
@@ -232,6 +244,28 @@ def post_brightness(level):
         pass
 
 
+def presence_body(intent, **fields):
+    """Pure: build a PresenceMessage body. Drops None/empty fields. The board stamps ts."""
+    body = {"intent": intent}
+    for k, v in fields.items():
+        if v is not None and v != "":
+            body[k] = v
+    return body
+
+
+def post_presence(intent, **fields):
+    """Best-effort POST /api/presence — keep the board's SEMANTIC status store in sync with
+    Claude's lifecycle so the presence card mirrors it. The board's POST is a pure store (no
+    LED render, no screensaver disarm), so this never affects the display. Fail-silent."""
+    try:
+        data = json.dumps(presence_body(intent, **fields)).encode("utf-8")
+        req = urllib.request.Request(BOARD_URL + "/api/presence", data=data,
+            headers={"Content-Type": "application/json"}, method="POST")
+        urllib.request.urlopen(req, timeout=TIMEOUT).read()
+    except Exception:
+        pass  # board offline / unreachable — never block a turn
+
+
 def post_animation(anim_type, params=None, transient=True):
     """Best-effort POST /api/display/animation for a firmware-animation pick (transient)."""
     # mirror to the engine's virtual board so the no-board web panel shows the animation
@@ -343,6 +377,9 @@ def main():
                            "hook:PostToolUse:ExitPlanMode")
     token = write_activity_token() if (is_active or is_done) else None
     render_moment(moment)
+    intent = MOMENT_PRESENCE.get(moment)
+    if intent:
+        post_presence(intent)          # semantic channel; render (display) already happened above
     if is_done and token is not None:
         arm_board_idle()
         spawn_idle_watcher(token)
