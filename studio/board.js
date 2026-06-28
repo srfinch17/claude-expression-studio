@@ -93,11 +93,19 @@ export function arbitrate({ mirrorOk, lastSseAt, now, pinned }) {
 }
 
 // Hysteresis for the mirror: the board's framebuffer endpoint is heavy and a single poll often
-// fails (503) or lags. Without a grace window, one miss instantly drops `mirrorOk` and a latched
-// LIVE render (e.g. a wait spinner) flashes through before the next good poll restores the mirror.
-// Treat the mirror as still valid for MIRROR_GRACE_MS after the last GOOD poll, so transient
-// hiccups hold the last frame instead of surrendering the panel. lastMirrorAt = 0 means never.
-export const MIRROR_GRACE_MS = 1500;
+// fails (503) or lags. Without a grace window, one miss instantly drops `mirrorOk` and the panel
+// surrenders to whatever is next in precedence — a latched LIVE render or, when Claude isn't
+// driving, the AMBIENT showcase (claudesweep) — which flashes through before the next good poll
+// restores the mirror. Treat the mirror as still valid for MIRROR_GRACE_MS after the last GOOD
+// poll, so transient hiccups hold the last frame instead of surrendering the panel.
+//
+// Sizing: the engine's /api/framebuffer proxy aborts a slow board fetch at 1500ms, and that failing
+// fetch BLOCKS the 333ms poll loop for its whole duration — so a single board hiccup produces a
+// ~3.2s gap between good polls (measured: longestFbGap 3221ms over a 20s live window). 1500ms was
+// guaranteed to undershoot one timeout. 5000ms clears the measured worst case (~55% margin) and
+// absorbs two back-to-back misses; a truly-gone board still decays to ambient within 5s.
+// lastMirrorAt = 0 means never polled successfully.
+export const MIRROR_GRACE_MS = 5000;
 export function mirrorOkAt(lastMirrorAt, now) {
   return lastMirrorAt > 0 && now - lastMirrorAt < MIRROR_GRACE_MS;
 }
