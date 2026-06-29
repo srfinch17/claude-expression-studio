@@ -1,273 +1,51 @@
-# ESP32-S3 Matrix — Claude-Controlled LED Display
+# Claude Expression Studio
 
-A Waveshare ESP32-S3-Matrix (8×8 WS2812B LEDs) controlled in natural language via Claude AI through a custom MCP (Model Context Protocol) server.
+A **renderer-agnostic presence & expression system for Claude**. Claude's state —
+working, done, waiting on you, idle — renders as 8×8 LED animations and a semantic
+presence card, on whatever output is connected. The physical LED panel is **one
+optional renderer**; everything runs board-free in the browser too.
 
+**Live demo (no install, no hardware):** https://srfinch17.github.io/peckworks-esp32s3matrix/
+
+## What it is
+
+- **The Studio** (`studio/`) — see, edit, and wire Claude's whole animation library:
+  a Gallery, a binding/pool/weight editor over the trigger manifest, a frame painter,
+  a live virtual board, and the presence card.
+- **The trigger manifest** (`shared/manifest.json`) — one source of truth mapping
+  *moment → intent → renderer*, with fallback chains and weighted pools. The MCP server
+  and the Claude Code hooks both resolve through it (parity-tested TS ↔ Python).
+- **The MCP server + engine** (`mcp_server/`) — Claude's tools (`matrix_express`,
+  `presence_set`, `matrix_idle`, …) plus a localhost engine that serves the Studio,
+  holds presence, and broadcasts a no-board virtual board over SSE.
+- **The Claude Code hooks** (`claude-hooks/`) — fire ambient presence/expression per
+  lifecycle moment (prompt submitted, task done, awaiting input, idle).
+
+## Install (Claude Code, board optional)
+
+```bash
+npm run setup            # wires hooks + registers the MCP server (backed-up, idempotent)
+npm run setup -- --board http://esp32matrix.local   # opt a physical board in
+npm run setup -- --dry-run        # preview    ·    --uninstall   # reverse
 ```
-Claude (AI) → MCP Server (Node.js) → HTTP → ESP32 Firmware (C++) → LED Matrix
-```
 
-## What It Does
-
-You talk to Claude in plain English — *"show a purple matrix rain animation"* or *"set a 5-minute snow timer"* — and the LEDs respond in real time. The MCP server acts as the bridge, translating Claude's structured tool calls into HTTP requests to the firmware running on the board.
-
-## Features
-
-### Animations
-| Mode | Description |
-|---|---|
-| `fire` | Heat-rise simulation with configurable palette, intensity, tendrils, and sparks |
-| `matrix_rain` | Digital rain / falling character screensaver (classic, blue, red, purple) |
-| `snow` | Endless ambient snowfall over a fixed snow bank — no accumulation; single random hue per launch or per-flake confetti |
-| `liquid` | Tilt-reactive fluid simulation using the onboard IMU — tilt the board to slosh it |
-| `imu` | Live 3-axis accelerometer bar graph |
-| `rainbow` / `wave` / `breathe` / `solid` | Classic LED effects |
-| `weather` | Animated weather icon + live data (temp, humidity, UV, pressure) via wttr.in |
-| `chiptemp` | ESP32 chip temperature display with pulsing background |
-| `clock` | Live 12-hour clock synced via NTP |
-| `calendar` | Today's date — scrolling text, big day number, month grid, or clock-style month/day (NTP) |
-| `timer_fill` | Countdown as a gradient LED fill (bottom → top) |
-| `timer_snow` | Countdown as snowfall accumulation |
-| `timer_text` | Countdown as MM:SS digits |
-| `sound` | Vibration-reactive VU bar — lights dance to the bass (uses the IMU; no microphone) |
-
-### Settings & Idle Screensaver
-NVS-backed board configuration (`GET`/`POST /api/settings`) with a web control page and two MCP tools (`matrix_get_settings` / `matrix_set_settings`). Includes an idle screensaver that auto-starts after a configurable period of inactivity and rotates through ambient apps (fire, matrix rain, clock, etc.) at low brightness. Armed automatically by Claude Code hooks; any real command disarms it.
-
-### Sketch
-Paint pixel-by-pixel on an 8×8 grid, then push to the board.
-
-### Text Scrolling
-Scrolling text in three font sizes (5×7, 3×5, 3×3), with solid or two-color gradient support.
-
-### Web UI
-Each mode has a dedicated HTML control page served directly from the board's flash (LittleFS), accessible at `http://esp32matrix.local` from any browser on the same network.
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────┐
-│  Claude (claude.ai or Claude Code)                   │
-│  "Show fire animation, high intensity, blue palette" │
-└──────────────────┬──────────────────────────────────┘
-                   │  MCP tool call: matrix_set_animation
-                   ▼
-┌─────────────────────────────────────────────────────┐
-│  MCP Server  (mcp_server/index.ts — Node.js)        │
-│  • 12 registered tools                              │
-│  • Translates natural language params → HTTP JSON   │
-│  • Runs as a stdio process managed by Claude Code   │
-└──────────────────┬──────────────────────────────────┘
-                   │  POST http://esp32matrix.local/api/display/animation
-                   ▼
-┌─────────────────────────────────────────────────────┐
-│  ESP32-S3 Firmware  (Arduino C++)                   │
-│  • WebServer on port 80                             │
-│  • FastLED for LED control                          │
-│  • millis()-based non-blocking animation loop       │
-│  • QMI8658C IMU via I2C for tilt/liquid modes       │
-└──────────────────┬──────────────────────────────────┘
-                   │  FastLED.show()
-                   ▼
-        [ 8×8 WS2812B LED Matrix ]
-```
+Board-optional by default. The board is reached only over HTTP — see
+[`docs/board-api-contract.md`](docs/board-api-contract.md).
 
 ## Hardware
 
-- **Board:** Waveshare ESP32-S3-Matrix
-- **Display:** 8×8 WS2812B RGB LED grid (64 LEDs), data pin 14
-- **IMU:** QMI8658C 6-axis (accelerometer + gyroscope), I2C SDA=11 SCL=12
-- **Flash:** 4MB (verified via esptool) + 2MB PSRAM; web UI lives in the 1MB LittleFS region
+The ESP32-S3 firmware + its standalone onboard web UI live in a separate repo:
+**[peckworks-esp32s3matrix](https://github.com/srfinch17/peckworks-esp32s3matrix)**
+(flash it, set up WiFi via a captive portal, runs with no computer attached).
 
-## Project Structure
-
-```
-esp32_matrix_webserver/     # Arduino sketch (all .ino files compile as one unit)
-│   esp32_matrix_webserver.ino  — globals, setup(), loop()
-│   api_handlers.ino            — all HTTP route handlers
-│   anim_fire.ino               — fire animation
-│   anim_liquid.ino             — IMU driver + liquid/imu animations
-│   anim_effects.ino            — rainbow, breathe, wave, solid
-│   anim_matrix.ino             — matrix rain screensaver
-│   clock_timer.ino             — NTP clock + 3 timer modes
-│   weather.ino                 — weather fetch + display
-│   fonts.ino                   — 3×3 and 3×5 pixel fonts
-│   scroll_text.ino             — 5×7, 3×5, 3×3 scrolling text
-└── data/                       — web UI pages (uploaded via LittleFS)
-
-mcp_server/                 # Node.js MCP server
-│   index.ts                    — MCP tool definitions + HTTP request handlers
-│   package.json
-└── tsconfig.json
-```
-
-## Install (end users)
-
-If you have a board and want to get it running — no Arduino IDE or Node.js required.
-
-**Requirements:** A Waveshare ESP32-S3-Matrix and a USB cable. Your computer and the board must be on the **same local network** after setup; the board is reachable at `http://esp32matrix.local`.
-
-### 1. Flash the firmware
-
-**Offline scripts (working now — recommended):**
-Download the release zip, plug in the board, and run the script for your OS:
-- Windows: double-click `install/flash.bat`
-- macOS / Linux: run `install/flash.sh` in a terminal
-
-Both scripts flash the pre-merged binary (`release/esp32matrix-<version>-merged.bin`) — firmware and web UI together, no separate LittleFS upload step.
-
-**Browser one-click flasher (coming once GitHub Pages is enabled):**
-ESP Web Tools requires a secure `https://` origin — opening `install/index.html` as a local `file://` will not work (Web Serial is blocked). Once the `install/` page is hosted on GitHub Pages, Chrome or Edge users will be able to flash in one click from that URL.
-
-### 2. First-time WiFi setup
-
-After flashing, the board opens a setup hotspot (LEDs **amber**):
-
-1. Join the `ESP32-Matrix-Setup` WiFi network on your phone or laptop.
-2. A captive portal opens (or browse to `192.168.4.1`).
-3. Tap **Configure WiFi**, choose your network, enter the password, save.
-4. The board reboots and joins your network. LEDs turn **blue** while connecting.
-5. Once joined, it is reachable at `http://esp32matrix.local`.
-
-### 3. Add the MCP extension to Claude Desktop
-
-Double-click `install/esp32-matrix.mcpb` (or `release/esp32-matrix.mcpb` from the release zip). Claude Desktop installs the extension automatically — no JSON editing or Node.js install needed. The extension connects to the board at `http://esp32matrix.local`.
-
----
-
-## Install for Claude Code (the ambient companion — board optional)
-
-This is the path that makes the matrix **react automatically** to your Claude Code
-session (prompts, turns, questions, idle "bored" animations) and lets you use the
-**Studio** to choose which animation fires on which hook. **You don't need a board** —
-without one, a web panel mirrors exactly what a board would show.
-
-From a clone of this repo:
+## Develop
 
 ```bash
-npm install          # once, in the repo root
-npm run setup        # wires hooks + the MCP server into your ~/.claude config
+npm test                 # node --test across shared/ studio/ mcp_server/ scripts/ + manifest check
+npm run check:manifest   # validate the trigger manifest
+npm run build:pages      # assemble the read-only Pages bundle
+npm run build:mcpb       # pack the Claude Desktop extension
+python -m http.server 8766   # then open /studio/index.html and /site/index.html
 ```
 
-`npm run setup` is turnkey and safe:
-
-- Deploys the hook scripts to `~/.claude/hooks/` and points them at this repo.
-- Merges the hooks into `~/.claude/settings.json` and registers the MCP server in
-  `~/.claude.json` — **backing up each file first** and only ever touching its own
-  entries (re-running is idempotent; your other settings are preserved).
-- Assumes **no board** by default. Have one? `npm run setup -- --board http://<board-ip>`.
-
-Then **restart Claude Code**. The MCP `matrix_studio` tool prints the local Studio/panel
-URL — open it to watch the companion and assign animations to hooks.
-
-- Preview what setup will do without writing anything: `npm run setup -- --dry-run`
-- Remove it all (with backups): `npm run setup -- --uninstall`
-- Silence the board/panel instantly, no restart: `touch ~/.claude/hooks/.matrix_off`
-  (delete the file to re-enable).
-
----
-
-## Developing / building from source
-
-The steps below are for contributors and maintainers building from the Arduino sketch and TypeScript source. **End users should use the Install steps above instead.**
-
-### 1. Firmware
-
-**Requirements:** Arduino IDE 2.x with the ESP32 board package installed.
-
-**Libraries** (install via Tools → Manage Libraries):
-- FastLED
-- ArduinoJson
-- PNGdec
-- WiFiManager (by tzapu) — runtime WiFi setup via captive portal
-
-**Board settings** (Tools menu):
-- Board: `ESP32S3 Dev Module` (or `Waveshare ESP32-S3-Matrix`)
-- USB Mode: `Hardware CDC and JTAG`
-- USB CDC On Boot: `Enabled`
-- PSRAM: `Enabled` — required; without it the heap starves and WiFi/web server get unstable
-- Flash Size: `4MB (32Mb)` — the board is 4MB (verified via esptool); 8MB settings won't flash
-- Partition Scheme: `Huge APP (3MB No OTA / 1MB SPIFFS)` — LittleFS data fits the 1MB region
-
-**WiFi:** No credentials are compiled in — the board is configured at runtime
-via a captive portal (see *First-time WiFi setup* below).
-
-Flash firmware, then upload the web UI:  
-`Tools → ESP32 LittleFS Data Upload`
-
-### First-time WiFi setup (and moving to a new network)
-
-WiFi credentials live in the board's flash, not in the source. On first boot —
-or any time the saved network can't be reached — the board falls back to a
-setup hotspot.
-
-1. Power on the board. It tries the saved network for ~10 s (LEDs **blue**).
-2. If that fails, it opens a WiFi hotspot named **`ESP32-Matrix-Setup`** (LEDs **amber**).
-3. On a phone or laptop, join **`ESP32-Matrix-Setup`**. A captive portal opens
-   automatically — if it doesn't, browse to **`192.168.4.1`**.
-4. Tap **Configure WiFi**, choose your network, enter the password, and save.
-5. The board reboots, joins the network, and is reachable at
-   **`http://esp32matrix.local`**.
-
-**Moving the board to a different WiFi network:** just power it on at the new
-location. When the old saved network isn't found, it automatically opens the
-`ESP32-Matrix-Setup` hotspot — repeat the steps above with the new network.
-
-**Force setup immediately:** hold the **BOOT button (GPIO 0)** while powering
-on. This wipes the saved credentials and jumps straight to the hotspot without
-waiting for the 10 s timeout.
-
-| LED color | Meaning |
-|---|---|
-| Blue | Trying to connect to saved WiFi |
-| Amber | Setup portal open — join `ESP32-Matrix-Setup` |
-
-### 2. MCP Server
-
-```bash
-cd mcp_server
-npm install
-```
-
-Set the board's IP (or use mDNS default):
-```bash
-# Optional — defaults to http://esp32matrix.local
-export ESP32_URL=http://192.168.1.xxx
-```
-
-Wire it into Claude Code by adding to your `.claude/settings.json`:
-```json
-{
-  "mcpServers": {
-    "esp32-matrix": {
-      "command": "npx",
-      "args": ["tsx", "index.ts"],
-      "cwd": "/path/to/mcp_server",
-      "env": { "ESP32_URL": "http://esp32matrix.local" }
-    }
-  }
-}
-```
-
-## API Reference
-
-```
-GET  /api/status
-GET  /api/sensors/temperature
-GET  /api/sensors/accelerometer
-GET  /api/sensors/weather
-POST /api/display/clear
-POST /api/brightness              { "level": 0-255 }
-POST /api/display/text            { "text", "color", "color2", "gradient", "small", "tiny", "scroll_speed" }
-POST /api/display/animation       { "type", ...animation-specific params }
-POST /api/display/matrix          { "matrix": [[8 rows × 8 hex colors]] }
-POST /api/display/frames          { "frames": ["384-hex × ≤24"], "frame_ms", "loop" }   (animations / Claude expressions)
-POST /api/display/temperature     { "matrix" } or { "value", "unit", "color" }   (legacy)
-POST /api/weather/mode            { "mode": "temp"|"humidity"|"uv"|"pressure"|"cycle" }
-POST /api/grid-test/set           { "mode": "color"|"brightness", "brightness": 0-255 }   (diagnostic)
-```
-
-## Tech Stack
-
-- **Firmware:** C++ / Arduino framework, FastLED, ArduinoJson, LittleFS, WiFi, HTTPClient
-- **MCP Server:** TypeScript, Node.js, `@modelcontextprotocol/sdk`
-- **AI Integration:** Claude via MCP (Model Context Protocol)
+Design specs: `docs/superpowers/specs/` · plans: `docs/superpowers/plans/`.
