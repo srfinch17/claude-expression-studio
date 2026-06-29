@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Matrix — give Claude a face</title>
-<meta name="description" content="A small 8×8 LED panel that becomes Claude's expression channel — it shows what Claude is doing and how it's going while you work. Open-source hardware for Claude Code & Claude Desktop." />
+<title>Matrix: give Claude a face</title>
+<meta name="description" content="A small 8×8 LED panel that becomes Claude's expression channel. It shows what Claude is doing and how it's going while you work. Open-source hardware for Claude Code & Claude Desktop." />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%230a0a0c'/%3E%3Crect x='5' y='2' width='6' height='2' fill='%23ff5008'/%3E%3Crect x='3' y='4' width='10' height='2' fill='%23ff5008'/%3E%3Crect x='4' y='6' width='2' height='1' fill='%23ff5008'/%3E%3Crect x='10' y='6' width='2' height='1' fill='%23ff5008'/%3E%3Crect x='2' y='7' width='12' height='2' fill='%23ff5008'/%3E%3Crect x='3' y='9' width='10' height='2' fill='%23ff5008'/%3E%3Crect x='3' y='11' width='3' height='2' fill='%23ff5008'/%3E%3Crect x='10' y='11' width='3' height='2' fill='%23ff5008'/%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,7 +13,7 @@
   :root{
     --bg:#08080b; --bg-2:#0c0c10; --panel-sub:#060608;
     --text:#ecedf2; --dim:#9a9ba6; --faint:#5d5e6a; --hair:#1c1c24;
-    --emotion:#ff5008;        /* the mascot — Claude's color here */
+    --emotion:#ff5008;        /* the mascot, Claude's color here */
     --info:#22ddff;           /* status / data */
     --mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
     --sans:"IBM Plex Sans", system-ui, -apple-system, sans-serif;
@@ -92,7 +92,7 @@
     border:1px solid #26262f;
     box-shadow:0 30px 80px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.04);
   }
-  .device::before{ /* ambient colored glow cast by the panel — driven per-frame */
+  .device::before{ /* ambient colored glow cast by the panel, driven per-frame */
     content:""; position:absolute; inset:-14%; z-index:-1; border-radius:40px;
     background:radial-gradient(closest-side, var(--glow,rgba(255,80,8,.5)), transparent 72%);
     opacity:.7; filter:blur(14px); transition:background .35s ease;
@@ -213,7 +213,7 @@
       <div class="hero-copy">
         <span class="eyebrow">Expression channel · Claude Code + Desktop</span>
         <h1>Give Claude<br>a <span class="em">face</span>.</h1>
-        <p class="lead">A small 8×8 LED panel becomes Claude's <b>expression channel</b> — a glowing thing on your desk that shows what Claude is doing and how it's going, in real time, while you work. Working, finished, stuck, celebrating: <b>body language for an AI</b>.</p>
+        <p class="lead">A small 8×8 LED panel becomes Claude's <b>expression channel</b>: a glowing thing on your desk that shows what Claude is doing and how it's going, in real time, while you work. Working, finished, stuck, celebrating: <b>body language for an AI</b>.</p>
         <div class="cta-row">
           <a class="btn btn-primary" href="#install">Put it on your desk</a>
           <a class="btn btn-ghost" href="#playground">Try the panel ↓</a>
@@ -235,7 +235,7 @@
     <div class="wrap">
       <span class="eyebrow">What it's saying</span>
       <h2>Claude, out loud.</h2>
-      <p class="section-lead">You don't watch a terminal the whole time. The panel is the glance — Claude's status and mood, ambient, in the corner of your eye. These are the real frames the board shows.</p>
+      <p class="section-lead">You don't watch a terminal the whole time. The panel is the glance: Claude's status and mood, ambient, in the corner of your eye. These are the real frames the board shows.</p>
       <div class="beats">
         <div class="beat">
           <canvas data-anim="hourglass" width="160" height="160" style="width:80px;height:80px"></canvas>
@@ -250,7 +250,7 @@
         <div class="beat">
           <canvas data-anim="ask-question" width="160" height="160" style="width:80px;height:80px"></canvas>
           <span class="tag">Your turn</span><h3>Stuck on you</h3>
-          <p>When Claude needs an answer or a permission, a question mark pulses — the silent shoulder-tap.</p>
+          <p>When Claude needs an answer or a permission, a question mark pulses, the silent shoulder-tap.</p>
         </div>
         <div class="beat">
           <canvas data-anim="warrocket" width="160" height="160" style="width:80px;height:80px"></canvas>
@@ -268,7 +268,7 @@
     <div class="wrap">
       <span class="eyebrow">The deep bench</span>
       <h2>A whole vocabulary of moods.</h2>
-      <p class="section-lead">Status is only the half of it. Dozens of hand-built animations live in the library — cosmic, kinetic, alive. A few favorites below, each running its real frame data with additive bloom.</p>
+      <p class="section-lead">Status is only the half of it. Dozens of hand-built animations live in the library: cosmic, kinetic, alive. A few favorites below, each running its real frame data with additive bloom.</p>
       <div class="show-grid" id="showGrid"></div>
     </div>
   </section>
@@ -280,7 +280,7 @@
     <div class="wrap">
       <span class="eyebrow">Your turn</span>
       <h2>Poke it.</h2>
-      <p class="section-lead">Tap an expression — it plays on the panel below, running the exact frame data the firmware would push to the LEDs. <span style="color:var(--emotion)">Orange</span> is feeling, <span style="color:var(--info)">cyan</span> is information.</p>
+      <p class="section-lead">Tap an expression and it plays on the panel below, running the exact frame data the firmware would push to the LEDs. <span style="color:var(--emotion)">Orange</span> is feeling, <span style="color:var(--info)">cyan</span> is information.</p>
       <div class="play-grid">
         <div class="device-stage">
           <div class="device" id="playDevice">
@@ -290,10 +290,10 @@
         </div>
         <div>
           <div class="expr-pad" id="exprPad"></div>
-          <p class="play-hint">Nothing here is faked — each button feeds the same 8×8 frames, color map, and timing from the board's expression library.</p>
+          <p class="play-hint">Nothing here is faked. Each button feeds the same 8×8 frames, color map, and timing from the board's expression library.</p>
           <p class="play-hint" style="margin-top:12px">
             <a href="../studio/index.html" style="color:var(--emotion);text-decoration:none;font-weight:600;">Open Studio →</a>
-            <span style="color:var(--faint)"> — browse the full expression library, live.</span>
+            <span style="color:var(--faint)"> to browse the full expression library, live.</span>
           </p>
         </div>
       </div>
@@ -307,15 +307,15 @@
     <div class="wrap">
       <span class="eyebrow" style="color:var(--info)"><!---->Not just feelings</span>
       <h2>Facts, too.</h2>
-      <p class="section-lead">The panel is an <i>informational</i> output as much as an emotional one. Claude can push live data — and the board renders it natively, no text needed.</p>
+      <p class="section-lead">The panel is an <i>informational</i> output as much as an emotional one. Claude can push live data, and the board renders it natively, no text needed.</p>
       <div class="data-grid">
         <div class="data-card">
           <canvas data-gen="progress" width="140" height="140" style="width:70px;height:70px"></canvas>
-          <div><span class="tag">Progress</span><h3>How far along</h3><p>A bottom-up fill tracks a long job from 0 to done — a glance tells you roughly how much is left.</p></div>
+          <div><span class="tag">Progress</span><h3>How far along</h3><p>A bottom-up fill tracks a long job from 0 to done; a glance tells you roughly how much is left.</p></div>
         </div>
         <div class="data-card">
           <canvas data-gen="spark" width="140" height="140" style="width:70px;height:70px"></canvas>
-          <div><span class="tag">Trend</span><h3>A live sparkline</h3><p>A reading over time — build times, a sensor, a queue depth — as a moving column chart.</p></div>
+          <div><span class="tag">Trend</span><h3>A live sparkline</h3><p>A reading over time (build times, a sensor, a queue depth) as a moving column chart.</p></div>
         </div>
       </div>
     </div>
@@ -328,9 +328,9 @@
     <div class="wrap">
       <span class="eyebrow">The bigger idea</span>
       <h2>One message. Any screen.</h2>
-      <p class="section-lead">Under the panel is a tiny protocol. Claude sends one <i>semantic</i> message — an intent, maybe some data — and any display you've connected renders it its own way. The 8×8 is just the first renderer.</p>
+      <p class="section-lead">Under the panel is a tiny protocol. Claude sends one <i>semantic</i> message (an intent, maybe some data) and any display you've connected renders it its own way. The 8×8 is just the first renderer.</p>
 
-      <div class="proto-msg"><span class="c">// Claude says it once —</span><br>presence.<span class="k">set</span>({ intent: <span class="v">"working"</span>, headline: <span class="v">"Running tests"</span>, data: { progress: <span class="v">0.6</span> } })</div>
+      <div class="proto-msg"><span class="c">// Claude says it once:</span><br>presence.<span class="k">set</span>({ intent: <span class="v">"working"</span>, headline: <span class="v">"Running tests"</span>, data: { progress: <span class="v">0.6</span> } })</div>
 
       <div class="renderers">
         <div class="rnd">
@@ -341,13 +341,13 @@
         <div class="rnd">
           <span class="n">Renderer 02</span>
           <h3>A desktop card</h3>
-          <p>The same message, rendered rich — headline, detail, a sparkline — in a window.</p>
+          <p>The same message, rendered rich (headline, detail, a sparkline) in a window.</p>
         </div>
         <div class="rnd future">
           <span class="soon">Next</span>
           <span class="n">Renderer 03+</span>
           <h3>Any ESP32 board</h3>
-          <p>Bigger matrices, round displays, a lamp. A fabric of screens you've <i>chosen</i> to let Claude speak through — it only ever drives the ones you enlist.</p>
+          <p>Bigger matrices, round displays, a lamp. A fabric of screens you've <i>chosen</i> to let Claude speak through. It only ever drives the ones you enlist.</p>
         </div>
       </div>
     </div>
@@ -365,17 +365,17 @@
         <div class="step">
           <span class="num">01 · Flash</span>
           <h3>One file to the board</h3>
-          <p>Grab the firmware from GitHub and run <code>flash.bat</code> / <code>flash.sh</code>. One merged image — firmware and the web UI together, no extra upload. A one-click browser flasher is on the way.</p>
+          <p>Grab the firmware from GitHub and run <code>flash.bat</code> / <code>flash.sh</code>. One merged image: firmware and the web UI together, no extra upload. A one-click browser flasher is on the way.</p>
         </div>
         <div class="step">
           <span class="num">02 · Connect</span>
           <h3>Add it to Claude Desktop</h3>
-          <p>Double-click the <code>.mcpb</code> extension. No JSON, no Node install, no config — the board lives at <code>esp32matrix.local</code> on your network.</p>
+          <p>Double-click the <code>.mcpb</code> extension. No JSON, no Node install, no config. The board lives at <code>esp32matrix.local</code> on your network.</p>
         </div>
         <div class="step">
           <span class="num">03 · Say hi</span>
           <h3>Watch it come alive</h3>
-          <p>Claude starts using the panel on its own — a spinner when it's busy, a check when it's done, a tap when it needs you.</p>
+          <p>Claude starts using the panel on its own: a spinner when it's busy, a check when it's done, a tap when it needs you.</p>
         </div>
       </div>
       <p class="install-note"><b>Where it stands:</b> the firmware, the web control panel, and the Claude integration all work and are hardware-verified. The offline flasher lives in the repo today; tagged releases and a one-click browser install are on the way. Full instructions and source are on <a href="https://github.com/srfinch17/peckworks-esp32s3matrix" style="color:var(--emotion)">GitHub</a>.</p>
@@ -389,21 +389,21 @@
 
 <footer class="site">
   <div class="wrap">
-    <span class="mono">Matrix — an expression channel for Claude.</span>
+    <span class="mono">Matrix: an expression channel for Claude.</span>
     <span>Open source · built with Claude Code · <a href="https://github.com/srfinch17/peckworks-esp32s3matrix">GitHub</a></span>
   </div>
 </footer>
 
 <script type="module">
 /* ============================================================
- * Matrix showcase — a faithful 8×8 LED simulation.
+ * Matrix showcase: a faithful 8×8 LED simulation.
  * Frame data is the project's real expression library (char-art
  * + color map), rendered with additive bloom so it reads as a
  * physical panel emitting light. No board required.
  *
  * Bloom renderer + expression resolve + desk companion are all
  * imported from the shared core (shared/render.js,
- * shared/expressions.js, shared/desk-sim.js) — one copy in the
+ * shared/expressions.js, shared/desk-sim.js), one copy in the
  * repo, verified by grep for globalCompositeOperation.
  * ========================================================== */
 
@@ -521,11 +521,11 @@ function loadLibrary() {
     try {
       const data = await (await fetch('../studio/gallery-data.json')).json();
       for (const e of data.expressions) LIB[e.name] = resolveExpression(e);
-    } catch { /* offline / missing — firmware sims still work, saved tiles just skip */ }
+    } catch { /* offline / missing: firmware sims still work, saved tiles just skip */ }
   })();
 }
 
-// ── Panel factory — wraps the shared Panel ──
+// ── Panel factory: wraps the shared Panel ──
 const panels = [];
 function mk(canvas, deviceEl) {
   const p = new Panel(canvas, { device: deviceEl });
@@ -564,14 +564,14 @@ document.querySelectorAll('canvas[data-gen]').forEach(cv => {
   if (fn) p.setGenerator(fn);
 });
 
-// ── Desk companion — shared component from shared/desk-sim.js ──
+// ── Desk companion: shared component from shared/desk-sim.js ──
 let compHandle = null;
 function showCompanion() {
   if (compHandle) return;
   compHandle = mountDeskSim({ expression: EXPR.idle, dismissible: true });
 }
 
-// ── Playground sampler — a fresh, pokeable cut of the library, distinct from
+// ── Playground sampler: a fresh, pokeable cut of the library, distinct from
 // the hero/beats/showcase. Mix of feeling (orange) and information (cyan),
 // driven straight from firmware sims + saved-expression frames. ──
 const PLAY = [
@@ -610,7 +610,7 @@ function wirePlayground() {
 drive(hero, 'claudesweep');
 document.getElementById('heroNow').innerHTML = 'Claude is <b>working</b>';
 
-// ── Library showcase — a curated set of the coolest animations ──
+// ── Library showcase: a curated set of the coolest animations ──
 // Pulled live from the gallery: saved expressions (frames) + a couple of
 // generative firmware sims, mixed for variety.
 const SHOWCASE = [
@@ -640,7 +640,7 @@ async function buildShowcase() {
 
 // ── Single shared animation loop ──
 // The loop reads `panels` each frame, so the async showcase tiles join in as
-// soon as buildShowcase() pushes them — no restart needed.
+// soon as buildShowcase() pushes them, no restart needed.
 if (REDUCE) {
   panels.forEach(p => p.draw(0));
   showCompanion();
@@ -652,7 +652,7 @@ if (REDUCE) {
   setTimeout(showCompanion, 2600);
 }
 
-// Beats and the showcase both draw from the saved-expression library — wire them
+// Beats and the showcase both draw from the saved-expression library, wire them
 // once it has loaded (the shared loop picks up their panels automatically).
 loadLibrary().then(() => { wireBeats(); wirePlayground(); buildShowcase(); });
 </script>
