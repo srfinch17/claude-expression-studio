@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizePresence, cannedFor, INTENTS } from "./presence.ts";
+import { normalizePresence, INTENTS } from "./presence.ts";
 
 test("minimal message defaults urgency to ambient and trims intent", () => {
   assert.deepEqual(normalizePresence({ intent: " working " }), { intent: "working", urgency: "ambient" });
@@ -53,12 +53,6 @@ test("data.series accepts 1..32 numbers, rejects 33 or non-number", () => {
 
 test("data with two cases is rejected", () => {
   assert.throws(() => normalizePresence({ intent: "info", data: { progress: 0.5, series: [1] } }), /exactly one/);
-});
-
-test("cannedFor maps known intents and falls back to smiley", () => {
-  assert.equal(cannedFor("done"), "done");
-  assert.equal(cannedFor("error"), "cross");
-  assert.equal(cannedFor("teleporting"), "smiley");
 });
 
 test("INTENTS has the 10 canonical names", () => {

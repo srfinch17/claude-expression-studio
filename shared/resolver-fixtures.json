@@ -1,0 +1,83 @@
+{
+  "manifests": {
+    "basic": {
+      "version": "1.0",
+      "intents": {
+        "info":    { "fallback": null, "root": true },
+        "working": { "fallback": null, "root": true },
+        "done":    { "fallback": null, "root": true },
+        "attention": { "fallback": null, "root": true },
+        "fail":    { "fallback": null, "root": true },
+        "idle":    { "fallback": null, "root": true },
+        "thinking":{ "fallback": "working" },
+        "fatal":   { "fallback": "error" },
+        "error":   { "fallback": "fail" }
+      },
+      "harnesses": {
+        "claude-code": { "moments": [ { "on": "hook:Stop", "intent": "done" } ] }
+      },
+      "renderers": {
+        "r1": { "bindings": {
+          "info": "a-info", "working": "a-work", "done": "a-done",
+          "attention": "a-att", "fail": "a-fail", "idle": "a-idle"
+        } },
+        "r2": { "inherits": "r1", "bindings": { "done": "a-done2" } },
+        "pooler": { "bindings": {
+          "info": "a-info", "working": "a-work", "done": "a-done",
+          "attention": "a-att", "fail": "a-fail",
+          "idle": { "pool": { "x": 1, "y": 3 } }
+        } },
+        "norep": { "bindings": {
+          "idle": { "noRepeat": true, "pool": { "x": 1, "y": 1 } }
+        } },
+        "rich": { "bindings": {
+          "idle": { "brightness": 5, "pool": {
+            "fire": { "weight": 1, "params": { "speed": 50 }, "label": "fire" },
+            "snow": { "weight": 3 }
+          } }
+        } }
+      }
+    }
+  },
+  "cases": [
+    { "name": "moment maps to intent + binding",
+      "manifest": "basic", "harness": "claude-code", "renderer": "r1",
+      "moment": "hook:Stop", "rngSeq": [], "expect": { "intent": "done", "value": "a-done" } },
+    { "name": "unknown moment resolves to null",
+      "manifest": "basic", "harness": "claude-code", "renderer": "r1",
+      "moment": "hook:Nope", "rngSeq": [], "expect": null },
+    { "name": "fallback walk: fatal -> error -> fail (only fail bound)",
+      "manifest": "basic", "renderer": "r1",
+      "intent": "fatal", "rngSeq": [], "expect": { "intent": "fail", "value": "a-fail" } },
+    { "name": "inherited binding used when not overridden",
+      "manifest": "basic", "renderer": "r2",
+      "intent": "info", "rngSeq": [], "expect": { "intent": "info", "value": "a-info" } },
+    { "name": "own binding overrides inherited",
+      "manifest": "basic", "renderer": "r2",
+      "intent": "done", "rngSeq": [], "expect": { "intent": "done", "value": "a-done2" } },
+    { "name": "pool pick: rng 0.9 over weights x:1,y:3 -> y",
+      "manifest": "basic", "renderer": "pooler",
+      "intent": "idle", "rngSeq": [0.9], "expect": { "intent": "idle", "value": "y" } },
+    { "name": "pool pick: rng 0.1 over weights x:1,y:3 -> x",
+      "manifest": "basic", "renderer": "pooler",
+      "intent": "idle", "rngSeq": [0.1], "expect": { "intent": "idle", "value": "x" } },
+    { "name": "noRepeat avoids the immediate repeat across two calls",
+      "manifest": "basic", "renderer": "norep", "rngSeq": [0, 0],
+      "steps": [
+        { "intent": "idle", "expect": { "intent": "idle", "value": "x" } },
+        { "intent": "idle", "expect": { "intent": "idle", "value": "y" } }
+      ] },
+    { "name": "rich pool: rng 0.1 picks fire (weight 1 of 4) and surfaces params+label+brightness",
+      "manifest": "basic", "renderer": "rich",
+      "intent": "idle", "rngSeq": [0.1],
+      "expect": { "intent": "idle", "value": "fire", "params": { "speed": 50 }, "label": "fire", "brightness": 5 } },
+    { "name": "rich pool: rng 0.9 picks snow (bare weight 3) — brightness only, no params/label",
+      "manifest": "basic", "renderer": "rich",
+      "intent": "idle", "rngSeq": [0.9],
+      "expect": { "intent": "idle", "value": "snow", "brightness": 5 } },
+    { "name": "rich pool DISCRIMINATING: rng 0.3 over fire:{weight:1}, snow:{weight:3} -> snow (old fallback-to-1 would pick fire)",
+      "manifest": "basic", "renderer": "rich",
+      "intent": "idle", "rngSeq": [0.3],
+      "expect": { "intent": "idle", "value": "snow", "brightness": 5 } }
+  ]
+}

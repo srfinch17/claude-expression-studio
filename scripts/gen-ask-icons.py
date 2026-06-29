@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Generate the three awaiting-input expressions for the ESP32-S3 8x8 matrix:
-ask-question / ask-confirm / ask-attention. Fired by the Claude Code hooks when
-Claude is waiting for the user (see the awaiting-input spec).
+"""Generate the awaiting-input + completion expressions for the ESP32-S3 8x8 matrix:
+ask-question / ask-attention (awaiting input) plus task-complete (a completion glyph,
+formerly ask-confirm — the '?' now covers plan-approval too, so ExitPlanMode fires
+ask-question). Fired by the Claude Code hooks (see the awaiting-input spec).
 
 Design notes (emoting-on-8x8 + docs/LED_BRIGHTNESS.md):
 - These play at the board's CURRENT brightness, which is often the bri-5 ambient
@@ -71,7 +72,7 @@ Q_STROKE = [(1, 1), (2, 0), (3, 0), (4, 0), (5, 1), (5, 2), (4, 3), (3, 4), (3, 
 
 
 def ask_question():
-    N = 12
+    N = len(Q_STROKE)  # one frame per stroke pixel => single clean sweep, no backtrack
     grids = []
     for i in range(N):
         pulse = 0.6 + 0.4 * (0.5 - 0.5 * math.cos(2 * math.pi * i / N))  # 0.6..1.0
@@ -86,7 +87,8 @@ def ask_question():
     return grids, 110
 
 
-# ---- ask-confirm: a box, then a green check draws in stroke-by-stroke, holds -----
+# ---- task-complete: a box, then a green check draws in stroke-by-stroke, holds -----
+# (Formerly ask-confirm; promoted to a completion glyph. The '?' covers plan-approval.)
 def box_pixels():
     px = []
     for x in range(1, 7):
@@ -99,7 +101,7 @@ def box_pixels():
 CHECK_STROKE = [(2, 4), (3, 5), (4, 4), (5, 3), (6, 2)]  # low point then up-right
 
 
-def ask_confirm():
+def task_complete():
     grids = []
     box = box_pixels()
     # f0: box only; f1..f5: reveal the check one pixel at a time
@@ -152,10 +154,10 @@ SPECS = {
         "Awaiting input — a pulsing cyan '?' with a white shine sweeping its stroke. "
         "Fired when Claude poses a questionnaire and is waiting for the user's answer. "
         "Holds (loop 0) until replaced."),
-    "ask-confirm": (ask_confirm,
-        "Awaiting input — an empty box with a green checkmark drawing itself in, then "
-        "holding. Fired when Claude presents a plan for the user's approval. Holds "
-        "(loop 0) until replaced."),
+    "task-complete": (task_complete,
+        "Task complete — an empty box with a green checkmark drawing itself in, then "
+        "holding. A completion/done glyph (formerly ask-confirm; the '?' now covers "
+        "plan-approval). Currently unwired — assign to an event in the Studio."),
     "ask-attention": (ask_attention,
         "Awaiting input — an amber bell ringing (clapper swings, side ticks flash). "
         "Fired when Claude needs the user's permission. Holds (loop 0) until replaced."),

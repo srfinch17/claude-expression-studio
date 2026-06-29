@@ -54,6 +54,12 @@ export async function stamp(version, root = REPO_ROOT) {
   pkg.version = version;
   await writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
 
+  // 4. MCP bundle manifest (.mcpb) — read/modify/write to preserve other fields
+  const manifestPath = path.join(root, "mcp_server", "manifest.json");
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  manifest.version = version;
+  await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + "\n", "utf8");
+
   return version;
 }
 
@@ -61,5 +67,5 @@ export async function stamp(version, root = REPO_ROOT) {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const version = await readVersion();
   await stamp(version);
-  console.log(`Stamped v${version} → version.h, data/version.json, mcp_server/package.json`);
+  console.log(`Stamped v${version} → version.h, data/version.json, mcp_server/package.json, mcp_server/manifest.json`);
 }

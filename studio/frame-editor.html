@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Frame Editor — Expression Studio</title>
+  <style>
+    :root { --bg:#0a0a0e; --panel:#111118; --sub:#15151b; --text:#e8e8ef; --dim:#9a9aa8;
+      --faint:#5a5a68; --orange:#ff5008; --cyan:#22ddff; --green:#16a34a;
+      --mono:'IBM Plex Mono',ui-monospace,monospace; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:14px var(--mono); padding:0 0 40px; }
+    header { position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid #1e1e26;
+      display:flex; align-items:center; gap:12px; padding:12px 18px; }
+    header h1 { font-size:1rem; margin:0; flex:1; }
+    #banner { color:var(--orange); font-size:.78rem; }
+    #status { font-size:.76rem; color:var(--dim); min-width:14ch; }
+    button { font:inherit; font-size:.8rem; color:var(--text); background:var(--sub);
+      border:1px solid #2a2a34; border-radius:7px; padding:5px 11px; cursor:pointer; }
+    button:disabled { opacity:.4; cursor:not-allowed; }
+    button.save { border-color:var(--green); color:#9affc8; }
+    main { display:grid; grid-template-columns:220px minmax(0,1fr); gap:16px; padding:16px; align-items:start; }
+    .side { background:var(--panel); border:1px solid #1c1c24; border-radius:10px; padding:12px; display:flex; flex-direction:column; gap:10px; }
+    h2 { font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); margin:0 0 4px; }
+    .swatches { display:flex; flex-direction:column; gap:5px; }
+    .swatch { display:flex; align-items:center; gap:8px; padding:3px 5px; border:1px solid transparent; border-radius:6px; cursor:pointer; font-size:.7rem; }
+    .swatch.active { border-color:var(--cyan); }
+    .swatch .chip { width:16px; height:16px; border-radius:4px; border:1px solid #0006; }
+    .swatch .off { width:16px; height:16px; border-radius:4px; border:1px dashed #555; }
+    .palrow { display:flex; gap:6px; }
+    .palrow button { flex:1; padding:3px; font-size:.66rem; }
+    .meta label { display:flex; justify-content:space-between; align-items:center; font-size:.72rem; color:var(--dim); margin-top:4px; }
+    .meta input { width:70px; font:inherit; background:#000; color:var(--text); border:1px solid #2a2a34; border-radius:4px; }
+    .meta textarea { width:100%; height:46px; font:inherit; font-size:.66rem; background:#000; color:var(--text); border:1px solid #2a2a34; border-radius:4px; resize:vertical; margin-top:4px; }
+    .preview canvas { width:120px; height:120px; border-radius:6px; background:#060608; display:block; }
+    .stage { background:var(--panel); border:1px solid #1c1c24; border-radius:10px; padding:14px; }
+    .grid { display:grid; grid-template-columns:repeat(8,40px); grid-template-rows:repeat(8,40px); gap:2px; background:#1c1c24; padding:2px; border-radius:6px; width:max-content; touch-action:none; user-select:none; }
+    .px { width:40px; height:40px; border-radius:3px; background:#060608; cursor:crosshair; }
+    .frames { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:14px; }
+    .fcell { position:relative; border:2px solid #22222c; border-radius:6px; padding:2px; cursor:pointer; }
+    .fcell.active { border-color:var(--cyan); }
+    .fcell canvas { width:46px; height:46px; border-radius:3px; background:#060608; display:block; }
+    .fcell .fn { position:absolute; top:1px; left:3px; font-size:.5rem; color:var(--faint); }
+    .fbtns { display:flex; gap:6px; margin-left:8px; }
+  </style>
+</head>
+<body>
+  <script type="module" src="./studio-nav.js"></script>
+  <header>
+    <h1 id="title">Frame Editor</h1>
+    <span id="banner"></span>
+    <span id="status"></span>
+    <button id="approve" disabled>○ approve</button>
+    <button id="revert">Revert</button>
+    <button id="save" class="save">Save</button>
+  </header>
+  <main>
+    <div class="side">
+      <div>
+        <h2>Palette</h2>
+        <div id="swatches" class="swatches"></div>
+        <div class="palrow">
+          <button id="addColor">+ color</button>
+          <button id="recolor">recolor</button>
+          <button id="removeColor">remove</button>
+        </div>
+      </div>
+      <div class="meta">
+        <h2>Timing</h2>
+        <label>frame_ms <input id="frameMs" type="number" min="10" max="10000"></label>
+        <label>loop <input id="loop" type="number" min="0" max="999"></label>
+        <h2>Description</h2>
+        <textarea id="desc"></textarea>
+      </div>
+      <div class="preview">
+        <h2>Preview</h2>
+        <canvas id="preview" width="120" height="120"></canvas>
+      </div>
+    </div>
+    <div class="stage">
+      <div id="grid" class="grid"></div>
+      <div class="frames">
+        <div id="fstrip" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+        <div class="fbtns">
+          <button id="addF">+ frame</button>
+          <button id="dupF">dup</button>
+          <button id="delF">del</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { Panel } from "../shared/render.js";
+    import { resolveExpression } from "../shared/expressions.js";
+    import { paintCell, addFrame, duplicateFrame, deleteFrame, moveFrame,
+             addColor, setColor, removeColor, setFrameMs, setLoop, setDescription } from "./frame-editor.js";
+
+    const qs = new URLSearchParams(location.search);
+    const NAME = qs.get("name") || "";
+    const titleEl = document.getElementById("title");
+    const bannerEl = document.getElementById("banner");
+    const statusEl = document.getElementById("status");
+    const saveBtn = document.getElementById("save");
+    const revertBtn = document.getElementById("revert");
+    const approveBtn = document.getElementById("approve");
+    const gridEl = document.getElementById("grid");
+    const swatchesEl = document.getElementById("swatches");
+    const fstripEl = document.getElementById("fstrip");
+
+    let expr = null, original = null, activeFrame = 0, brush = ".", readOnly = false, dirty = false, approved = false;
+    let previewPanel = null, fpanels = [];
+    const REDUCE = matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+    function setDirty(d) { dirty = d; statusEl.textContent = readOnly ? "read-only" : d ? "unsaved changes" : "saved"; saveBtn.disabled = readOnly || !d; }
+    function edit(fn) { expr = fn(expr); setDirty(true); renderAll(); }
+
+    // Resolve a single frame to a flat lit-pixel array via the expression resolver.
+    function resolvedFrames() { return resolveExpression(expr).frames; }
+
+    function renderGrid() {
+      gridEl.innerHTML = "";
+      const cols = expr.colors || {};
+      const rows = expr.frames[activeFrame];
+      for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
+        const ch = rows[y][x];
+        const px = document.createElement("div"); px.className = "px";
+        px.style.background = (ch !== "." && cols[ch]) ? cols[ch] : "#060608";
+        const paint = (b) => edit((e) => paintCell(e, activeFrame, x, y, b));
+        px.addEventListener("pointerdown", (ev) => { ev.preventDefault(); if (readOnly) return; paint(ev.button === 2 ? "." : brush); });
+        px.addEventListener("pointerenter", (ev) => { if (readOnly || !(ev.buttons & 1)) return; paint(brush); });
+        px.addEventListener("contextmenu", (ev) => ev.preventDefault());
+        gridEl.appendChild(px);
+      }
+    }
+
+    function renderSwatches() {
+      swatchesEl.innerHTML = "";
+      const off = document.createElement("div"); off.className = "swatch" + (brush === "." ? " active" : "");
+      off.innerHTML = `<span class="off"></span> off / eraser`;
+      off.onclick = () => { brush = "."; renderSwatches(); };
+      swatchesEl.appendChild(off);
+      for (const [ch, hex] of Object.entries(expr.colors || {})) {
+        const sw = document.createElement("div"); sw.className = "swatch" + (brush === ch ? " active" : "");
+        sw.innerHTML = `<span class="chip" style="background:${hex}"></span> ${hex}`;
+        sw.onclick = () => { brush = ch; renderSwatches(); };
+        swatchesEl.appendChild(sw);
+      }
+    }
+
+    function renderFrames() {
+      fstripEl.innerHTML = ""; fpanels = [];
+      expr.frames.forEach((_, i) => {
+        const cell = document.createElement("div"); cell.className = "fcell" + (i === activeFrame ? " active" : "");
+        cell.draggable = !readOnly;
+        const cv = document.createElement("canvas"); cv.width = 46; cv.height = 46; cell.appendChild(cv);
+        const fn = document.createElement("div"); fn.className = "fn"; fn.textContent = i; cell.appendChild(fn);
+        cell.onclick = () => { activeFrame = i; renderAll(); };
+        cell.addEventListener("dragstart", (ev) => ev.dataTransfer.setData("text/plain", String(i)));
+        cell.addEventListener("dragover", (ev) => { if (!readOnly) ev.preventDefault(); });
+        cell.addEventListener("drop", (ev) => { ev.preventDefault(); if (readOnly) return; const from = Number(ev.dataTransfer.getData("text/plain")); edit((e) => moveFrame(e, from, i)); });
+        fstripEl.appendChild(cell);
+        const p = new Panel(cv); const rf = resolvedFrames()[i]; p.setFrames([rf], 1e9); fpanels.push(p);
+      });
+    }
+
+    function renderAll() {
+      if (activeFrame >= expr.frames.length) activeFrame = expr.frames.length - 1;
+      titleEl.textContent = `Frame Editor — ${NAME}`;
+      document.getElementById("frameMs").value = expr.frame_ms;
+      document.getElementById("loop").value = expr.loop;
+      document.getElementById("desc").value = expr.description || "";
+      renderGrid(); renderSwatches(); renderFrames();
+      const ex = resolveExpression(expr); previewPanel.setFrames(ex.frames, ex.frame_ms);
+    }
+
+    // --- palette buttons ---
+    document.getElementById("addColor").onclick = () => {
+      if (readOnly) return; const hex = prompt("New color (hex, e.g. #44ccff):", "#44ccff");
+      if (!hex || !/^#[0-9a-fA-F]{6}$/.test(hex)) return;
+      const r = addColor(expr, hex); expr = r.expr; if (r.char) brush = r.char; setDirty(true); renderAll();
+    };
+    document.getElementById("recolor").onclick = () => {
+      if (readOnly || brush === ".") return; const hex = prompt("Recolor:", expr.colors[brush]);
+      if (!hex || !/^#[0-9a-fA-F]{6}$/.test(hex)) return; edit((e) => setColor(e, brush, hex));
+    };
+    document.getElementById("removeColor").onclick = () => {
+      if (readOnly || brush === ".") return; if (!confirm(`Remove this color? Cells using it become off.`)) return;
+      const ch = brush; brush = "."; edit((e) => removeColor(e, ch));
+    };
+
+    // --- frame buttons + meta ---
+    document.getElementById("addF").onclick = () => { if (!readOnly) { activeFrame++; edit((e) => addFrame(e, activeFrame, activeFrame - 1)); } };
+    document.getElementById("dupF").onclick = () => { if (!readOnly) { edit((e) => duplicateFrame(e, activeFrame)); } };
+    document.getElementById("delF").onclick = () => { if (!readOnly) { edit((e) => deleteFrame(e, activeFrame)); } };
+    document.getElementById("frameMs").addEventListener("change", (e) => { if (!readOnly) edit((x) => setFrameMs(x, Number(e.target.value))); });
+    document.getElementById("loop").addEventListener("change", (e) => { if (!readOnly) edit((x) => setLoop(x, Number(e.target.value))); });
+    document.getElementById("desc").addEventListener("change", (e) => { if (!readOnly) edit((x) => setDescription(x, e.target.value)); });
+
+    // --- save / revert ---
+    saveBtn.onclick = async () => {
+      saveBtn.disabled = true; statusEl.textContent = "saving…";
+      try {
+        const r = await fetch(`/api/expression/${encodeURIComponent(NAME)}`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(expr) });
+        const res = await r.json();
+        if (res.ok) { original = JSON.parse(JSON.stringify(expr)); setDirty(false); approved = false; paintApprove(); statusEl.textContent = "saved — now pending re-review (orange)"; }
+        else { statusEl.textContent = "save failed: " + (res.errors || []).join("; "); setDirty(true); }
+      } catch (e) { statusEl.textContent = "save error: " + e.message; setDirty(true); }
+    };
+    revertBtn.onclick = () => { expr = JSON.parse(JSON.stringify(original)); activeFrame = 0; setDirty(false); renderAll(); };
+    function paintApprove() { approveBtn.textContent = approved ? "✓ approved" : "○ approve"; approveBtn.classList.toggle("save", approved); approveBtn.disabled = readOnly; }
+    approveBtn.onclick = async () => {
+      if (readOnly) return;
+      approveBtn.disabled = true;
+      try {
+        const r = await fetch(`/api/approval/${encodeURIComponent(NAME)}`, {
+          method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ approved: !approved }),
+        });
+        const res = await r.json();
+        if (res.ok) approved = res.approved;
+      } catch { /* leave state unchanged */ }
+      paintApprove();
+    };
+
+    // --- boot ---
+    previewPanel = new Panel(document.getElementById("preview"));
+    if (!REDUCE) { let last = performance.now(); (function loop(now){ previewPanel.tick(now-last, now); last=now; requestAnimationFrame(loop); })(last); }
+
+    async function boot() {
+      let data;
+      try { data = await (await fetch("./gallery-data.json")).json(); }
+      catch { bannerEl.textContent = "Could not load gallery-data.json."; return; }
+      const found = (data.expressions || []).find((e) => e.name === NAME);
+      if (!found) { bannerEl.textContent = `No expression named "${NAME}".`; return; }
+      if (found.source !== "saved") { readOnly = true; bannerEl.textContent = `"${NAME}" is a ${found.source} expression — not editable here (only saved expressions).`; }
+      expr = { description: found.description || "", frames: found.frames, colors: found.colors || {}, frame_ms: found.frame_ms || 150, loop: found.loop ?? 0 };
+      original = JSON.parse(JSON.stringify(expr));
+      approved = !!found.approved;
+      // Engine gate: a save needs the engine. If /api/manifest isn't reachable, go read-only.
+      try { const r = await fetch("/api/manifest"); if (!r.ok) throw 0; }
+      catch { if (!readOnly) { readOnly = true; bannerEl.textContent = "Editing needs the live engine — launch the Studio via matrix_studio. (Read-only; Save disabled.)"; } }
+      setDirty(false); renderAll(); paintApprove();
+    }
+    boot();
+  </script>
+</body>
+</html>

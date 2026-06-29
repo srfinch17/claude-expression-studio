@@ -32,6 +32,20 @@ round-trips as the scarce resource:
     `browser_evaluate` to call the page's own functions and confirm they drive the
     board (cross-check the framebuffer). Catches JS errors and dead controls before
     the user ever looks.
+    - **Engine origin, not just the board.** The Studio/panel surfaces (`studio/board.html`,
+      `studio/presence.html`) are served by the MCP server's ENGINE at `http://127.0.0.1:8787`, and
+      ONLY there do its proxies (`/api/framebuffer`, `/api/presence`) + `/events` SSE exist. Verify
+      them at the engine URL (the `matrix_studio` tool prints it / `mcp_server/.engine-url`) — any
+      other origin (a stray http-server, `file://`, Pages) silently 404s those routes. A "Live does
+      nothing" / "panel shows random stuff" report is often just the wrong origin, not a bug.
+    - **Instrument INTERMITTENT symptoms over a window that spans the period — don't eyeball.** A
+      short check sails straight through a periodic fault and gives false confidence (a 4s glance
+      missed the board's ~12s `/api/framebuffer` stall → I shipped a WRONG fix and told the user it
+      was done). In ONE `browser_evaluate`, loop ~20-30s logging each poll's status + the longest gap
+      + the FULL causal chain (e.g. the SSE event count, which disproved a wrong root-cause theory),
+      then size any hysteresis/timeout to the measured FAILURE cost, not the happy-path interval. And
+      make best-effort UI **surface its state** so silence ≠ broken (see `feedback-live-instrumentation`,
+      `feedback-surface-degraded-state`).
     - ⚠️ **Stale-cache trap (bites .js AND .css):** after a LittleFS upload, the browser
       may still use the OLD cached asset while `curl`/`fetch` returns the NEW one — so the
       file "looks deployed" but the page behaves/renders old. **(Mostly FIXED 2026-06-22:**
@@ -52,14 +66,28 @@ round-trips as the scarce resource:
     - **Pre-upload web verification (no LittleFS upload needed):** serve `data/` locally and point
       Playwright at it to verify layout/markup/JS BEFORE spending the user's upload —
       `python -c "from http.server import ThreadingHTTPServer,SimpleHTTPRequestHandler; ThreadingHTTPServer(('127.0.0.1',PORT),SimpleHTTPRequestHandler).serve_forever()"` (run in BACKGROUND; **never pipe to `head`** — BrokenPipe kills the server's request logging → ERR_EMPTY_RESPONSE on sub-resources; use a THREADED server so concurrent asset loads don't choke). `/api/*` 404s gracefully. Catches CSS/markup/JS bugs cheaply; then do the live-apply/framebuffer checks against the REAL board post-upload.
+      - **Audit ALL pages in ONE call (iframe-sweep):** to check every page for the same invariants
+        (no 390px horizontal overflow, `app.css` loaded, breadcrumb present + correct parent, hub links
+        resolve) without 30+ navigations, load each same-origin page into a hidden 390px-wide `<iframe>`
+        inside one `browser_evaluate` and measure `contentDocument.documentElement.scrollWidth -
+        clientWidth` etc. Use `?cb=Date.now()` + an `onload`-then-~200ms settle so `app.css`/scripts
+        mount before you measure. Collapsed ~30 navigations into one call in the v1.1.0 audit. Same
+        "assert RENDERED size, not the on-disk file" discipline as the stale-cache trap above.
 - **Live-reload data files to skip a reflash.** Some endpoints re-read their data file
   on POST (e.g. `POST /api/calibration` calls `loadCalibration()`; settings live-apply).
   Exploit this to retune values (gains, gamma, profiles) with ZERO round-trips while
   iterating, then commit the final file. Turned a multi-flash gamma hunt into live POSTs.
-- **Defer version bumps** that rewrite `data/version.json` until a deploy is already
-  happening — otherwise the stamp change forces an extra LittleFS upload. (Deferring a
-  feature's bump to the NEXT flash that's happening anyway is fine — no drift if repo +
-  all artifacts still agree; `npm run check` to confirm.)
+- **Time the version bump to the deploy that's already happening.** The bump stamps
+  `version.h` (firmware), `data/version.json` (web), AND `package.json` (MCP) — each stamp
+  only goes live when its artifact redeploys. So:
+  - **If the batch is web-only (no flash forced):** defer the bump or accept it stamps
+    `version.h` un-flashed → expected COSMETIC firmware drift (`npm run check` flags it; clear
+    it on the next flash that happens anyway). Don't force a flash just to move the stamp.
+  - **If a firmware fix is in the SAME batch (a flash is required regardless):** bump NOW,
+    *before* that flash — the `version.h` stamp piggybacks the already-required Sketch→Upload,
+    so all three artifacts deploy at the new version with **ZERO drift**. (v1.1.0: a chip-temp
+    firmware fix turned the web-only revamp into a firmware+web release → bump-now beat
+    bump-after, no extra round-trip, no drift.) Confirm with `npm run check`.
 - When done driving the panel hard (calibration runs hit 255), **restore a
   comfortable brightness** via `POST /api/brightness` (persists to NVS).
 
@@ -81,7 +109,7 @@ Upload speed 921600. (Board is 4MB — verified via esptool.)
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | `'X.h' No such file` / undefined ref to a lib | library not installed | Install via Manage Libraries (FastLED, ArduinoJson, PNGdec, **WiFiManager by tzapu**) |
-| `Sketch too big` / won't link | wrong partition scheme | Set partition to `8MB with spiffs (3MB APP, 5MB SPIFFS)` |
+| `Sketch too big` / won't link | wrong partition scheme | This board is **4MB** → use **Huge APP (3MB No OTA / 1MB SPIFFS)** (an 8MB scheme won't fit — only 4MB flash) |
 | Web page is stale / 404 after editing `data/` | forgot LittleFS data upload | Run **ESP32 LittleFS Data Upload** (and beware the browser stale-cache trap above — verify the LOADED code) |
 | Board freezes/reboots while Claude HTTP-drives it (NOT under bright patterns) | `/api/display/matrix` full-fill can FREEZE; repeated `/api/display/animation` can REBOOT — even with PSRAM on. 64-burst grid-test is stable | While driving for tests, prefer grid-test endpoints + `solid` sparingly; AVOID `/api/display/matrix`. See `bug-render-crash-matrix-solid` memory |
 | Upload fails / port busy | Serial Monitor holding the port, or no boot mode | Close Serial Monitor; retry; if stuck, hold BOOT during connect |
@@ -121,3 +149,24 @@ connected). Then read Serial (115200; needs USB CDC On Boot: Enabled):
 - `.local` fails but the raw IP works → it's mDNS, not WiFi. Use the IP.
 
 Full history of these in `docs/PITFALLS.md` (WiFi-drop + credential-loss entries).
+
+## 7. Cutting an end-user RELEASE (distribution — NOT the dev loop)
+End users never do the two-step upload above — they flash ONE merged binary and
+double-click a `.mcpb`. Maintainer-side, produce those artifacts:
+- **`npm run build:mcpb`** → `release/esp32-matrix.mcpb` (the Claude Desktop extension —
+  double-click install, no JSON/Node). After a TS edit, **`/mcp` reconnect FIRST** so the
+  live server releases the old native binary (a Windows file lock otherwise leaves
+  `@napi-rs/canvas` in the bundle).
+- ⛔ **Export Compiled Binary with `secrets.h` ABSENT** for anything you DISTRIBUTE — a local
+  `secrets.h` bakes your WiFi creds into the app AND removes the setup portal (the `.bin`
+  leaks your password via `strings` and can't onboard anyone else). **`npm run build:release`
+  REFUSES if `secrets.h` is present** (`--allow-secrets` = a personal build of your own
+  board). See `docs/PITFALLS.md` 2026-06-23 + the `project-distribution` memory.
+- **`npm run build:release`** assembles a self-contained `release/` (merged.bin + esptool.exe
+  + flash.bat/.sh + install page + .mcpb). End-user flash = `release\flash.bat` (or the ESP Web
+  Tools browser button once GitHub Pages is wired). The merged image is a **factory image**:
+  it 0xFF-pads the NVS gap → wipes WiFi/settings → the authentic fresh-install flow (captive
+  portal on first boot). NOTE: a `secrets.h` build skips that portal (see PITFALLS).
+- Before crowning a version, confirm **zero drift across all FOUR artifacts** (firmware / web /
+  mcp / **mcp-bundle**) with `npm run check` or `matrix_version`. The public showcase/landing
+  page is `site/` (self-contained, Pages-deployable; not a board artifact).

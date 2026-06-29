@@ -1,0 +1,134 @@
+{
+  "description": "grey rain cloud across the top with blue raindrops falling in staggered streaks and cyan splash ripples on the puddle line; steady continuous rainfall, seamless loop",
+  "frames": [
+    [
+      ".CCCCCC.",
+      "cCCcCCcc",
+      "D....d..",
+      ".....D..",
+      "...d....",
+      "...D...d",
+      ".d.....D",
+      ".D..S..."
+    ],
+    [
+      ".CCCCCC.",
+      "cCCcCCcc",
+      "d.......",
+      "D....d..",
+      ".....D..",
+      "...d....",
+      "...D...d",
+      "SSS....D"
+    ],
+    [
+      ".CCCCCC.",
+      "cCCcCCcc",
+      "......D.",
+      "d.......",
+      "D....d..",
+      ".....D..",
+      "...d....",
+      ".S.D..SS"
+    ],
+    [
+      ".CCCCCC.",
+      "cCCcCCcc",
+      "..D...d.",
+      "......D.",
+      "d.......",
+      "D....d..",
+      ".....D..",
+      "..SSS..S"
+    ],
+    [
+      ".CCCCCC.",
+      "cCCcCCcc",
+      "..d.....",
+      "..D...d.",
+      "......D.",
+      "d.......",
+      "D....d..",
+      "...S.D.."
+    ],
+    [
+      ".CCCCCC.",
+      "cCCcCCcc",
+      "....D...",
+      "..d.....",
+      "..D...d.",
+      "......D.",
+      "d.......",
+      "D...SSS."
+    ],
+    [
+      ".CCCCCC.",
+      "cCCcCCcc",
+      "....d...",
+      "....D...",
+      "..d.....",
+      "..D...d.",
+      "......D.",
+      "SS...S.."
+    ],
+    [
+      ".CCCCCC.",
+      "cCCcCCcc",
+      ".D......",
+      "....d...",
+      "....D...",
+      "..d.....",
+      "..D...d.",
+      "S.....D."
+    ],
+    [
+      ".CCCCCC.",
+      "cCCcCCcc",
+      ".d.....D",
+      ".D......",
+      "....d...",
+      "....D...",
+      "..d.....",
+      "..D..SSS"
+    ],
+    [
+      ".CCCCCC.",
+      "cCCcCCcc",
+      "...D...d",
+      ".d.....D",
+      ".D......",
+      "....d...",
+      "....D...",
+      ".SSS..S."
+    ],
+    [
+      ".CCCCCC.",
+      "cCCcCCcc",
+      "...d....",
+      "...D...d",
+      ".d.....D",
+      ".D......",
+      "....d...",
+      "..S.D..."
+    ],
+    [
+      ".CCCCCC.",
+      "cCCcCCcc",
+      ".....D..",
+      "...d....",
+      "...D...d",
+      ".d.....D",
+      ".D......",
+      "...SSS.."
+    ]
+  ],
+  "colors": {
+    "C": "#4a4a55",
+    "c": "#2c2c34",
+    "D": "#1e6bff",
+    "d": "#0e3a8c",
+    "S": "#5ad6ff"
+  },
+  "frame_ms": 110,
+  "loop": 0
+}

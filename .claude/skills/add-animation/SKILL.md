@@ -76,25 +76,31 @@ Claude can't launch it." Names below assume a mode called `<name>` (e.g. `comet`
    internal state to reseed) call your `reset<Name>()` function. `animationName`/
    `animationSpeed` are set by the shared path.
 
-6. **Control page `data/<name>.html`** — clone an existing page (e.g. `snow.html`) to get
-   the shared chrome (`.wrap` → `← Home` `.back` → colored `h1` → `.layout`). Include the
-   shared brightness widget (`<script src="bright.js" data-auto></script>` + a
-   `<div id="brightnessSlot"></div>`) + palette/picker if it has colors. **Speed = fps
-   slider → ms** (`Math.round(1000/fps)`), never raw (trap 2). Live preview at FULL
-   brightness — never dim the canvas / no `ledsim.js` for animation previews (the board
-   slider only POSTs). Launch button POSTs `{ "type":"<name>", ... }`.
+6. **Control page `data/<name>.html`** — clone an existing leaf (e.g. **`rainbow.html`**) for the
+   **shared design system (v1.1.0 revamp)**. Structure: `.wrap` (set `--accent-page:#hex` inline) →
+   colored emoji `h1` → `.panel` → `.layout` (`.preview-frame` with `<canvas class="preview">` +
+   `.controls` of `.subcard`/`.subhead`/`.chips`) → `.actions` (`.btn-primary`/`.btn-secondary`/
+   `.live-dot`) → `.status`. Link `app.css` (all chrome/tokens). Load `previews.js`
+   (`MatrixPreview.start(canvas,'<type>')` — the canvas engine) and `palettes.js` (`DF_PAL` +
+   `buildDfPalGrid(gridEl, onPick, activeIdx)`) if it has a preview/palette. **End-of-body drop-in
+   scripts (order matters):** page JS, then `backnav.js data-auto data-parent="/animations.html"
+   data-label="Animations"` (renders the breadcrumb), `bright.js data-auto` (self-mounts the
+   brightness widget — no manual `#brightnessSlot`), `header.js data-auto` (logo card). **Live-apply
+   default-on, debounced ~180ms:** `liveApply(){clearTimeout(t);t=setTimeout(applyAnimation,180)}`.
+   **Speed = fps slider → ms** (trap 2). Preview renders at FULL brightness — no `ledsim.js` for
+   animation previews. Launch POSTs `{ "type":"<name>", ... }`.
 
-7. **Hub card — in `data/animations.html`, NOT the index.** The UI is hub-based: the index
-   is a flat grid where "Animations" is a hub card. A new animation's card goes in
-   `animations.html`'s `.anim-grid` as a **link-out card**, exactly like fire/liquid/snow:
+7. **Hub card — in `data/animations.html`, NOT the index.** Post-revamp `animations.html` is a **pure
+   `.apps` grid of `.card` link-outs** (every animation has its own page now — no more inline
+   `.anim-card`s). Add, same `.card` shape as the index:
    ```html
-   <a href="/<name>.html" class="anim-card-link">
-     <div class="anim-card"><span class="icon">…</span>
-       <div class="name">…</div><div class="desc">…</div></div>
-   </a>
+   <a href="/<name>.html" class="card"><span class="icon">…</span>
+     <div class="name">…</div><div class="desc">…</div></a>
    ```
    Do NOT add it to `index.html` (cards placed there get moved — see web-ui-structure).
-   (System/config pages go in `system.html` instead.)
+   System/config pages go in `system.html` instead. ⚠️ The new leaf's `<h1>` must NOT duplicate its
+   hub's name — `backnav.js` derives the breadcrumb's current crumb from the `<h1>`, so a leaf titled
+   "Animations" would read "Animations › Animations". Give it the mode's own name.
 
 8. **MCP enum** in `mcp_server/index.ts` — add `<name>` to the `matrix_set_animation`
    `type` enum array AND a one-line description (params + meaning). Without this, Claude

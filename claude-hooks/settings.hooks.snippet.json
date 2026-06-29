@@ -1,10 +1,10 @@
 {
-  "_comment": "Merge this 'hooks' block into your ~/.claude/settings.json. Fix the absolute path to wherever you put the scripts, and use 'python' or 'python3' to match your system. Hooks load at session start, so restart Claude Code after editing. Mapping: UserPromptSubmit->wait (weighted-random spinner from the wait pool, set odds in mcp_server/wait-weights.json; use 'working' to force the snake); Stop->done (turn finished, arms idle). Awaiting-input (v0.9.0, verified via hook_probe.py): PreToolUse(AskUserQuestion)->ask-question, PreToolUse(ExitPlanMode)->ask-confirm, Notification(permission_prompt)->ask-attention, PostToolUse(AskUserQuestion|ExitPlanMode)->wait (flips busy the moment you answer; probe showed PostToolUse fires on the ANSWER, not on display, and Stop does NOT fire while a question/plan is pending so 'done' can't clobber the animation). NOTE: the probe also showed Notification(permission_prompt) can fire ~6s into a question/plan wait (not only for real permission requests) - if the bell visibly clobbers the ?/check during a plain question, drop the Notification block; questions/plans still work. idle_prompt is intentionally NOT wired (turn-end bell-spam risk).",
+  "_comment": "Merge this 'hooks' block into your ~/.claude/settings.json. Fix the absolute path to wherever you put the scripts, and use 'python' or 'python3' to match your system. Hooks load at session start, so restart Claude Code after editing. Both matrix_signal.py AND manifest_resolver.py must be installed to ~/.claude/hooks/. Each hook passes a manifest MOMENT key (harnesses.claude-code in shared/manifest.json maps moment->intent, weights+pools live in the manifest — not in wait-weights.json): UserPromptSubmit->hook:UserPromptSubmit (working spinner from manifest working pool); Stop->hook:Stop (done glyph, arms idle screensaver + spawns bored-watcher); PreToolUse(AskUserQuestion)->hook:PreToolUse:AskUserQuestion (ask-question glyph); PreToolUse(ExitPlanMode)->hook:PreToolUse:ExitPlanMode (ask-question doubles for plan-approval); Notification(permission_prompt)->hook:Notification:permission_prompt (ask-attention glyph); PostToolUse(AskUserQuestion)->hook:PostToolUse:AskUserQuestion (flips busy the moment you answer); PostToolUse(ExitPlanMode)->hook:PostToolUse:ExitPlanMode (same for plan exit). NOTE: Notification(permission_prompt) can fire ~6s into a question/plan wait — if it visibly clobbers the ?/check during a plain question, drop the Notification block.",
   "hooks": {
     "UserPromptSubmit": [
       {
         "hooks": [
-          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" wait" }
+          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" hook:UserPromptSubmit" }
         ]
       }
     ],
@@ -12,21 +12,27 @@
       {
         "matcher": "AskUserQuestion",
         "hooks": [
-          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" ask-question" }
+          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" hook:PreToolUse:AskUserQuestion" }
         ]
       },
       {
         "matcher": "ExitPlanMode",
         "hooks": [
-          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" ask-confirm" }
+          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" hook:PreToolUse:ExitPlanMode" }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "AskUserQuestion|ExitPlanMode",
+        "matcher": "AskUserQuestion",
         "hooks": [
-          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" wait" }
+          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" hook:PostToolUse:AskUserQuestion" }
+        ]
+      },
+      {
+        "matcher": "ExitPlanMode",
+        "hooks": [
+          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" hook:PostToolUse:ExitPlanMode" }
         ]
       }
     ],
@@ -34,14 +40,14 @@
       {
         "matcher": "permission_prompt",
         "hooks": [
-          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" ask-attention" }
+          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" hook:Notification:permission_prompt" }
         ]
       }
     ],
     "Stop": [
       {
         "hooks": [
-          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" done" }
+          { "type": "command", "command": "python \"C:\\Users\\YOU\\.claude\\hooks\\matrix_signal.py\" hook:Stop" }
         ]
       }
     ]

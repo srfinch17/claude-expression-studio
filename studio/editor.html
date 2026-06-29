@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Editor — Expression Studio</title>
+  <style>
+    :root { --bg:#0a0a0e; --panel:#111118; --sub:#15151b; --text:#e8e8ef; --dim:#9a9aa8;
+      --faint:#5a5a68; --orange:#ff5008; --cyan:#22ddff; --green:#16a34a;
+      --mono:'IBM Plex Mono',ui-monospace,monospace; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text); font:14px var(--mono); padding:0 0 40px; }
+    header { position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid #1e1e26;
+      display:flex; align-items:center; gap:12px; padding:12px 18px; }
+    header h1 { font-size:1rem; margin:0; flex:0 0 auto; }
+    #banner { color:var(--orange); font-size:.78rem; flex:1; }
+    button { font:inherit; font-size:.8rem; color:var(--text); background:var(--sub);
+      border:1px solid #2a2a34; border-radius:7px; padding:5px 11px; cursor:pointer; }
+    button:disabled { opacity:.4; cursor:not-allowed; }
+    button.save { border-color:var(--green); color:#9affc8; }
+    #status { font-size:.76rem; color:var(--dim); min-width:14ch; }
+    main { display:grid; grid-template-columns:minmax(0,1fr) minmax(360px,46%); gap:16px; padding:16px; align-items:start; }
+    .intent { background:var(--panel); border:1px solid #1c1c24; border-radius:10px; padding:10px; margin-bottom:10px; }
+    .intent.drop { border-color:var(--cyan); box-shadow:0 0 0 1px var(--cyan); }
+    .intent h2 { font-size:.82rem; margin:0 0 2px; }
+    .intent .meta { font-size:.66rem; color:var(--faint); margin-bottom:7px; line-height:1.35; }
+    .pool { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; }
+    .tile { width:84px; background:var(--sub); border:1px solid #22222c; border-radius:8px; padding:6px; position:relative; }
+    .tile canvas { width:72px; height:72px; border-radius:5px; background:#060608; display:block; }
+    .tile .nm { font-size:.62rem; margin-top:4px; word-break:break-all; color:var(--text); line-height:1.1; }
+    .tile .pct { font-size:.6rem; color:var(--cyan); }
+    .tile .editlink { display:inline-block; font-size:.58rem; color:var(--cyan); text-decoration:none; margin-top:2px; }
+    .tile .editlink:hover { text-decoration:underline; }
+    .tile input[type=range] { width:72px; margin:2px 0 0; }
+    .tile .x { position:absolute; top:3px; right:3px; width:15px; height:15px; line-height:13px;
+      text-align:center; border-radius:50%; background:#000a; border:1px solid #333; cursor:pointer; font-size:.66rem; }
+    .empty { font-size:.68rem; color:var(--faint); padding:12px; border:1px dashed #2a2a34; border-radius:8px; }
+    .opts { margin-top:7px; font-size:.68rem; color:var(--dim); display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+    .opts input[type=number] { width:50px; font:inherit; background:#000; color:var(--text); border:1px solid #2a2a34; border-radius:4px; }
+    .fire { margin-top:7px; display:flex; gap:8px; align-items:center; }
+    .fire canvas { width:46px; height:46px; border-radius:5px; background:#060608; }
+    aside { position:sticky; top:64px; background:var(--panel); border:1px solid #1c1c24; border-radius:10px; padding:12px; }
+    aside h2 { font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); margin:0 0 4px; }
+    .legend { font-size:.64rem; color:var(--dim); margin-bottom:10px; display:flex; gap:14px; }
+    .legend .sw { display:inline-block; width:9px; height:9px; border-radius:2px; border:2px solid; margin-right:4px; vertical-align:middle; }
+    .legend .av { border-color:var(--green); }
+    .legend .as { border-color:var(--orange); }
+    .tray { display:flex; flex-wrap:wrap; gap:8px; max-height:82vh; overflow-y:auto; align-content:flex-start; }
+    .ptile { width:62px; background:var(--sub); border:2px solid var(--green); border-radius:8px; padding:4px; cursor:grab; text-align:center; }
+    .ptile.assigned { border-color:var(--orange); }
+    .ptile canvas { width:46px; height:46px; border-radius:5px; background:#060608; display:block; margin:0 auto; }
+    .ptile .nm { font-size:.56rem; margin-top:3px; word-break:break-all; color:var(--dim); line-height:1.05; }
+    .ptile .cnt { font-size:.56rem; color:var(--orange); }
+    .tile .gear { width:100%; margin-top:4px; padding:2px; font-size:.58rem; }
+    .entryed { position:absolute; top:4px; left:90px; z-index:20; width:212px; background:#0d0d12;
+      border:1px solid #2a2a34; border-radius:8px; padding:8px; display:flex; flex-direction:column; gap:6px;
+      box-shadow:0 6px 22px #000a; }
+    .entryed.hidden { display:none; }
+    .prow { display:flex; align-items:center; gap:6px; font-size:.62rem; color:var(--dim); }
+    .prow input[type=text] { flex:1; font:inherit; font-size:.6rem; background:#000; color:var(--text); border:1px solid #2a2a34; border-radius:4px; }
+    .prow input[type=range] { flex:1; }
+    .prow select { font:inherit; font-size:.6rem; background:#000; color:var(--text); border:1px solid #2a2a34; border-radius:4px; }
+    .prow button { padding:1px 6px; font-size:.62rem; }
+    .entryed details summary { font-size:.6rem; color:var(--faint); cursor:pointer; }
+    .rawjson { width:100%; height:48px; margin-top:4px; resize:vertical; font:inherit; font-size:.58rem;
+      background:#000; color:var(--text); border:1px solid #2a2a34; border-radius:4px; }
+    .jsonerr { color:var(--orange); font-size:.58rem; min-height:.7em; }
+  </style>
+</head>
+<body>
+  <script type="module" src="./studio-nav.js"></script>
+  <header>
+    <h1>Studio Editor</h1>
+    <span id="banner"></span>
+    <span id="status"></span>
+    <button id="revert">Revert</button>
+    <button id="save" class="save">Save</button>
+  </header>
+  <main>
+    <div id="intents"></div>
+    <aside>
+      <h2>Animations</h2>
+      <div class="legend"><span><span class="sw av"></span>available</span><span><span class="sw as"></span>assigned (N&nbsp;events)</span></div>
+      <div id="tray" class="tray"></div>
+    </aside>
+  </main>
+
+  <script type="module">
+    import { Panel } from "../shared/render.js";
+    import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";
+    import { resolveExpression } from "../shared/expressions.js";
+    import { pickWeighted } from "../shared/resolver.js";
+    import { buildPlaylists } from "./board.js";
+    import { ownBindings, isPool, bindingEntries, poolPercentages, assignmentCounts,
+             assign, remove, reweight, move, singleToPool, poolToSingle, setPoolOption,
+             setEntryParam, removeEntryParam, setEntryParamsRaw, setLabel } from "./editor.js";
+    import { INTENT_FIRES } from "./intent-info.js";
+    import { FIRMWARE_PARAMS } from "./firmware-params.js";
+
+    const RID = "esp32-8x8";
+    const FW_DEFAULTS = { frostbite:{mist:40,sparkle:20}, fire:{palette:"classic",intensity:6},
+      matrix_rain:{theme:"classic",frame_ms:60}, snow:{frame_ms:110,flakeColor:"#dce6ff"}, dancefloor:{palette:0,hold:6} };
+    const REDUCE = matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+    const intentsEl = document.getElementById("intents");
+    const trayEl = document.getElementById("tray");
+    const statusEl = document.getElementById("status");
+    const bannerEl = document.getElementById("banner");
+    const saveBtn = document.getElementById("save");
+    const revertBtn = document.getElementById("revert");
+
+    let manifest = null, readOnly = false, byName = new Map(), allItems = [], dirty = false;
+    let panels = [];   // live Panels to tick each frame (rebuilt on render)
+
+    // Drive an existing Panel to play a library item (firmware sim OR frame-expression).
+    function drive(panel, name) {
+      const it = byName.get(name);
+      if (it && it.kind === "firmware") { const sim = FIRMWARE_SIMS[name](FW_DEFAULTS[name] || {}); panel.setStepper(() => sim.frame(), sim.frame_ms); }
+      else if (it) { const ex = resolveExpression(it.entry); panel.setFrames(ex.frames, ex.frame_ms); }
+      else { panel.setFrames([[]], 1e9); } // unknown name -> blank
+    }
+    function makePanel(cv, name) { const p = new Panel(cv); drive(p, name); return p; }
+
+    function setDirty(d) { dirty = d; statusEl.textContent = readOnly ? "read-only (no engine)" : d ? "unsaved changes" : "saved"; saveBtn.disabled = readOnly || !d; }
+
+    if (!REDUCE) { let last = performance.now(); (function loop(now){ for (const p of panels) p.tick(now-last, now); last=now; requestAnimationFrame(loop); })(last); }
+
+    function apply(fn) { manifest = fn(manifest); setDirty(true); render(); }
+    // For param/label edits that don't change tile layout (% / counts / membership): update the
+    // manifest + mark dirty WITHOUT re-rendering, so the open ⚙ expander keeps its DOM state.
+    function applyQuiet(fn) { manifest = fn(manifest); setDirty(true); }
+
+    // One typed control for a schema param. cur = the entry's current value (undefined = unset →
+    // ghost the schema default). All edits go through applyQuiet so the open expander survives.
+    function widgetFor(intent, name, key, spec, cur) {
+      const row = document.createElement("label"); row.className = "prow";
+      const val = cur != null ? cur : spec.default;
+      const set = (v) => applyQuiet((m) => setEntryParam(m, RID, intent, name, key, v));
+      const clear = () => applyQuiet((m) => removeEntryParam(m, RID, intent, name, key));
+      let ctrl;
+      if (spec.type === "number") {
+        ctrl = document.createElement("input"); ctrl.type = "range";
+        ctrl.min = spec.min; ctrl.max = spec.max; ctrl.step = spec.step || 1; ctrl.value = val;
+        const out = document.createElement("span"); out.textContent = val;
+        ctrl.addEventListener("input", () => (out.textContent = ctrl.value));
+        ctrl.addEventListener("change", () => set(Number(ctrl.value)));
+        row.append(`${key} `, ctrl, out);
+      } else if (spec.type === "enum") {
+        ctrl = document.createElement("select");
+        for (const o of spec.options) { const op = document.createElement("option"); op.value = o; op.textContent = o; if (o === val) op.selected = true; ctrl.appendChild(op); }
+        ctrl.addEventListener("change", () => set(ctrl.value));
+        row.append(`${key} `, ctrl);
+      } else if (spec.type === "color") {
+        ctrl = document.createElement("input"); ctrl.type = "color";
+        ctrl.value = (typeof val === "string" && val[0] === "#") ? val : "#000000";
+        ctrl.addEventListener("change", () => set(ctrl.value));
+        row.append(`${key} `, ctrl);
+      } else if (spec.type === "bool") {
+        ctrl = document.createElement("input"); ctrl.type = "checkbox"; ctrl.checked = !!val;
+        ctrl.addEventListener("change", () => set(ctrl.checked));
+        row.append(ctrl, ` ${key}`);
+      }
+      if (cur != null) { const c = document.createElement("button"); c.type = "button"; c.textContent = "↺"; c.title = "reset to default"; c.onclick = clear; row.appendChild(c); }
+      return row;
+    }
+
+    // The ⚙ expander for one pool entry: a label field (always) + typed param widgets and a raw-JSON
+    // escape hatch (firmware entries only). Built hidden; the gear toggles .hidden.
+    function buildEntryEditor(intent, name) {
+      const wrap = document.createElement("div"); wrap.className = "entryed hidden";
+      const entry = (ownBindings(manifest, RID)[intent].pool || {})[name];
+      const params = (entry && typeof entry === "object" && entry.params) || {};
+      const label = (entry && typeof entry === "object" && entry.label) || "";
+      const it = byName.get(name);
+      const isFw = it && it.kind === "firmware";
+      const schema = isFw ? FIRMWARE_PARAMS[name] : null;
+
+      const lab = document.createElement("label"); lab.className = "prow";
+      const li = document.createElement("input"); li.type = "text"; li.value = label; li.placeholder = "label";
+      li.addEventListener("change", () => applyQuiet((m) => setLabel(m, RID, intent, name, li.value)));
+      lab.append("label ", li); wrap.appendChild(lab);
+
+      if (schema) for (const [key, spec] of Object.entries(schema)) wrap.appendChild(widgetFor(intent, name, key, spec, params[key]));
+
+      if (isFw) {
+        const det = document.createElement("details"); const sum = document.createElement("summary"); sum.textContent = "advanced (raw JSON)";
+        const ta = document.createElement("textarea"); ta.className = "rawjson"; ta.placeholder = '{"key": value}';
+        ta.value = Object.keys(params).length ? JSON.stringify(params) : "";
+        const err = document.createElement("div"); err.className = "jsonerr";
+        // Re-seed from the live manifest each time the box is opened (widget edits may have changed params).
+        det.addEventListener("toggle", () => {
+          if (!det.open) return;
+          const e2 = (ownBindings(manifest, RID)[intent].pool || {})[name];
+          const p2 = (e2 && typeof e2 === "object" && e2.params) || {};
+          ta.value = Object.keys(p2).length ? JSON.stringify(p2) : ""; err.textContent = "";
+        });
+        ta.addEventListener("change", () => {
+          const t = ta.value.trim();
+          if (!t) { err.textContent = ""; applyQuiet((m) => setEntryParamsRaw(m, RID, intent, name, {})); return; }
+          let o; try { o = JSON.parse(t); } catch { err.textContent = "invalid JSON"; return; }
+          if (o == null || typeof o !== "object" || Array.isArray(o)) { err.textContent = "must be a JSON object"; return; }
+          err.textContent = ""; applyQuiet((m) => setEntryParamsRaw(m, RID, intent, name, o));
+        });
+        det.append(sum, ta, err); wrap.appendChild(det);
+      }
+      return wrap;
+    }
+
+    function render() {
+      panels = [];
+      intentsEl.innerHTML = "";
+      const bindings = ownBindings(manifest, RID);
+      for (const intent of Object.keys(manifest.intents || {})) {
+        const binding = bindings[intent];
+        const sec = document.createElement("div");
+        sec.className = "intent";
+        const def = manifest.intents[intent] || {};
+        const desc = INTENT_FIRES[intent] || def.doc || "";
+        sec.innerHTML = `<h2>${intent}</h2><div class="meta">${desc}</div>`;
+
+        if (binding == null) {
+          const e = document.createElement("div"); e.className = "empty"; e.textContent = "drop an animation here to bind"; sec.appendChild(e);
+        } else {
+          const pool = document.createElement("div"); pool.className = "pool";
+          const pcts = poolPercentages(binding);
+          const poolMode = isPool(binding);
+          for (const { name, weight } of bindingEntries(binding)) {
+            const tile = document.createElement("div"); tile.className = "tile"; tile.draggable = true;
+            tile.addEventListener("dragstart", (ev) => ev.dataTransfer.setData("text/plain", JSON.stringify({ name, from: intent })));
+            const cv = document.createElement("canvas"); cv.width = 72; cv.height = 72; tile.appendChild(cv);
+            panels.push(makePanel(cv, name));
+            const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = name; tile.appendChild(nm);
+            if (byName.get(name)?.entry?.source === "saved") { const ed = document.createElement("a"); ed.className = "editlink";
+              ed.href = `./frame-editor.html?name=${encodeURIComponent(name)}`; ed.textContent = "✎"; ed.title = "Edit pixels";
+              ed.onclick = (ev) => ev.stopPropagation(); tile.appendChild(ed); }
+            if (!readOnly) { const x = document.createElement("div"); x.className = "x"; x.textContent = "×";
+              x.onclick = () => apply((m) => remove(m, RID, intent, name)); tile.appendChild(x); }
+            if (poolMode) {
+              const pct = document.createElement("div"); pct.className = "pct"; pct.textContent = `${pcts[name]}% · w${weight}`; tile.appendChild(pct);
+              if (!readOnly) { const sl = document.createElement("input"); sl.type = "range"; sl.min = 0; sl.max = 100; sl.value = weight;
+                sl.addEventListener("change", () => apply((m) => reweight(m, RID, intent, name, Number(sl.value)))); tile.appendChild(sl); }
+              if (!readOnly) {
+                const ed = buildEntryEditor(intent, name);
+                const gear = document.createElement("button"); gear.type = "button"; gear.className = "gear"; gear.textContent = "⚙ params"; gear.title = "params / label";
+                gear.onclick = () => ed.classList.toggle("hidden");
+                tile.appendChild(gear); tile.appendChild(ed);
+              }
+            }
+            pool.appendChild(tile);
+          }
+          sec.appendChild(pool);
+          if (!readOnly) {
+            const opts = document.createElement("div"); opts.className = "opts";
+            if (poolMode) {
+              const nr = document.createElement("label"); nr.innerHTML = `<input type="checkbox" ${binding.noRepeat?"checked":""}> noRepeat`;
+              nr.querySelector("input").onchange = (e) => apply((m) => setPoolOption(m, RID, intent, "noRepeat", e.target.checked)); opts.appendChild(nr);
+              const br = document.createElement("label"); br.innerHTML = `brightness <input type="number" min="0" max="255" value="${binding.brightness ?? ""}">`;
+              br.querySelector("input").onchange = (e) => apply((m) => setPoolOption(m, RID, intent, "brightness", e.target.value === "" ? null : Number(e.target.value))); opts.appendChild(br);
+              if (bindingEntries(binding).length === 1) { const c = document.createElement("button"); c.textContent = "→ single"; c.onclick = () => apply((m) => poolToSingle(m, RID, intent)); opts.appendChild(c); }
+            } else { const c = document.createElement("button"); c.textContent = "→ pool"; c.onclick = () => apply((m) => singleToPool(m, RID, intent)); opts.appendChild(c); }
+            sec.appendChild(opts);
+          }
+        }
+
+        // test-fire: one preview Panel per intent; ▶ re-drives it with a fresh weighted pick.
+        const fire = document.createElement("div"); fire.className = "fire";
+        const btn = document.createElement("button"); btn.textContent = "▶ test";
+        const pv = document.createElement("canvas"); pv.width = 46; pv.height = 46;
+        const pvPanel = new Panel(pv); panels.push(pvPanel);
+        btn.onclick = () => {
+          const b = ownBindings(manifest, RID)[intent];
+          const pick = isPool(b) ? pickWeighted(b.pool) : (typeof b === "string" ? b : null);
+          if (pick) drive(pvPanel, pick);
+        };
+        fire.appendChild(btn); fire.appendChild(pv); sec.appendChild(fire);
+
+        // drop target: assign (from tray) or move (from another intent)
+        sec.addEventListener("dragover", (ev) => { if (!readOnly) { ev.preventDefault(); sec.classList.add("drop"); } });
+        sec.addEventListener("dragleave", () => sec.classList.remove("drop"));
+        sec.addEventListener("drop", (ev) => {
+          sec.classList.remove("drop"); if (readOnly) return; ev.preventDefault();
+          let d; try { d = JSON.parse(ev.dataTransfer.getData("text/plain")); } catch { return; }
+          if (d.from == null) apply((m) => assign(m, RID, intent, d.name));
+          else if (d.from !== intent) apply((m) => move(m, RID, d.from, intent, d.name));
+        });
+        intentsEl.appendChild(sec);
+      }
+      renderTray();
+    }
+
+    // The palette: every animation as a mini live-preview tile, color-coded by assignment.
+    // Sort: available (green, 0 events) first alphabetically, then assigned (orange) below.
+    function renderTray() {
+      trayEl.innerHTML = "";
+      const counts = assignmentCounts(manifest, RID, allItems.map((i) => i.name));
+      const ordered = [...allItems].sort((a, b) => {
+        const aAssigned = (counts[a.name] || 0) > 0 ? 1 : 0;
+        const bAssigned = (counts[b.name] || 0) > 0 ? 1 : 0;
+        if (aAssigned !== bAssigned) return aAssigned - bAssigned;   // available before assigned
+        return a.name.localeCompare(b.name);                        // then alphabetical
+      });
+      for (const it of ordered) {
+        const n = counts[it.name] || 0;
+        const t = document.createElement("div"); t.className = "ptile" + (n > 0 ? " assigned" : "");
+        t.draggable = true;
+        t.addEventListener("dragstart", (ev) => ev.dataTransfer.setData("text/plain", JSON.stringify({ name: it.name, from: null })));
+        const cv = document.createElement("canvas"); cv.width = 46; cv.height = 46; t.appendChild(cv);
+        panels.push(makePanel(cv, it.name));
+        const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = it.name; t.appendChild(nm);
+        if (n > 0) { const c = document.createElement("div"); c.className = "cnt"; c.textContent = `(${n})`; t.appendChild(c); }
+        trayEl.appendChild(t);
+      }
+    }
+
+    async function loadManifest() {
+      try {
+        const r = await fetch("/api/manifest");
+        if (r.ok) { manifest = await r.json(); readOnly = false; bannerEl.textContent = ""; return; }
+        throw new Error("no engine");
+      } catch {
+        manifest = await (await fetch("../shared/manifest.json")).json();
+        readOnly = true;
+        bannerEl.textContent = "Editing needs the live engine — launch the Studio via matrix_studio. (Exploring read-only; Save disabled.)";
+      }
+    }
+
+    saveBtn.onclick = async () => {
+      saveBtn.disabled = true; statusEl.textContent = "saving…";
+      try {
+        const r = await fetch("/api/manifest", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(manifest) });
+        const res = await r.json();
+        if (res.ok) { setDirty(false); statusEl.textContent = "saved — behavior is live"; }
+        else { statusEl.textContent = "validation failed: " + (res.errors || []).join("; "); setDirty(true); }
+      } catch (e) { statusEl.textContent = "save error: " + e.message; setDirty(true); }
+    };
+    revertBtn.onclick = async () => { await loadManifest(); setDirty(false); render(); };
+
+    // --- boot ---
+    const data = await (await fetch("./gallery-data.json")).json();
+    allItems = buildPlaylists(data, Object.keys(FIRMWARE_SIMS), []).all;
+    byName = new Map(allItems.map((it) => [it.name, it]));
+    await loadManifest();
+    setDirty(false);
+    render();
+  </script>
+</body>
+</html>

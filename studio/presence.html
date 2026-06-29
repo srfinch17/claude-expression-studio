@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Presence — Expression Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0a0a0e; --panel:#111118; --text:#e8e8ef; --dim:#9a9aa8; --faint:#5a5a68;
+    --mono:'IBM Plex Mono',ui-monospace,monospace; --sans:'IBM Plex Sans',system-ui,sans-serif;
+    --cyan:#22ddff; --accent:#46506a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:var(--sans);
+    padding:0 0 80px; line-height:1.5; }
+  .wrap { max-width:880px; margin:0 auto; padding:28px 24px; }
+  h1 { font-family:var(--mono); font-size:1.25rem; margin:0 0 4px; }
+  .sub { color:var(--dim); font-size:.86rem; margin:0 0 24px; max-width:62ch; }
+  .stage { display:grid; grid-template-columns:1fr; gap:22px; }
+  @media (min-width:680px){ .stage { grid-template-columns:360px 1fr; } }
+
+  /* ── The card (mirrors the board's presence-card visual) ── */
+  #card { min-height:230px; display:grid; grid-template-rows:auto 1fr auto; gap:10px;
+    padding:18px 20px; border-radius:14px; border:1px solid #1c1c24;
+    background:radial-gradient(120% 90% at 30% 0%, color-mix(in srgb, var(--accent) 28%, #0c0e14), #0c0e14); }
+  #card .top { display:flex; align-items:center; gap:14px; }
+  #card .glyph { font-size:52px; line-height:1; color:var(--accent);
+    text-shadow:0 0 18px color-mix(in srgb, var(--accent) 60%, transparent); }
+  #card .headline { font-size:20px; font-weight:650; }
+  #card .label { font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+    color:color-mix(in srgb, var(--accent) 70%, var(--text)); }
+  #card .detail { color:#aeb6c8; font-size:14px; }
+  #card .data { display:flex; flex-direction:column; gap:8px; justify-content:center; }
+  #card .bar { height:14px; border-radius:7px; background:#1c2030; overflow:hidden; }
+  #card .bar > i { display:block; height:100%; background:var(--accent); border-radius:7px; transition:width .4s ease; }
+  #card .readouts { display:flex; gap:18px; flex-wrap:wrap; }
+  #card .readout { display:flex; flex-direction:column; }
+  #card .readout .v { font-size:26px; font-weight:650; font-variant-numeric:tabular-nums; }
+  #card .readout .l { font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#8b94a8; }
+  #card .spark { width:100%; height:56px; display:block; color:var(--accent); }
+  #card .foot { display:flex; justify-content:space-between; font-size:11px; color:#6b7488; }
+  /* motion (keyed off the card's class set by renderPresenceCard) */
+  @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:.55} }
+  @keyframes shimmer{ 0%,100%{opacity:.7} 50%{opacity:1} }
+  @keyframes blink  { 0%,49%{opacity:1} 50%,100%{opacity:.2} }
+  @keyframes breathe{ 0%,100%{opacity:.45} 50%{opacity:.75} }
+  @keyframes burst  { 0%{transform:scale(1)} 30%{transform:scale(1.18)} 100%{transform:scale(1)} }
+  @keyframes settle { 0%{transform:scale(1.18)} 100%{transform:scale(1)} }
+  #card.m-pulse   .glyph { animation:pulse 1.4s ease-in-out infinite; }
+  #card.m-shimmer .glyph { animation:shimmer 2s ease-in-out infinite; }
+  #card.m-blink   .glyph { animation:blink .7s steps(1) infinite; }
+  #card.m-breathe .glyph { animation:breathe 3.5s ease-in-out infinite; }
+  #card.m-burst   .glyph { animation:burst .8s ease-out; }
+  #card.m-settle  .glyph { animation:settle .5s ease-out; }
+  #card.u-notice { animation:pulse 2.4s ease-in-out infinite; }
+  #card.u-urgent { animation:blink 1s steps(1) infinite; }
+  @media (prefers-reduced-motion:reduce){ #card, #card .glyph { animation:none !important; } }
+
+  /* ── Playground ── */
+  .pg { background:var(--panel); border:1px solid #1c1c24; border-radius:14px; padding:16px 18px; }
+  .pg h2 { font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--faint); margin:0 0 12px; }
+  .pg .row { margin-bottom:16px; }
+  .pg .row > .rl { font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); margin-bottom:7px; }
+  .chips { display:flex; flex-wrap:wrap; gap:7px; }
+  .chip { font:inherit; font-size:.78rem; cursor:pointer; color:var(--dim); background:#15151b;
+    border:1px solid #2a2a34; border-radius:7px; padding:4px 11px; }
+  .chip:hover { color:var(--text); }
+  .chip.on { color:var(--cyan); border-color:#22ddff66; background:#22ddff14; }
+  .hint { color:var(--faint); font-size:.72rem; margin-top:14px; }
+</style>
+</head>
+<body>
+<script type="module" src="./studio-nav.js"></script>
+<div class="wrap">
+  <h1>Presence</h1>
+  <p class="sub">Claude's semantic status, rendered the same way everywhere from one
+    <code>PresenceMessage</code>. This is the desktop card — board-independent. Drive it below,
+    or flip on Live to mirror a real board's last presence message (<code>GET /api/presence</code>).
+    Note: that's Claude's <em>status message</em> (set by <code>presence_set</code>), <em>not</em> the
+    LEDs' current animation — a board running the clock or idle screensaver still reports its last
+    presence here, and the age shows how stale it is. The <strong>Board</strong> page mirrors the live display.</p>
+
+  <div class="stage">
+    <div id="card" class="m-breathe u-ambient">
+      <div class="top">
+        <div class="glyph">z</div>
+        <div>
+          <div class="label">Idle</div>
+          <div class="headline"></div>
+        </div>
+      </div>
+      <div class="data"></div>
+      <div>
+        <div class="detail"></div>
+        <div class="foot"><span class="intent">idle</span><span class="age">—</span></div>
+      </div>
+    </div>
+
+    <div class="pg">
+      <h2>Playground</h2>
+      <div class="row">
+        <div class="rl">Source</div>
+        <div class="chips"><button class="chip" id="livebtn">○ Live (board presence)</button></div>
+      </div>
+      <div class="row">
+        <div class="rl">Intent</div>
+        <div class="chips" id="intents"></div>
+      </div>
+      <div class="row">
+        <div class="rl">Data</div>
+        <div class="chips" id="datakinds"></div>
+      </div>
+      <div class="row">
+        <div class="rl">Urgency</div>
+        <div class="chips" id="urgencies"></div>
+      </div>
+      <div class="hint" id="hint">Self-driven demo — no board or engine required.</div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { renderPresenceCard, formatAge } from "../shared/presence-card.js";
+import { PRESENCE_VOCAB } from "../shared/presence-vocab.js";
+import { sampleData } from "./presence-samples.js";
+
+const cardEl = document.getElementById("card");
+const state = { intent: "idle", dataKind: "none", urgency: "ambient" };
+
+const INTENTS = Object.keys(PRESENCE_VOCAB);
+const DATAKINDS = ["none", "progress", "values", "series"];
+const URGENCIES = ["ambient", "notice", "urgent"];
+
+const HEADLINES = {
+  working: "Refactoring the resolver", thinking: "Weighing two approaches",
+  done: "All tests green", ok: "Got it", celebrate: "Shipped v1.0",
+  alert: "Need your call on the schema", error: "Build failed",
+  question: "Which port should I use?", info: "Synced 12 files", idle: "",
+};
+
+function buildMsg() {
+  return {
+    intent: state.intent,
+    headline: HEADLINES[state.intent] ?? "",
+    detail: state.dataKind === "none" ? "" : `demo · ${state.dataKind}`,
+    data: sampleData(state.dataKind),
+    urgency: state.urgency,
+  };
+}
+
+const apply = () => renderPresenceCard(cardEl, buildMsg(), PRESENCE_VOCAB);
+
+function chips(host, items, key) {
+  const el = document.getElementById(host);
+  el.innerHTML = "";
+  for (const it of items) {
+    const b = document.createElement("button");
+    b.className = "chip" + (state[key] === it ? " on" : "");
+    b.textContent = it;
+    b.onclick = () => {
+      state[key] = it;
+      for (const c of el.children) c.classList.toggle("on", c.textContent === it);
+      apply();
+    };
+    el.appendChild(b);
+  }
+}
+
+chips("intents", INTENTS, "intent");
+chips("datakinds", DATAKINDS, "dataKind");
+chips("urgencies", URGENCIES, "urgency");
+apply();
+
+// ── Best-effort live mode ── poll a real /api/presence on this origin (the board, or the engine's
+// board-proxy). Crucially this REPORTS its own state in the hint, so it never silently looks dead:
+// "connecting" → "live · mirroring" on success, or a specific reason on failure (wrong origin =
+// 404, no/offline board = 503, unreachable = network). A transient miss after a good render keeps
+// the last board frame (the board hiccups ~every 12s). Toggling off restores the playground.
+const liveBtn = document.getElementById("livebtn");
+const hintEl = document.getElementById("hint");
+const ageEl = cardEl.querySelector(".age");
+const DEMO_HINT = "Self-driven demo — no board or engine required.";
+let live = false, timer = null, ageTimer = null, lastTs = 0, everOk = false, fails = 0;
+
+async function poll() {
+  if (!live || document.hidden) return;
+  let r = null;
+  try { r = await fetch("/api/presence", { cache: "no-store" }); } catch { r = null; }
+  if (!live) return;                                  // toggled off while this poll was in flight
+  if (r && r.ok) {
+    try {
+      const m = await r.json();
+      if (!live) return;
+      renderPresenceCard(cardEl, m, PRESENCE_VOCAB);
+      lastTs = Number(m.ts) > 1e9 ? Number(m.ts) : 0;
+      everOk = true; fails = 0;
+      hintEl.textContent = "● Live — mirroring the board's last presence message (not the LED display; see Board for that).";
+      return;
+    } catch { /* body wasn't JSON — treat as a failure below */ }
+  }
+  fails++;
+  if (everOk) return;                                 // had a live board; ride a transient miss, keep last frame
+  if (fails >= 2) {                                   // give it a beat before declaring no source
+    const why = !r ? "can't reach this origin."
+      : r.status === 404 ? "no /api/presence here — open the Studio via the matrix_studio URL (the engine serves the proxy)."
+      : "board not reachable (no board, or it's offline).";
+    hintEl.textContent = "○ Live: " + why + " Showing the demo.";
+  }
+}
+function tickAge() { ageEl.textContent = (live && everOk) ? formatAge(lastTs, Date.now()) : "—"; }
+
+liveBtn.onclick = () => {
+  live = !live;
+  liveBtn.classList.toggle("on", live);
+  liveBtn.textContent = (live ? "● " : "○ ") + "Live (board presence)";
+  if (live) {
+    everOk = false; fails = 0;
+    hintEl.textContent = "Connecting to /api/presence…";
+    poll(); timer = setInterval(poll, 1500); ageTimer = setInterval(tickAge, 1000);
+  } else {
+    clearInterval(timer); clearInterval(ageTimer); timer = ageTimer = null;
+    lastTs = 0; ageEl.textContent = "—"; hintEl.textContent = DEMO_HINT; apply(); // restore playground render
+  }
+};
+window.__presenceApply = apply;
+</script>
+</body>
+</html>

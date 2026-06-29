@@ -1,0 +1,212 @@
+{
+  "description": "Aurora borealis \u2014 vertical curtains of light hang from the top of a dark night sky and sway in a slow horizontal wave, colors flowing green->cyan->violet over time, with a few faint static stars. Calm, flowing, ambient. Baked brightness steps with soft bottom-edge falloff so dim curtain survives bri5. Loops over one full wave/color period.",
+  "frames": [
+    [
+      ".....j..",
+      "....jj..",
+      "b...jkm.",
+      "cd.hklno",
+      "cddik.no",
+      ".egi...p",
+      ".fe....o",
+      "..d....."
+    ],
+    [
+      ".....m..",
+      "....jm..",
+      "....knm.",
+      "b..hstuo",
+      "cdhi..no",
+      "qgii...o",
+      ".fr....o",
+      ".e......"
+    ],
+    [
+      "....j...",
+      "....km..",
+      "...jsno.",
+      "..hkktpo",
+      "ddhk..po",
+      "ggr...op",
+      "fei....o",
+      ".e......"
+    ],
+    [
+      "...jm...",
+      "...jum..",
+      "...knno.",
+      "..hk.tob",
+      "dhi...pb",
+      "gri...oc",
+      "fr.....b",
+      "g......."
+    ],
+    [
+      "...jm...",
+      "...kuo..",
+      "..jstp..",
+      ".hk..vob",
+      "dij..pob",
+      "er....pc",
+      "fi......",
+      "........"
+    ],
+    [
+      "..jmm...",
+      "..juu...",
+      ".hkuto..",
+      "hik.upbb",
+      "ir...pbc",
+      "wi....cq",
+      "r.....c.",
+      "........"
+    ],
+    [
+      "..jm....",
+      ".jkno...",
+      ".jknv...",
+      "hk..vo.d",
+      "rk...obg",
+      "w....pce",
+      "......q.",
+      "........"
+    ],
+    [
+      "..mm....",
+      ".juu....",
+      "hknto...",
+      "is.up..d",
+      "r...pbbe",
+      "r....ccf",
+      ".....qq.",
+      "........"
+    ],
+    [
+      "..m.....",
+      ".juo....",
+      "jknv...d",
+      "kk.vo..g",
+      "s..op.df",
+      "....vbgg",
+      "....pce.",
+      ".....c.."
+    ],
+    [
+      "..m.....",
+      ".mu....h",
+      "juno...i",
+      "kunp..dr",
+      "s..pb.gr",
+      "...ocbe.",
+      "....qcg.",
+      ".....c.."
+    ],
+    [
+      ".......h",
+      ".mo....i",
+      "jupo..dr",
+      "kuvo..gr",
+      "k.opbde.",
+      "...vcgg.",
+      "....qg..",
+      "....b..."
+    ],
+    [
+      ".......h",
+      "mmo...hi",
+      "uup...ir",
+      "uupb.dr.",
+      "u.pcbg..",
+      "...qce..",
+      "...cq...",
+      "........"
+    ],
+    [
+      ".o....hj",
+      "moo...is",
+      "upo..drk",
+      "uppb.gi.",
+      "..vcde..",
+      "...qg...",
+      "...cg...",
+      "........"
+    ],
+    [
+      "mo....hj",
+      "up...hrs",
+      "upb..iws",
+      "mpcbdr..",
+      "..qcgi..",
+      "...qg...",
+      "...c....",
+      "........"
+    ],
+    [
+      "oo....jj",
+      "po...hsk",
+      "ppb.drls",
+      ".pcddr.k",
+      "..qgg...",
+      "..qed...",
+      "...d....",
+      "........"
+    ],
+    [
+      "o....hj.",
+      "pb...ism",
+      "pc..hrlu",
+      ".cbdir.u",
+      "..qgi..m",
+      "..xe....",
+      "........",
+      "........"
+    ],
+    [
+      "o....jj.",
+      "p....kk.",
+      "pb..hssm",
+      ".cddissm",
+      ".xggi..u",
+      "..eg...m",
+      "..gd....",
+      "........"
+    ],
+    [
+      ".....j..",
+      "b...hkm.",
+      "c...isu.",
+      "ccdhisum",
+      ".qgii.um",
+      ".xgi...u",
+      "..gh....",
+      "........"
+    ]
+  ],
+  "colors": {
+    "b": "#156b2b",
+    "c": "#1e953c",
+    "d": "#156b44",
+    "e": "#26c07b",
+    "f": "#2feb96",
+    "g": "#1e955f",
+    "h": "#156b5e",
+    "i": "#1e9583",
+    "j": "#31486b",
+    "k": "#456495",
+    "l": "#6c9eeb",
+    "m": "#471d6b",
+    "n": "#8033c0",
+    "o": "#42616b",
+    "p": "#5c8795",
+    "q": "#26c04d",
+    "r": "#26c0a9",
+    "s": "#5981c0",
+    "t": "#9d3feb",
+    "u": "#632895",
+    "v": "#77aec0",
+    "w": "#2febce",
+    "x": "#2feb5e"
+  },
+  "frame_ms": 140,
+  "loop": 0
+}

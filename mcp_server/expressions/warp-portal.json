@@ -1,0 +1,273 @@
+{
+  "description": "warp portal: concentric square color rings fill the panel and a smooth rainbow gradient flows continuously OUTWARD from the center \u2014 adjacent colors chase each other ring to ring with no gaps, gliding rather than blinking.",
+  "frames": [
+    [
+      "ssssssss",
+      "suuuuuus",
+      "suwwwwus",
+      "suwaawus",
+      "suwaawus",
+      "suwwwwus",
+      "suuuuuus",
+      "ssssssss"
+    ],
+    [
+      "tttttttt",
+      "tvvvvvvt",
+      "tvxxxxvt",
+      "tvxbbxvt",
+      "tvxbbxvt",
+      "tvxxxxvt",
+      "tvvvvvvt",
+      "tttttttt"
+    ],
+    [
+      "uuuuuuuu",
+      "uwwwwwwu",
+      "uwaaaawu",
+      "uwaccawu",
+      "uwaccawu",
+      "uwaaaawu",
+      "uwwwwwwu",
+      "uuuuuuuu"
+    ],
+    [
+      "vvvvvvvv",
+      "vxxxxxxv",
+      "vxbbbbxv",
+      "vxbddbxv",
+      "vxbddbxv",
+      "vxbbbbxv",
+      "vxxxxxxv",
+      "vvvvvvvv"
+    ],
+    [
+      "wwwwwwww",
+      "waaaaaaw",
+      "waccccaw",
+      "waceecaw",
+      "waceecaw",
+      "waccccaw",
+      "waaaaaaw",
+      "wwwwwwww"
+    ],
+    [
+      "xxxxxxxx",
+      "xbbbbbbx",
+      "xbddddbx",
+      "xbdffdbx",
+      "xbdffdbx",
+      "xbddddbx",
+      "xbbbbbbx",
+      "xxxxxxxx"
+    ],
+    [
+      "aaaaaaaa",
+      "acccccca",
+      "aceeeeca",
+      "aceggeca",
+      "aceggeca",
+      "aceeeeca",
+      "acccccca",
+      "aaaaaaaa"
+    ],
+    [
+      "bbbbbbbb",
+      "bddddddb",
+      "bdffffdb",
+      "bdfhhfdb",
+      "bdfhhfdb",
+      "bdffffdb",
+      "bddddddb",
+      "bbbbbbbb"
+    ],
+    [
+      "cccccccc",
+      "ceeeeeec",
+      "ceggggec",
+      "cegiigec",
+      "cegiigec",
+      "ceggggec",
+      "ceeeeeec",
+      "cccccccc"
+    ],
+    [
+      "dddddddd",
+      "dffffffd",
+      "dfhhhhfd",
+      "dfhjjhfd",
+      "dfhjjhfd",
+      "dfhhhhfd",
+      "dffffffd",
+      "dddddddd"
+    ],
+    [
+      "eeeeeeee",
+      "egggggge",
+      "egiiiige",
+      "egikkige",
+      "egikkige",
+      "egiiiige",
+      "egggggge",
+      "eeeeeeee"
+    ],
+    [
+      "ffffffff",
+      "fhhhhhhf",
+      "fhjjjjhf",
+      "fhjlljhf",
+      "fhjlljhf",
+      "fhjjjjhf",
+      "fhhhhhhf",
+      "ffffffff"
+    ],
+    [
+      "gggggggg",
+      "giiiiiig",
+      "gikkkkig",
+      "gikmmkig",
+      "gikmmkig",
+      "gikkkkig",
+      "giiiiiig",
+      "gggggggg"
+    ],
+    [
+      "hhhhhhhh",
+      "hjjjjjjh",
+      "hjlllljh",
+      "hjlnnljh",
+      "hjlnnljh",
+      "hjlllljh",
+      "hjjjjjjh",
+      "hhhhhhhh"
+    ],
+    [
+      "iiiiiiii",
+      "ikkkkkki",
+      "ikmmmmki",
+      "ikmoomki",
+      "ikmoomki",
+      "ikmmmmki",
+      "ikkkkkki",
+      "iiiiiiii"
+    ],
+    [
+      "jjjjjjjj",
+      "jllllllj",
+      "jlnnnnlj",
+      "jlnppnlj",
+      "jlnppnlj",
+      "jlnnnnlj",
+      "jllllllj",
+      "jjjjjjjj"
+    ],
+    [
+      "kkkkkkkk",
+      "kmmmmmmk",
+      "kmoooomk",
+      "kmoqqomk",
+      "kmoqqomk",
+      "kmoooomk",
+      "kmmmmmmk",
+      "kkkkkkkk"
+    ],
+    [
+      "llllllll",
+      "lnnnnnnl",
+      "lnppppnl",
+      "lnprrpnl",
+      "lnprrpnl",
+      "lnppppnl",
+      "lnnnnnnl",
+      "llllllll"
+    ],
+    [
+      "mmmmmmmm",
+      "moooooom",
+      "moqqqqom",
+      "moqssqom",
+      "moqssqom",
+      "moqqqqom",
+      "moooooom",
+      "mmmmmmmm"
+    ],
+    [
+      "nnnnnnnn",
+      "nppppppn",
+      "nprrrrpn",
+      "nprttrpn",
+      "nprttrpn",
+      "nprrrrpn",
+      "nppppppn",
+      "nnnnnnnn"
+    ],
+    [
+      "oooooooo",
+      "oqqqqqqo",
+      "oqssssqo",
+      "oqsuusqo",
+      "oqsuusqo",
+      "oqssssqo",
+      "oqqqqqqo",
+      "oooooooo"
+    ],
+    [
+      "pppppppp",
+      "prrrrrrp",
+      "prttttrp",
+      "prtvvtrp",
+      "prtvvtrp",
+      "prttttrp",
+      "prrrrrrp",
+      "pppppppp"
+    ],
+    [
+      "qqqqqqqq",
+      "qssssssq",
+      "qsuuuusq",
+      "qsuwwusq",
+      "qsuwwusq",
+      "qsuuuusq",
+      "qssssssq",
+      "qqqqqqqq"
+    ],
+    [
+      "rrrrrrrr",
+      "rttttttr",
+      "rtvvvvtr",
+      "rtvxxvtr",
+      "rtvxxvtr",
+      "rtvvvvtr",
+      "rttttttr",
+      "rrrrrrrr"
+    ]
+  ],
+  "colors": {
+    "a": "#ff0000",
+    "b": "#ff3f00",
+    "c": "#ff7f00",
+    "d": "#ffbf00",
+    "e": "#ffff00",
+    "f": "#bfff00",
+    "g": "#7fff00",
+    "h": "#3fff00",
+    "i": "#00ff00",
+    "j": "#00ff3f",
+    "k": "#00ff7f",
+    "l": "#00ffbf",
+    "m": "#00ffff",
+    "n": "#00bfff",
+    "o": "#007fff",
+    "p": "#003fff",
+    "q": "#0000ff",
+    "r": "#3f00ff",
+    "s": "#7f00ff",
+    "t": "#bf00ff",
+    "u": "#ff00ff",
+    "v": "#ff00bf",
+    "w": "#ff007f",
+    "x": "#ff003f"
+  },
+  "frame_ms": 110,
+  "loop": 0
+}

@@ -1,0 +1,134 @@
+{
+  "description": "Newton's cradle: end balls swing out and up alternately while the middle balls hold still, click-clack momentum transfer",
+  "frames": [
+    [
+      "FFFFFFFF",
+      ".S.SSS..",
+      "B..SSS..",
+      "...SSS..",
+      "...SSS..",
+      "...CDC..",
+      "........",
+      "........"
+    ],
+    [
+      "FFFFFFFF",
+      ".S.SSS..",
+      ".S.SSS..",
+      "B..SSS..",
+      "...SSS..",
+      "...CDC..",
+      "........",
+      "........"
+    ],
+    [
+      "FFFFFFFF",
+      "..SSSS..",
+      "..SSSS..",
+      ".S.SSS..",
+      ".B.SSS..",
+      "...CDC..",
+      "........",
+      "........"
+    ],
+    [
+      "FFFFFFFF",
+      "..SSSS..",
+      "..SSSS..",
+      "..SSSS..",
+      "..SSSS..",
+      "..CCDC..",
+      "........",
+      "........"
+    ],
+    [
+      "FFFFFFFF",
+      "..SSSS..",
+      "..SSS.S.",
+      "..SSS.S.",
+      "..SSS.B.",
+      "..CCD...",
+      "........",
+      "........"
+    ],
+    [
+      "FFFFFFFF",
+      "..SSS.S.",
+      "..SSS.S.",
+      "..SSS..B",
+      "..SSS...",
+      "..CCD...",
+      "........",
+      "........"
+    ],
+    [
+      "FFFFFFFF",
+      "..SSS.S.",
+      "..SSS..B",
+      "..SSS...",
+      "..SSS...",
+      "..CCD...",
+      "........",
+      "........"
+    ],
+    [
+      "FFFFFFFF",
+      "..SSS.S.",
+      "..SSS.S.",
+      "..SSS..B",
+      "..SSS...",
+      "..CCD...",
+      "........",
+      "........"
+    ],
+    [
+      "FFFFFFFF",
+      "..SSSS..",
+      "..SSS.S.",
+      "..SSS.S.",
+      "..SSS.B.",
+      "..CCD...",
+      "........",
+      "........"
+    ],
+    [
+      "FFFFFFFF",
+      "..SSSS..",
+      "..SSSS..",
+      "..SSSS..",
+      "..SSSS..",
+      "..CCDC..",
+      "........",
+      "........"
+    ],
+    [
+      "FFFFFFFF",
+      "..SSSS..",
+      "..SSSS..",
+      ".S.SSS..",
+      ".B.SSS..",
+      "...CDC..",
+      "........",
+      "........"
+    ],
+    [
+      "FFFFFFFF",
+      ".S.SSS..",
+      ".S.SSS..",
+      "B..SSS..",
+      "...SSS..",
+      "...CDC..",
+      "........",
+      "........"
+    ]
+  ],
+  "colors": {
+    "B": "#eafaff",
+    "C": "#39b6d6",
+    "D": "#176079",
+    "F": "#3a2606",
+    "S": "#2a1c05"
+  },
+  "frame_ms": 110,
+  "loop": 0
+}

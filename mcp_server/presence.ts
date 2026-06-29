@@ -25,18 +25,6 @@ export const INTENTS = [
   "alert", "error", "question", "info", "idle",
 ] as const;
 
-// Map a presence intent to an existing canned expression name (see CANNED in
-// expressions.ts) so the 8x8 renders via the proven frame path.
-const INTENT_TO_CANNED: Record<string, string> = {
-  working: "working", thinking: "working", done: "done", ok: "check",
-  celebrate: "party", alert: "alert", error: "cross", question: "question",
-  info: "smiley", idle: "sleep",
-};
-
-export function cannedFor(intent: string): string {
-  return INTENT_TO_CANNED[intent] ?? "smiley";
-}
-
 const URGENCIES: Urgency[] = ["ambient", "notice", "urgent"];
 
 function isObj(v: unknown): v is Record<string, unknown> {

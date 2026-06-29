@@ -1,0 +1,121 @@
+// scripts/setup-lib.mjs — pure, unit-tested core of the onboarding installer.
+// No IO here: every function takes plain data and returns plain data, so the risky
+// logic (merging into the user's GLOBAL config, per-OS registration shape) is fully
+// tested without touching ~/.claude. scripts/setup.mjs is the thin IO shell.
+
+// A matrix hook entry is recognised by this substring in its command — the merge/remove
+// functions use it so they only ever touch OUR groups and never a user's other hooks.
+const MATRIX_MARKER = "matrix_signal.py";
+const MCP_KEY = "esp32-matrix";
+
+// The six harness moments we wire, in order. Single source for hooksBlock so the emitted
+// settings can't drift from this list. matcher === null => an ungated event-level hook.
+export const MOMENTS = [
+  { event: "UserPromptSubmit", matcher: null, key: "hook:UserPromptSubmit" },
+  { event: "PreToolUse", matcher: "AskUserQuestion", key: "hook:PreToolUse:AskUserQuestion" },
+  { event: "PreToolUse", matcher: "ExitPlanMode", key: "hook:PreToolUse:ExitPlanMode" },
+  { event: "PostToolUse", matcher: "AskUserQuestion", key: "hook:PostToolUse:AskUserQuestion" },
+  { event: "PostToolUse", matcher: "ExitPlanMode", key: "hook:PostToolUse:ExitPlanMode" },
+  { event: "Notification", matcher: "permission_prompt", key: "hook:Notification:permission_prompt" },
+  { event: "Stop", matcher: null, key: "hook:Stop" },
+];
+
+const clone = (o) => JSON.parse(JSON.stringify(o ?? {}));
+
+// First candidate interpreter that resolves on PATH (probe injected for tests).
+export function detectPython(candidates, exists) {
+  for (const c of candidates) if (exists(c)) return c;
+  throw new Error(
+    `No Python interpreter found (tried: ${candidates.join(", ")}). Install Python 3 and re-run.`
+  );
+}
+
+// Interpreter probe order. On Windows `python` is the real interpreter while a bare `python3`
+// is usually the Microsoft Store app-execution-alias stub (opens the Store, doesn't run) — so
+// try `python` first there. On posix `python3` is the canonical name.
+export function pythonCandidatesFor(platform) {
+  return platform === "win32" ? ["python", "python3"] : ["python3", "python"];
+}
+
+export function buildHookCommand(pythonCmd, signalScriptPath, momentKey) {
+  return `${pythonCmd} "${signalScriptPath}" ${momentKey}`;
+}
+
+// Build the full `hooks` object Claude Code expects, grouped by event.
+export function hooksBlock(pythonCmd, signalScriptPath) {
+  const out = {};
+  for (const m of MOMENTS) {
+    const group = { hooks: [{ type: "command", command: buildHookCommand(pythonCmd, signalScriptPath, m.key) }] };
+    if (m.matcher) group.matcher = m.matcher;
+    (out[m.event] ||= []).push(group);
+  }
+  return out;
+}
+
+const isMatrixGroup = (g) =>
+  Array.isArray(g?.hooks) && g.hooks.some((h) => typeof h?.command === "string" && h.command.includes(MATRIX_MARKER));
+
+// Merge our hooks into an existing settings object: drop any prior matrix groups (so a
+// re-run doesn't duplicate or leave a stale path), keep every unrelated group, append ours.
+export function mergeHooks(settings, ourHooks) {
+  const out = clone(settings);
+  out.hooks ||= {};
+  for (const [event, ourGroups] of Object.entries(ourHooks)) {
+    const kept = (out.hooks[event] || []).filter((g) => !isMatrixGroup(g));
+    out.hooks[event] = [...kept, ...clone(ourGroups)];
+  }
+  return out;
+}
+
+// Remove only our matrix groups; prune events (and the hooks key) left empty.
+export function removeHooks(settings) {
+  const out = clone(settings);
+  if (!out.hooks) return out;
+  for (const event of Object.keys(out.hooks)) {
+    const kept = out.hooks[event].filter((g) => !isMatrixGroup(g));
+    if (kept.length) out.hooks[event] = kept;
+    else delete out.hooks[event];
+  }
+  if (Object.keys(out.hooks).length === 0) delete out.hooks;
+  return out;
+}
+
+// The MCP server registration value. Windows keeps the cmd.exe wrapper (spawn is finicky
+// there — documented in mcp_launch.cmd); posix launches the compiled server with node.
+// Paths arrive already joined by the caller (native separators) — this stays IO/path-free.
+export function mcpRegistration({ platform, mcpDir, distIndexPath, nodePath, launchCmdPath, boardUrl }) {
+  const env = { MATRIX_MCP_DIR: mcpDir };
+  if (boardUrl) env.ESP32_URL = boardUrl;
+  if (platform === "win32") {
+    return { type: "stdio", command: "cmd.exe", args: ["/c", launchCmdPath], env };
+  }
+  return { type: "stdio", command: nodePath, args: [distIndexPath], env };
+}
+
+export function mergeMcp(claudeJson, registration) {
+  const out = clone(claudeJson);
+  out.mcpServers ||= {};
+  out.mcpServers[MCP_KEY] = clone(registration);
+  return out;
+}
+
+export function removeMcp(claudeJson) {
+  const out = clone(claudeJson);
+  if (out.mcpServers) {
+    delete out.mcpServers[MCP_KEY];
+    if (Object.keys(out.mcpServers).length === 0) delete out.mcpServers; // clean round-trip
+  }
+  return out;
+}
+
+// Regenerated Windows launcher: pins this machine's node + this repo's compiled entry.
+export function launchCmdContents(nodePath, distIndexPath) {
+  return [
+    "@echo off",
+    "REM Generated by `npm run setup`. Launches the compiled MCP server directly.",
+    "REM Do NOT redirect stderr to a shared fixed file — an orphaned instance would lock",
+    "REM it and break the next spawn (MCP -32000). Claude Code captures stderr already.",
+    `"${nodePath}" "${distIndexPath}"`,
+    "",
+  ].join("\r\n");
+}
