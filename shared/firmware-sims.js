@@ -666,6 +666,119 @@ function makeFireworks(opts = {}) {
   };
 }
 
+// ---- fireworks2 (port of anim_fireworks.ino, FW2 variant — "fireworks2") ----
+// Same launch/burst machine as fireworks, but the payload reads differently:
+//   • EXPLODE: a "cross-bloom" flash — a bright white plus (+) at the burst
+//     center instead of a single pixel.
+//   • FADE: every tendril is a bright COLORED TIP dragging a short, dimming
+//     WHITE COMET TAIL behind it (the last few cells it passed through).
+// Tip color follows fwColorAt(brightness) exactly like fireworks; the tail is
+// white, fading with both its age along the trail and the tendril's own decay.
+const FW2_TAIL = 3;   // comet-tail length (cells trailing the tip)
+
+function makeFireworks2(opts = {}) {
+  const c1 = opts.color1 ? hexToRGB(opts.color1) : [255, 0, 80];   // #ff0050
+  const c2 = opts.color2 ? hexToRGB(opts.color2) : [0, 224, 255];  // #00e0ff
+  const c3 = opts.color3 ? hexToRGB(opts.color3) : [255, 208, 0];  // #ffd000
+
+  let phase       = FW_IDLE;
+  let idleFrames  = 0;
+  let mortarX = 0, mortarY = 0, mortarDx = 0, mortarDy = 0, explodeY = 0;
+  let flashFrames = 0;
+
+  // tendrils gain a short position history (`trail`) for the comet tail.
+  const tendrils = Array.from({ length: 12 }, () => ({
+    x: 0, y: 0, dx: 0, dy: 0, brightness: 0, active: false, trail: [],
+  }));
+
+  function launchNew() {
+    mortarX  = 2 + Math.floor(Math.random() * 5);
+    mortarY  = 7.0;
+    mortarDx = (Math.floor(Math.random() * 3) - 1) * 0.25;
+    mortarDy = -(0.8 + Math.floor(Math.random() * 5) * 0.08);
+    explodeY = 2 + Math.floor(Math.random() * 4);
+    phase    = FW_LAUNCH;
+  }
+
+  return {
+    frame_ms: opts.frame_ms || 50,
+    frame() {
+      const px = [];
+
+      if (phase === FW_IDLE) {
+        if (++idleFrames >= FW_IDLE_FRAMES) { idleFrames = 0; launchNew(); }
+        return px;
+      }
+
+      if (phase === FW_LAUNCH) {
+        mortarX += mortarDx;
+        mortarY += mortarDy;
+        if (Math.floor(mortarY) <= Math.floor(explodeY)) {
+          for (let i = 0; i < 12; i++) {
+            const angle = i * (2.0 * Math.PI / 12) + (Math.floor(Math.random() * 30)) * (Math.PI / 180);
+            const speed = 0.35 + Math.floor(Math.random() * 4) * 0.08;
+            const t = tendrils[i];
+            t.x = mortarX; t.y = mortarY;
+            t.dx = Math.cos(angle) * speed; t.dy = Math.sin(angle) * speed;
+            t.brightness = 255; t.active = true; t.trail = [];
+          }
+          flashFrames = 2;
+          phase = FW_EXPLODE;
+        } else {
+          const mx = Math.floor(mortarX), my = Math.floor(mortarY);
+          if (mx >= 0 && mx < 8 && my >= 0 && my < 8) px.push({ x: mx, y: my, r: 255, g: 255, b: 255 });
+        }
+        return px;
+      }
+
+      if (phase === FW_EXPLODE) {
+        // Cross-bloom: a bright white plus (+) at the burst, dimming over the flash.
+        const ex = Math.floor(mortarX), ey = Math.floor(mortarY);
+        const v = flashFrames === 2 ? 255 : 150;
+        for (const [dx, dy] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const x = ex + dx, y = ey + dy;
+          if (x >= 0 && x < 8 && y >= 0 && y < 8) px.push({ x, y, r: v, g: v, b: v });
+        }
+        if (--flashFrames === 0) phase = FW_FADE;
+        return px;
+      }
+
+      // FW_FADE: advance tendrils; draw a white comet tail then a colored tip.
+      let anyActive = false;
+      for (const t of tendrils) {
+        if (!t.active) continue;
+        anyActive = true;
+        t.x += t.dx;
+        t.y += t.dy;
+        if (t.brightness > 12) t.brightness -= 12;
+        else { t.active = false; continue; }
+        if (t.x < 0 || t.x > 7 || t.y < 0 || t.y > 7) { t.active = false; continue; }
+
+        const tx = Math.floor(t.x), ty = Math.floor(t.y);
+
+        // White comet tail: older trail cells, dimmer with age and overall decay.
+        t.trail.forEach((c, i) => {
+          if (c.x === tx && c.y === ty) return;           // tip cell drawn below
+          const age = (FW2_TAIL - i) / FW2_TAIL;          // newest cell brightest
+          const w = Math.round(255 * age * (t.brightness / 255) * 0.7);
+          if (w > 0) px.push({ x: c.x, y: c.y, r: w, g: w, b: w });
+        });
+
+        // Bright colored tip.
+        const [r, g, b] = fwColorAt(t.brightness, c1, c2, c3);
+        px.push({ x: tx, y: ty, r, g, b });
+
+        // Record this cell at the head of the trail.
+        t.trail.unshift({ x: tx, y: ty });
+        if (t.trail.length > FW2_TAIL) t.trail.pop();
+      }
+      if (!anyActive) { phase = FW_IDLE; idleFrames = 0; }
+
+      return px;
+    },
+  };
+}
+
 // ---- dancefloor (port of anim_dance_floor.ino) ----
 // 4×4 grid of 2×2 tiles. Slot assignment: slot = (tx%2) + (ty%2)*2
 // guarantees no two 4-directionally or diagonally adjacent tiles share a slot.
@@ -1321,6 +1434,7 @@ export const FIRMWARE_SIMS = {
   matrix_rain: makeMatrixRain,
   snow: makeSnow,
   fireworks: makeFireworks,
+  fireworks2: makeFireworks2,
   dancefloor: makeDancefloor,
   rainbow: makeRainbow,
   breathe: makeBreathe,

@@ -113,6 +113,15 @@
   .beat h3{font-size:1.02rem; font-weight:600; margin-bottom:6px;}
   .beat p{font-size:.86rem; color:var(--dim);}
 
+  /* ── library showcase (the deep bench) ───────────────────── */
+  .show-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:44px;}
+  .show{border:1px solid var(--hair); border-radius:16px; padding:18px 18px 16px; display:flex; flex-direction:column; align-items:center; gap:13px;
+    background:linear-gradient(180deg,rgba(255,255,255,.015),transparent); transition:border-color .18s, transform .18s;}
+  .show:hover{border-color:#2f2f3a; transform:translateY(-2px);}
+  .show canvas{display:block; border-radius:10px; background:var(--panel-sub);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.03), inset 0 6px 20px rgba(0,0,0,.55);}
+  .show figcaption{font-family:var(--mono); font-size:.72rem; letter-spacing:.06em; color:var(--dim); text-align:center;}
+
   /* ── playground ──────────────────────────────────────────── */
   .play-grid{display:grid; grid-template-columns:auto 1fr; gap:clamp(32px,5vw,60px); align-items:center; margin-top:44px;}
   .expr-pad{display:flex; flex-wrap:wrap; gap:10px; max-width:520px;}
@@ -169,10 +178,11 @@
     .hero .device-stage{order:-1;}
     .eyebrow{justify-content:center;} .lead{margin-left:auto; margin-right:auto;} .cta-row{justify-content:center;}
     .beats{grid-template-columns:repeat(2,1fr);}
+    .show-grid{grid-template-columns:repeat(2,1fr);}
     .play-grid{grid-template-columns:1fr; justify-items:center; text-align:center;} .expr-pad{justify-content:center;}
     .renderers{grid-template-columns:1fr;} .steps{grid-template-columns:1fr;} .data-grid{grid-template-columns:1fr;}
   }
-  @media(max-width:440px){ .beats{grid-template-columns:1fr;} }
+  @media(max-width:440px){ .beats{grid-template-columns:1fr;} .show-grid{grid-template-columns:1fr;} }
 
   @media(prefers-reduced-motion:reduce){ html{scroll-behavior:auto;} .device::before{transition:none;} }
 </style>
@@ -228,26 +238,38 @@
       <p class="section-lead">You don't watch a terminal the whole time. The panel is the glance — Claude's status and mood, ambient, in the corner of your eye. These are the real frames the board shows.</p>
       <div class="beats">
         <div class="beat">
-          <canvas data-expr="working" width="160" height="160" style="width:80px;height:80px"></canvas>
+          <canvas data-anim="hourglass" width="160" height="160" style="width:80px;height:80px"></canvas>
           <span class="tag">Busy</span><h3>Heads-down</h3>
-          <p>A comet circles while Claude compiles, searches, or runs a long task. You know it's working without looking.</p>
+          <p>An hourglass turns while Claude compiles, searches, or runs a long task. You know it's working without looking.</p>
         </div>
         <div class="beat">
-          <canvas data-expr="done" width="160" height="160" style="width:80px;height:80px"></canvas>
+          <canvas data-anim="task-complete" width="160" height="160" style="width:80px;height:80px"></canvas>
           <span class="tag">Finished</span><h3>Done</h3>
-          <p>A green check the instant a task completes. The "you can look now" signal.</p>
+          <p>A check draws itself the instant a task completes. The "you can look now" signal.</p>
         </div>
         <div class="beat">
-          <canvas data-expr="alert" width="160" height="160" style="width:80px;height:80px"></canvas>
+          <canvas data-anim="ask-question" width="160" height="160" style="width:80px;height:80px"></canvas>
           <span class="tag">Your turn</span><h3>Stuck on you</h3>
-          <p>When Claude needs an answer or a permission, a gentle amber tap — the silent shoulder-tap.</p>
+          <p>When Claude needs an answer or a permission, a question mark pulses — the silent shoulder-tap.</p>
         </div>
         <div class="beat">
-          <canvas data-expr="party" width="160" height="160" style="width:80px;height:80px"></canvas>
+          <canvas data-anim="warrocket" width="160" height="160" style="width:80px;height:80px"></canvas>
           <span class="tag">Win</span><h3>Shipped it</h3>
-          <p>Confetti for the moments worth celebrating. Yes, it's a little theatrical. That's the point.</p>
+          <p>A rocket blasts off for the wins worth celebrating. Yes, it's a little theatrical. That's the point.</p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="divider"></div></div>
+
+  <!-- ───────────────────────── LIBRARY ─────────────────────── -->
+  <section id="library">
+    <div class="wrap">
+      <span class="eyebrow">The deep bench</span>
+      <h2>A whole vocabulary of moods.</h2>
+      <p class="section-lead">Status is only the half of it. Dozens of hand-built animations live in the library — cosmic, kinetic, alive. A few favorites below, each running its real frame data with additive bloom.</p>
+      <div class="show-grid" id="showGrid"></div>
     </div>
   </section>
 
@@ -343,7 +365,7 @@
         <div class="step">
           <span class="num">01 · Flash</span>
           <h3>One file to the board</h3>
-          <p>Download the release and run <code>flash.bat</code> / <code>flash.sh</code>. One merged image — firmware and the web UI together, no extra upload. A one-click browser flasher is coming once this site is hosted.</p>
+          <p>Grab the firmware from GitHub and run <code>flash.bat</code> / <code>flash.sh</code>. One merged image — firmware and the web UI together, no extra upload. A one-click browser flasher is on the way.</p>
         </div>
         <div class="step">
           <span class="num">02 · Connect</span>
@@ -356,10 +378,10 @@
           <p>Claude starts using the panel on its own — a spinner when it's busy, a check when it's done, a tap when it needs you.</p>
         </div>
       </div>
-      <p class="install-note"><b>Where it stands:</b> the firmware, the web control panel, and the Claude integration all work and are hardware-verified. The offline flasher is ready now; the one-click browser install goes live when this page is published. Full instructions and downloads are on <a href="https://github.com/srfinch17/peckworks-esp32s3matrix" style="color:var(--emotion)">GitHub</a>.</p>
+      <p class="install-note"><b>Where it stands:</b> the firmware, the web control panel, and the Claude integration all work and are hardware-verified. The offline flasher lives in the repo today; tagged releases and a one-click browser install are on the way. Full instructions and source are on <a href="https://github.com/srfinch17/peckworks-esp32s3matrix" style="color:var(--emotion)">GitHub</a>.</p>
       <div class="cta-row" style="margin-top:30px">
-        <a class="btn btn-primary" href="https://github.com/srfinch17/peckworks-esp32s3matrix/releases">Download the release</a>
-        <a class="btn btn-ghost" href="https://github.com/srfinch17/peckworks-esp32s3matrix">Read the docs ↗</a>
+        <a class="btn btn-primary" href="https://github.com/srfinch17/peckworks-esp32s3matrix">View on GitHub</a>
+        <a class="btn btn-ghost" href="https://github.com/srfinch17/peckworks-esp32s3matrix#readme">Read the docs ↗</a>
       </div>
     </div>
   </section>
@@ -388,8 +410,16 @@
 import { Panel } from "../shared/render.js";
 import { resolveExpression } from "../shared/expressions.js";
 import { mountDeskSim } from "../shared/desk-sim.js";
+import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";
 
 const REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Nice default params for the generative firmware sims we feature (mirrors studio/gallery.js).
+const FW_DEFAULTS = {
+  claudesweep: {},
+  fire:        { palette: "classic", intensity: 6 },
+  matrix_rain: { theme: "classic", frame_ms: 60 },
+};
 
 // ── The real expression vocabulary (ported from mcp_server/expressions) ──
 // '.' = off; any other char → its hex in `colors`.
@@ -481,6 +511,20 @@ const GEN = {
   },
 };
 
+// ── Library of saved expressions, fetched lazily from the Studio's gallery data ──
+// (build-pages.mjs keeps studio/ a sibling of this page, so this resolves on Pages too).
+// Each entry → resolved {frames, frame_ms}. Empty until loadLibrary() resolves.
+const LIB = {};
+let _libReady;
+function loadLibrary() {
+  return _libReady ||= (async () => {
+    try {
+      const data = await (await fetch('../studio/gallery-data.json')).json();
+      for (const e of data.expressions) LIB[e.name] = resolveExpression(e);
+    } catch { /* offline / missing — firmware sims still work, saved tiles just skip */ }
+  })();
+}
+
 // ── Panel factory — wraps the shared Panel ──
 const panels = [];
 function mk(canvas, deviceEl) {
@@ -489,26 +533,30 @@ function mk(canvas, deviceEl) {
   return p;
 }
 
-// Helper: set a named expression on a panel
-function setPanelExpr(panel, name, deviceEl) {
-  const r = RESOLVED[name];
-  if (!r) return;
-  panel.setFrames(r.frames, r.frame_ms);
-  if (deviceEl) {
-    const el = deviceEl.querySelector('.now');
-    if (el) el.innerHTML = 'showing <b>' + EXPR[name].label + '</b>';
+// One render path for all three animation kinds: a generative firmware sim
+// (stepper), a hand-ported char-art expression, or a saved library expression.
+function drive(panel, name) {
+  if (FIRMWARE_SIMS[name]) {
+    const sim = FIRMWARE_SIMS[name](FW_DEFAULTS[name] || {});
+    panel.setStepper(() => sim.frame(), sim.frame_ms);
+    return true;
   }
+  const r = RESOLVED[name] || LIB[name];
+  if (r) { panel.setFrames(r.frames, r.frame_ms); return true; }
+  return false;
 }
 
 // ── Wire up panels ──
 const hero = mk(document.getElementById('heroPanel'), document.getElementById('heroDevice'));
 const play = mk(document.getElementById('playPanel'), document.getElementById('playDevice'));
 
-document.querySelectorAll('.beat canvas[data-expr]').forEach(cv => {
-  const p = mk(cv, null);
-  const r = RESOLVED[cv.dataset.expr];
-  if (r) p.setFrames(r.frames, r.frame_ms);
-});
+// Beats use saved library expressions, so they wire once the library is loaded.
+function wireBeats() {
+  document.querySelectorAll('.beat canvas').forEach(cv => {
+    const p = mk(cv, null);
+    if (drive(p, cv.dataset.anim || cv.dataset.expr) && REDUCE) p.draw(0);
+  });
+}
 
 document.querySelectorAll('canvas[data-gen]').forEach(cv => {
   const p = mk(cv, null);
@@ -523,31 +571,76 @@ function showCompanion() {
   compHandle = mountDeskSim({ expression: EXPR.idle, dismissible: true });
 }
 
-// ── Playground buttons ──
-const ORDER = ['mascot','working','done','alert','party','heart','spaceship','smiley','sleep','cross','idle'];
+// ── Playground sampler — a fresh, pokeable cut of the library, distinct from
+// the hero/beats/showcase. Mix of feeling (orange) and information (cyan),
+// driven straight from firmware sims + saved-expression frames. ──
+const PLAY = [
+  { name: 'wink',          label: 'Wink',      kind: 'emotion' },
+  { name: 'idea',          label: 'Idea',      kind: 'emotion' },
+  { name: 'crystal-ball',  label: 'Thinking',  kind: 'emotion' },
+  { name: 'potion',        label: 'Brewing',   kind: 'emotion' },
+  { name: 'butterfly',     label: 'Butterfly', kind: 'emotion' },
+  { name: 'sun',           label: 'Sunshine',  kind: 'emotion' },
+  { name: 'jupiter',       label: 'Jupiter',   kind: 'info' },
+  { name: 'ringed-planet', label: 'Saturn',    kind: 'info' },
+  { name: 'soundwave',     label: 'Listening', kind: 'info' },
+  { name: 'newtons-cradle', label: 'Cradle',   kind: 'info' },
+];
 const pad = document.getElementById('exprPad');
-ORDER.forEach((name, i) => {
-  const e = EXPR[name], b = document.createElement('button');
-  b.className = 'chip'; b.dataset.kind = e.kind;
-  b.innerHTML = '<span class="dot"></span>' + e.label;
-  b.onclick = () => {
-    setPanelExpr(play, name, document.getElementById('playDevice'));
-    pad.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    b.classList.add('active');
-  };
-  pad.appendChild(b);
-  if (i === 0) b.classList.add('active');
-});
-setPanelExpr(play, 'mascot', document.getElementById('playDevice'));
+const playDevice = document.getElementById('playDevice');
+function setPlay(item, btn) {
+  if (!drive(play, item.name)) return;
+  const now = playDevice.querySelector('.now');
+  if (now) now.innerHTML = 'showing <b>' + item.label + '</b>';
+  pad.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+function wirePlayground() {
+  PLAY.forEach((item, i) => {
+    const b = document.createElement('button');
+    b.className = 'chip'; b.dataset.kind = item.kind;
+    b.innerHTML = '<span class="dot"></span>' + item.label;
+    b.onclick = () => setPlay(item, b);
+    pad.appendChild(b);
+    if (i === 0) setPlay(item, b);   // default selection + render
+  });
+}
 
-// ── Hero auto-reel ──
-const REEL = ['mascot','working','done','party','spaceship','heart','idle'];
-let ri = 0;
-setPanelExpr(hero, REEL[0], document.getElementById('heroDevice'));
-function advanceReel() { ri = (ri+1)%REEL.length; setPanelExpr(hero, REEL[ri], document.getElementById('heroDevice')); }
-if (!REDUCE) setInterval(advanceReel, 3400);
+// ── Hero: the signature Claude wait-spinner (ring sweep + bobbing Claude) ──
+drive(hero, 'claudesweep');
+document.getElementById('heroNow').innerHTML = 'Claude is <b>working</b>';
+
+// ── Library showcase — a curated set of the coolest animations ──
+// Pulled live from the gallery: saved expressions (frames) + a couple of
+// generative firmware sims, mixed for variety.
+const SHOWCASE = [
+  { name: 'galaxy',      label: 'galaxy' },
+  { name: 'aurora',      label: 'aurora' },
+  { name: 'fireworks2',  label: 'fireworks' },
+  { name: 'black-hole',  label: 'black hole' },
+  { name: 'jellyfish',   label: 'jellyfish' },
+  { name: 'matrix_rain', label: 'matrix rain' },
+  { name: 'lava-lamp',   label: 'lava lamp' },
+  { name: 'fire',        label: 'fire' },
+  { name: 'goldfish',    label: 'goldfish' },
+];
+async function buildShowcase() {
+  const grid = document.getElementById('showGrid');
+  for (const { name, label } of SHOWCASE) {
+    const fig = document.createElement('figure'); fig.className = 'show';
+    const cv = document.createElement('canvas');
+    cv.width = 220; cv.height = 220; cv.style.width = '110px'; cv.style.height = '110px';
+    const cap = document.createElement('figcaption'); cap.textContent = label;
+    fig.appendChild(cv); fig.appendChild(cap); grid.appendChild(fig);
+    const p = mk(cv, null);
+    if (!drive(p, name)) { fig.remove(); }      // skip anything the library didn't supply
+    else if (REDUCE) p.draw(0);
+  }
+}
 
 // ── Single shared animation loop ──
+// The loop reads `panels` each frame, so the async showcase tiles join in as
+// soon as buildShowcase() pushes them — no restart needed.
 if (REDUCE) {
   panels.forEach(p => p.draw(0));
   showCompanion();
@@ -558,6 +651,10 @@ if (REDUCE) {
   // reveal companion after a beat (the desk-buddy showing up)
   setTimeout(showCompanion, 2600);
 }
+
+// Beats and the showcase both draw from the saved-expression library — wire them
+// once it has loaded (the shared loop picks up their panels automatically).
+loadLibrary().then(() => { wireBeats(); wirePlayground(); buildShowcase(); });
 </script>
 </body>
 </html>
