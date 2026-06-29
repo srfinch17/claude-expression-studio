@@ -1,5 +1,6 @@
 {
   "version": "1.0",
+  "appVersion": "0.12.0",
   "intents": {
     "info":           { "fallback": null,      "root": true, "doc": "neutral status / floor" },
     "working":        { "fallback": null,      "root": true, "doc": "busy, in progress" },

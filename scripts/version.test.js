@@ -1,10 +1,11 @@
 // Unit tests for the versioning tooling. Run with `npm test` (node --test).
-// Covers the pure logic (semver math, drift comparison) and the check
-// report-building against mock /api/status payloads — no board required.
+// Covers the pure logic (semver math, drift comparison), the stamp targets
+// (MCP package.json + .mcpb manifest + trigger manifest appVersion), and the
+// drift check against the local MCP self-report. No board or network needed.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, writeFile, readFile } from "node:fs/promises";
+import { mkdtemp, mkdir, writeFile, readFile, access } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -35,11 +36,28 @@ test("compareArtifact classifies match / drift / unknown", () => {
   }
 });
 
-// Build a throwaway repo tree so stamp() has real files to write.
+// A hand-aligned trigger manifest, like the real shared/manifest.json: padded
+// columns AND CRLF line endings (the real file is CRLF). The padding proves
+// stamp() does a targeted edit rather than a reformatting JSON round-trip; the
+// CRLF proves the insert regex tolerates Windows line endings, not just LF.
+const TRIGGER_MANIFEST = [
+  "{",
+  '  "version": "1.0",',
+  '  "intents": {',
+  '    "info":    { "fallback": null, "root": true },',
+  '    "working": { "fallback": null, "root": true }',
+  "  }",
+  "}",
+  "",
+].join("\r\n");
+
+// Build a throwaway studio repo tree so stamp() has real files to write. There
+// is NO esp32_matrix_webserver/ here — that's the firmware repo — so a stamp
+// that wrongly reached for firmware artifacts would fail.
 async function fixtureRoot(version) {
   const root = await mkdtemp(path.join(tmpdir(), "vtest-"));
-  await mkdir(path.join(root, "esp32_matrix_webserver", "data"), { recursive: true });
   await mkdir(path.join(root, "mcp_server"), { recursive: true });
+  await mkdir(path.join(root, "shared"), { recursive: true });
   await writeFile(path.join(root, "VERSION"), version + "\n");
   await writeFile(
     path.join(root, "mcp_server", "package.json"),
@@ -49,19 +67,13 @@ async function fixtureRoot(version) {
     path.join(root, "mcp_server", "manifest.json"),
     JSON.stringify({ manifest_version: "0.3", name: "esp32-matrix", version: "0.0.0", server: { type: "node", entry_point: "dist/index.js" } }, null, 2) + "\n",
   );
+  await writeFile(path.join(root, "shared", "manifest.json"), TRIGGER_MANIFEST);
   return root;
 }
 
-test("stamp writes the version into all four artifacts", async () => {
+test("stamp writes the version into the three studio artifacts and nothing else", async () => {
   const root = await fixtureRoot("0.1.0");
   await stamp("0.3.0", root);
-
-  const h = await readFile(path.join(root, "esp32_matrix_webserver", "version.h"), "utf8");
-  assert.match(h, /#define FW_VERSION "0\.3\.0"/);
-
-  const web = JSON.parse(await readFile(path.join(root, "esp32_matrix_webserver", "data", "version.json"), "utf8"));
-  assert.equal(web.version, "0.3.0");
-  assert.ok(web.stamped, "version.json carries a stamped timestamp");
 
   const pkg = JSON.parse(await readFile(path.join(root, "mcp_server", "package.json"), "utf8"));
   assert.equal(pkg.version, "0.3.0");
@@ -70,47 +82,61 @@ test("stamp writes the version into all four artifacts", async () => {
   const manifest = JSON.parse(await readFile(path.join(root, "mcp_server", "manifest.json"), "utf8"));
   assert.equal(manifest.version, "0.3.0");
   assert.equal(manifest.name, "esp32-matrix", "stamp preserves other manifest fields");
+
+  const trigger = JSON.parse(await readFile(path.join(root, "shared", "manifest.json"), "utf8"));
+  assert.equal(trigger.appVersion, "0.3.0", "product version stamped into appVersion");
+  assert.equal(trigger.version, "1.0", "schema version field is left untouched");
+
+  // Discriminating: the firmware + web bundle live in the other repo. stamp()
+  // must not reach across to an esp32_matrix_webserver/ tree here.
+  await assert.rejects(
+    access(path.join(root, "esp32_matrix_webserver")),
+    "stamp() must not write any firmware artifact in the studio repo",
+  );
 });
 
-// A fake fetch returning a chosen /api/status body.
-function fakeFetch(body) {
-  return async () => ({ json: async () => body });
-}
-
-test("checkVersions reports match when board agrees", async () => {
-  const root = await fixtureRoot("0.2.0");
-  await stamp("0.2.0", root); // make mcp package.json match
-  const report = await checkVersions({
-    root,
-    boardUrl: "http://x",
-    fetchFn: fakeFetch({ fw_version: "0.2.0", fw_built: "Jun 16 2026", web_version: "0.2.0" }),
-  });
-  assert.equal(report.reachable, true);
-  const byArtifact = Object.fromEntries(report.rows.map((r) => [r.artifact, r.status]));
-  assert.deepEqual(byArtifact, { firmware: "match", web: "match", mcp: "match", "mcp-bundle": "match" });
-});
-
-test("checkVersions flags firmware drift and unknown web", async () => {
+test("stamp edits the trigger manifest in place without reformatting it", async () => {
   const root = await fixtureRoot("0.2.0");
   await stamp("0.2.0", root);
-  const report = await checkVersions({
-    root,
-    boardUrl: "http://x",
-    fetchFn: fakeFetch({ fw_version: "0.1.0", web_version: "unknown" }),
-  });
-  const byArtifact = Object.fromEntries(report.rows.map((r) => [r.artifact, r.status]));
-  assert.equal(byArtifact.firmware, "drift");
-  assert.equal(byArtifact.web, "unknown");
+  const text = await readFile(path.join(root, "shared", "manifest.json"), "utf8");
+  // The hand-aligned intent rows survive verbatim (a JSON round-trip would expand them).
+  assert.match(text, /"info":    \{ "fallback": null, "root": true \}/);
+  // The inserted appVersion line uses the file's CRLF line ending, not a bare LF.
+  assert.match(text, /"appVersion": "0\.2\.0",\r\n/);
+  assert.ok(!/[^\r]\n/.test(text), "no bare LF introduced — file stays CRLF throughout");
 });
 
-test("checkVersions marks board unreachable without throwing", async () => {
+test("stamp is idempotent on the trigger manifest (no duplicate appVersion)", async () => {
   const root = await fixtureRoot("0.2.0");
-  const report = await checkVersions({
-    root,
-    boardUrl: "http://x",
-    fetchFn: async () => { throw new Error("ECONNREFUSED"); },
-  });
-  assert.equal(report.reachable, false);
-  const fw = report.rows.find((r) => r.artifact === "firmware");
-  assert.equal(fw.status, "unreachable");
+  await stamp("0.2.0", root);
+  await stamp("0.4.0", root);
+  const text = await readFile(path.join(root, "shared", "manifest.json"), "utf8");
+  assert.equal((text.match(/"appVersion"/g) || []).length, 1, "exactly one appVersion line");
+  assert.match(text, /"appVersion": "0\.4\.0"/);
+});
+
+test("checkVersions reports match when the MCP package.json agrees", async () => {
+  const root = await fixtureRoot("0.2.0");
+  await stamp("0.2.0", root);
+  const report = await checkVersions({ root });
+  const byArtifact = Object.fromEntries(report.rows.map((r) => [r.artifact, r.status]));
+  // Studio checks exactly one artifact — the MCP server. No firmware/web rows.
+  assert.deepEqual(byArtifact, { mcp: "match" });
+});
+
+test("checkVersions flags drift when the MCP package.json is stale", async () => {
+  const root = await fixtureRoot("0.2.0");
+  // package.json fixture is at 0.0.0; VERSION is 0.2.0 → drift.
+  const report = await checkVersions({ root });
+  const mcp = report.rows.find((r) => r.artifact === "mcp");
+  assert.equal(mcp.status, "drift");
+  assert.equal(mcp.reported, "0.0.0");
+});
+
+test("checkVersions marks the MCP unknown when package.json is unreadable", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "vtest-"));
+  await writeFile(path.join(root, "VERSION"), "0.2.0\n");
+  const report = await checkVersions({ root });
+  const mcp = report.rows.find((r) => r.artifact === "mcp");
+  assert.equal(mcp.status, "unknown");
 });
