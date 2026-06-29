@@ -5,7 +5,7 @@ working, done, waiting on you, idle — renders as 8×8 LED animations and a sem
 presence card, on whatever output is connected. The physical LED panel is **one
 optional renderer**; everything runs board-free in the browser too.
 
-**Live demo (no install, no hardware):** https://srfinch17.github.io/peckworks-esp32s3matrix/
+**Live demo (no install, no hardware):** https://srfinch17.github.io/claude-expression-studio/
 
 ## What it is
 
