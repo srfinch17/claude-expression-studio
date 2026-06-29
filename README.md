@@ -1,5 +1,7 @@
 # Claude Expression Studio
 
+[![Live demo](https://img.shields.io/badge/live_demo-online-ff5008?style=flat-square&logo=github)](https://srfinch17.github.io/claude-expression-studio/)
+
 A **renderer-agnostic presence & expression system for Claude**. Claude's state —
 working, done, waiting on you, idle — renders as 8×8 LED animations and a semantic
 presence card, on whatever output is connected. The physical LED panel is **one
