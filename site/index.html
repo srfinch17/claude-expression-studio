@@ -525,13 +525,6 @@ function loadLibrary() {
   })();
 }
 
-// Display labels for the captions: char-art + the one firmware sim shown by name.
-const LABEL = { claudesweep: "Working" };
-for (const [n, e] of Object.entries(EXPR)) LABEL[n] = e.label;
-// Playground metadata for entries that aren't char-art (firmware sims).
-const EXTRA = { claudesweep: { label: "Working", kind: "status" } };
-const meta = (name) => EXPR[name] || EXTRA[name];
-
 // ── Panel factory — wraps the shared Panel ──
 const panels = [];
 function mk(canvas, deviceEl) {
@@ -551,15 +544,6 @@ function drive(panel, name) {
   const r = RESOLVED[name] || LIB[name];
   if (r) { panel.setFrames(r.frames, r.frame_ms); return true; }
   return false;
-}
-
-// Helper: drive a panel by name and update its device caption.
-function setPanelExpr(panel, name, deviceEl) {
-  if (!drive(panel, name)) return;
-  if (deviceEl) {
-    const el = deviceEl.querySelector('.now');
-    if (el) el.innerHTML = 'showing <b>' + (LABEL[name] || name) + '</b>';
-  }
 }
 
 // ── Wire up panels ──
@@ -587,22 +571,40 @@ function showCompanion() {
   compHandle = mountDeskSim({ expression: EXPR.idle, dismissible: true });
 }
 
-// ── Playground buttons ──
-const ORDER = ['claudesweep','mascot','done','alert','party','heart','spaceship','smiley','sleep','cross','idle'];
+// ── Playground sampler — a fresh, pokeable cut of the library, distinct from
+// the hero/beats/showcase. Mix of feeling (orange) and information (cyan),
+// driven straight from firmware sims + saved-expression frames. ──
+const PLAY = [
+  { name: 'wink',          label: 'Wink',      kind: 'emotion' },
+  { name: 'idea',          label: 'Idea',      kind: 'emotion' },
+  { name: 'crystal-ball',  label: 'Thinking',  kind: 'emotion' },
+  { name: 'potion',        label: 'Brewing',   kind: 'emotion' },
+  { name: 'butterfly',     label: 'Butterfly', kind: 'emotion' },
+  { name: 'sun',           label: 'Sunshine',  kind: 'emotion' },
+  { name: 'jupiter',       label: 'Jupiter',   kind: 'info' },
+  { name: 'ringed-planet', label: 'Saturn',    kind: 'info' },
+  { name: 'soundwave',     label: 'Listening', kind: 'info' },
+  { name: 'newtons-cradle', label: 'Cradle',   kind: 'info' },
+];
 const pad = document.getElementById('exprPad');
-ORDER.forEach((name, i) => {
-  const e = meta(name), b = document.createElement('button');
-  b.className = 'chip'; b.dataset.kind = e.kind;
-  b.innerHTML = '<span class="dot"></span>' + e.label;
-  b.onclick = () => {
-    setPanelExpr(play, name, document.getElementById('playDevice'));
-    pad.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-    b.classList.add('active');
-  };
-  pad.appendChild(b);
-  if (i === 0) b.classList.add('active');
-});
-setPanelExpr(play, ORDER[0], document.getElementById('playDevice'));
+const playDevice = document.getElementById('playDevice');
+function setPlay(item, btn) {
+  if (!drive(play, item.name)) return;
+  const now = playDevice.querySelector('.now');
+  if (now) now.innerHTML = 'showing <b>' + item.label + '</b>';
+  pad.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+function wirePlayground() {
+  PLAY.forEach((item, i) => {
+    const b = document.createElement('button');
+    b.className = 'chip'; b.dataset.kind = item.kind;
+    b.innerHTML = '<span class="dot"></span>' + item.label;
+    b.onclick = () => setPlay(item, b);
+    pad.appendChild(b);
+    if (i === 0) setPlay(item, b);   // default selection + render
+  });
+}
 
 // ── Hero: the signature Claude wait-spinner (ring sweep + bobbing Claude) ──
 drive(hero, 'claudesweep');
@@ -652,7 +654,7 @@ if (REDUCE) {
 
 // Beats and the showcase both draw from the saved-expression library — wire them
 // once it has loaded (the shared loop picks up their panels automatically).
-loadLibrary().then(() => { wireBeats(); buildShowcase(); });
+loadLibrary().then(() => { wireBeats(); wirePlayground(); buildShowcase(); });
 </script>
 </body>
 </html>
