@@ -1,50 +1,176 @@
 {
   "version": "1.0",
   "intents": {
-    "info":           { "fallback": null,      "root": true, "doc": "neutral status / floor" },
-    "working":        { "fallback": null,      "root": true, "doc": "busy, in progress" },
-    "done":           { "fallback": null,      "root": true, "doc": "turn / task finished" },
-    "attention":      { "fallback": null,      "root": true, "doc": "engage with me" },
-    "fail":           { "fallback": null,      "root": true, "doc": "a setback / something wrong" },
-    "idle":           { "fallback": null,      "root": true, "doc": "ambient / away" },
-    "thinking":       { "fallback": "working", "doc": "reasoning hard" },
-    "heard":          { "fallback": "working", "doc": "got your message" },
-    "compacting":     { "fallback": "working", "doc": "folding memory down" },
-    "session-start":  { "fallback": "info",    "doc": "booting / waking" },
-    "session-end":    { "fallback": "idle",    "doc": "signing off" },
-    "results-merged": { "fallback": "done",    "doc": "a helper reported back" },
-    "approve":        { "fallback": "done",    "doc": "acknowledgement / thumbs-up" },
-    "ok":             { "fallback": "approve",        "doc": "acknowledged" },
-    "question":       { "fallback": "awaiting-input", "doc": "asking the human" },
-    "celebrate":      { "fallback": "done",    "doc": "a win / milestone" },
-    "delight":        { "fallback": "celebrate", "doc": "pleasant surprise" },
-    "awaiting-input": { "fallback": "attention", "doc": "blocked on the human" },
-    "alert":          { "fallback": "attention", "doc": "active look-here" },
-    "error":          { "fallback": "fail",    "doc": "an error" },
-    "fatal":          { "fallback": "error",   "doc": "something died" },
-    "sleep":          { "fallback": "idle",    "doc": "resting" },
-    "screensaver":    { "fallback": "idle",    "doc": "ambient screensaver rotation (firmware apps)" },
-    "greet":          { "fallback": "info",    "doc": "hello" },
-    "affection":      { "fallback": "info",    "doc": "warmth" },
-    "fun":            { "fallback": "info",    "doc": "playful" }
+    "info": {
+      "fallback": null,
+      "root": true,
+      "doc": "neutral status / floor"
+    },
+    "working": {
+      "fallback": null,
+      "root": true,
+      "doc": "busy, in progress"
+    },
+    "done": {
+      "fallback": null,
+      "root": true,
+      "doc": "turn / task finished"
+    },
+    "attention": {
+      "fallback": null,
+      "root": true,
+      "doc": "engage with me"
+    },
+    "fail": {
+      "fallback": null,
+      "root": true,
+      "doc": "a setback / something wrong"
+    },
+    "idle": {
+      "fallback": null,
+      "root": true,
+      "doc": "ambient / away"
+    },
+    "thinking": {
+      "fallback": "working",
+      "doc": "reasoning hard"
+    },
+    "heard": {
+      "fallback": "working",
+      "doc": "got your message"
+    },
+    "compacting": {
+      "fallback": "working",
+      "doc": "folding memory down"
+    },
+    "session-start": {
+      "fallback": "info",
+      "doc": "booting / waking"
+    },
+    "session-end": {
+      "fallback": "idle",
+      "doc": "signing off"
+    },
+    "results-merged": {
+      "fallback": "done",
+      "doc": "a helper reported back"
+    },
+    "approve": {
+      "fallback": "done",
+      "doc": "acknowledgement / thumbs-up"
+    },
+    "ok": {
+      "fallback": "approve",
+      "doc": "acknowledged"
+    },
+    "question": {
+      "fallback": "awaiting-input",
+      "doc": "asking the human"
+    },
+    "celebrate": {
+      "fallback": "done",
+      "doc": "a win / milestone"
+    },
+    "delight": {
+      "fallback": "celebrate",
+      "doc": "pleasant surprise"
+    },
+    "awaiting-input": {
+      "fallback": "attention",
+      "doc": "blocked on the human"
+    },
+    "alert": {
+      "fallback": "attention",
+      "doc": "active look-here"
+    },
+    "error": {
+      "fallback": "fail",
+      "doc": "an error"
+    },
+    "fatal": {
+      "fallback": "error",
+      "doc": "something died"
+    },
+    "sleep": {
+      "fallback": "idle",
+      "doc": "resting"
+    },
+    "screensaver": {
+      "fallback": "idle",
+      "doc": "ambient screensaver rotation (firmware apps)"
+    },
+    "greet": {
+      "fallback": "info",
+      "doc": "hello"
+    },
+    "affection": {
+      "fallback": "info",
+      "doc": "warmth"
+    },
+    "fun": {
+      "fallback": "info",
+      "doc": "playful"
+    }
   },
   "harnesses": {
     "claude-code": {
       "moments": [
-        { "on": "hook:UserPromptSubmit",               "intent": "working" },
-        { "on": "hook:Stop",                           "intent": "done" },
-        { "on": "hook:SubagentStop",                   "intent": "results-merged" },
-        { "on": "hook:PreCompact",                     "intent": "compacting" },
-        { "on": "hook:PreToolUse:AskUserQuestion",     "intent": "awaiting-input" },
-        { "on": "hook:PreToolUse:ExitPlanMode",        "intent": "awaiting-input" },
-        { "on": "hook:PostToolUse:AskUserQuestion",    "intent": "working" },
-        { "on": "hook:PostToolUse:ExitPlanMode",       "intent": "working" },
-        { "on": "hook:Notification:permission_prompt", "intent": "attention" },
-        { "on": "hook:SessionStart",                   "intent": "session-start" },
-        { "on": "hook:SessionEnd",                     "intent": "session-end" },
-        { "on": "discretionary", "intent": "celebrate" },
-        { "on": "discretionary", "intent": "fatal" },
-        { "on": "discretionary", "intent": "screensaver" }
+        {
+          "on": "hook:UserPromptSubmit",
+          "intent": "working"
+        },
+        {
+          "on": "hook:Stop",
+          "intent": "done"
+        },
+        {
+          "on": "hook:SubagentStop",
+          "intent": "results-merged"
+        },
+        {
+          "on": "hook:PreCompact",
+          "intent": "compacting"
+        },
+        {
+          "on": "hook:PreToolUse:AskUserQuestion",
+          "intent": "awaiting-input"
+        },
+        {
+          "on": "hook:PreToolUse:ExitPlanMode",
+          "intent": "awaiting-input"
+        },
+        {
+          "on": "hook:PostToolUse:AskUserQuestion",
+          "intent": "working"
+        },
+        {
+          "on": "hook:PostToolUse:ExitPlanMode",
+          "intent": "working"
+        },
+        {
+          "on": "hook:Notification:permission_prompt",
+          "intent": "attention"
+        },
+        {
+          "on": "hook:SessionStart",
+          "intent": "session-start"
+        },
+        {
+          "on": "hook:SessionEnd",
+          "intent": "session-end"
+        },
+        {
+          "on": "discretionary",
+          "intent": "celebrate"
+        },
+        {
+          "on": "discretionary",
+          "intent": "fatal"
+        },
+        {
+          "on": "discretionary",
+          "intent": "screensaver"
+        }
       ]
     }
   },
@@ -52,45 +178,277 @@
     "esp32-8x8": {
       "doc": "8x8 WS2812B board",
       "bindings": {
-        "info":           "smiley",
-        "working":        { "pool": { "wait-claude": 40, "wait-rainbow": 30, "wait-orbit": 20, "claudesweep": 20, "working": 10, "wait-logo-breathe": 8, "wait-logo-chase": 8, "wait-logo-boot": 8, "wait-logo-ripple": 8 } },
-        "done":           "done",
-        "attention":      "ask-attention",
-        "fail":           "cross",
-        "idle":           "sleep",
+        "info": {
+          "pool": {
+            "smiley": 1
+          }
+        },
+        "working": {
+          "pool": {
+            "wait-claude": 40,
+            "wait-rainbow": 30,
+            "wait-orbit": 20,
+            "claudesweep": 20,
+            "working": 10,
+            "hourglass": 10,
+            "wait-logo-breathe": 8,
+            "wait-logo-chase": 8,
+            "wait-logo-boot": 8,
+            "wait-logo-ripple": 8
+          }
+        },
+        "thinking": {
+          "pool": {
+            "crystal-ball": 1,
+            "newtons-cradle": 1,
+            "claudesweep": 1
+          }
+        },
+        "heard": {
+          "pool": {
+            "soundwave": 1,
+            "wave": 1
+          }
+        },
+        "done": {
+          "pool": {
+            "done": 2,
+            "task-complete": 1
+          }
+        },
+        "attention": {
+          "pool": {
+            "ask-attention": 1,
+            "alert": 1
+          }
+        },
+        "alert": {
+          "pool": {
+            "reticle": 1,
+            "ask-attention": 1
+          }
+        },
+        "fail": {
+          "pool": {
+            "cross": 1,
+            "volcano": 1,
+            "tornado": 1,
+            "mushroom-cloud": 1
+          }
+        },
+        "error": {
+          "pool": {
+            "lightning": 1,
+            "cross": 1,
+            "mushroom-cloud": 1,
+            "volcano": 1,
+            "sad": 1
+          }
+        },
         "screensaver": {
           "noRepeat": true,
           "brightness": 5,
           "pool": {
-            "fire":        { "weight": 1, "params": { "speed": 50, "intensity": 6 }, "label": "🔥 fire" },
-            "dancefloor":  { "weight": 1, "params": { "palette": 0, "hold": 6 }, "label": "🪩 dance floor" },
-            "fireworks":   { "weight": 1, "params": { "color1": "#ff0050", "color2": "#00e0ff", "color3": "#ffd000" }, "label": "🎆 fireworks" },
-            "clock":       { "weight": 1, "params": { "color1": "#00ff88", "color2": "#0088ff", "color3": "#ff4040" }, "label": "🕐 clock" },
-            "frostbite":   { "weight": 1, "params": { "color": "#66ccff", "sparkle": 5, "mist": 4 }, "label": "❄️ frostbite" },
-            "matrix_rain": { "weight": 1, "params": { "theme": "classic", "speed": 60 }, "label": "🟩 matrix" },
-            "snow":        { "weight": 1, "params": { "speed": 110 }, "label": "❄️ snow" },
-            "claudesweep": { "weight": 1, "params": {}, "label": "🟠 claude sweep" }
+            "fire": {
+              "weight": 1,
+              "params": {
+                "speed": 50,
+                "intensity": 6
+              },
+              "label": "🔥 fire"
+            },
+            "dancefloor": {
+              "weight": 1,
+              "params": {
+                "palette": 0,
+                "hold": 6
+              },
+              "label": "🪩 dance floor"
+            },
+            "fireworks": {
+              "weight": 1,
+              "params": {
+                "color1": "#ff0050",
+                "color2": "#00e0ff",
+                "color3": "#ffd000"
+              },
+              "label": "🎆 fireworks"
+            },
+            "clock": {
+              "weight": 1,
+              "params": {
+                "color1": "#00ff88",
+                "color2": "#0088ff",
+                "color3": "#ff4040"
+              },
+              "label": "🕐 clock"
+            },
+            "frostbite": {
+              "weight": 1,
+              "params": {
+                "color": "#66ccff",
+                "sparkle": 5,
+                "mist": 4
+              },
+              "label": "❄️ frostbite"
+            },
+            "matrix_rain": {
+              "weight": 1,
+              "params": {
+                "theme": "classic",
+                "speed": 60
+              },
+              "label": "🟩 matrix"
+            },
+            "snow": {
+              "weight": 1,
+              "params": {
+                "speed": 110
+              },
+              "label": "❄️ snow"
+            },
+            "atom": 1,
+            "double-slit": 1,
+            "jupiter": 1,
+            "ringed-planet": 1,
+            "meteor": 1,
+            "jellyfish": 1,
+            "lava-lamp": 1,
+            "rain": 1,
+            "fireflies": 1,
+            "tornado": 1,
+            "jack-o-lantern": 1,
+            "claude-idle": 1
           }
         },
         "awaiting-input": "ask-question",
         "results-merged": "swarm-merge",
-        "compacting":     { "pool": { "black-hole": 2, "galaxy": 1 } },
-        "celebrate":      { "pool": { "party": 1, "confetti": 1 } },
-        "fatal":          "skull",
-        "session-start":  "aurora",
-        "session-end":    "sleep"
+        "compacting": {
+          "pool": {
+            "black-hole": 2,
+            "galaxy": 1,
+            "compactor": 2
+          }
+        },
+        "celebrate": {
+          "pool": {
+            "party": 1,
+            "confetti": 1,
+            "warrocket": 1,
+            "fireworks": 1
+          }
+        },
+        "delight": {
+          "pool": {
+            "sparkle": 1,
+            "bloom": 1,
+            "butterfly": 1,
+            "idea": 1
+          }
+        },
+        "fun": {
+          "pool": {
+            "goldfish": 1,
+            "ufo": 1,
+            "spinning-coin": 1,
+            "inchworm": 1,
+            "potion": 1
+          }
+        },
+        "fatal": {
+          "pool": {
+            "skull": 2,
+            "mushroom-cloud": 1,
+            "bomb": 1,
+            "volcano": 1
+          }
+        },
+        "session-start": {
+          "pool": {
+            "aurora": 1,
+            "sunrise": 1
+          }
+        },
+        "session-end": {
+          "pool": {
+            "dusk": 1
+          }
+        },
+        "ok": {
+          "pool": {
+            "done": 1,
+            "thumbsup": 1,
+            "ok": 1
+          }
+        },
+        "question": "ask-question",
+        "affection": {
+          "pool": {
+            "smiley": 1,
+            "bloom": 1,
+            "heart": 1,
+            "wink": 1
+          }
+        },
+        "sleep": {
+          "pool": {
+            "sleep": 1,
+            "yawn": 1,
+            "dusk": 1
+          }
+        },
+        "greet": {
+          "pool": {
+            "sunrise": 1,
+            "wait-claude": 1
+          }
+        },
+        "approve": {
+          "pool": {
+            "done": 1,
+            "thumbsup": 1
+          }
+        },
+        "idle": "frostbite"
       }
     },
-    "web-sim": { "doc": "browser canvas board", "inherits": "esp32-8x8" },
+    "web-sim": {
+      "doc": "browser canvas board",
+      "inherits": "esp32-8x8"
+    },
     "card": {
       "doc": "desktop presence card",
       "bindings": {
-        "info":      { "glyph": "•",  "text": "Info",       "color": "#28c8ff" },
-        "working":   { "glyph": "...", "text": "Working",   "color": "#c8e6ff" },
-        "done":      { "glyph": "OK", "text": "Done",       "color": "#00c83c" },
-        "attention": { "glyph": "!",  "text": "Needs you",  "color": "#ff6000" },
-        "fail":      { "glyph": "x",  "text": "Problem",    "color": "#ff3030" },
-        "idle":      { "glyph": "z",  "text": "Idle",       "color": "#32509b" }
+        "info": {
+          "glyph": "•",
+          "text": "Info",
+          "color": "#28c8ff"
+        },
+        "working": {
+          "glyph": "...",
+          "text": "Working",
+          "color": "#c8e6ff"
+        },
+        "done": {
+          "glyph": "OK",
+          "text": "Done",
+          "color": "#00c83c"
+        },
+        "attention": {
+          "glyph": "!",
+          "text": "Needs you",
+          "color": "#ff6000"
+        },
+        "fail": {
+          "glyph": "x",
+          "text": "Problem",
+          "color": "#ff3030"
+        },
+        "idle": {
+          "glyph": "z",
+          "text": "Idle",
+          "color": "#32509b"
+        }
       }
     }
   }

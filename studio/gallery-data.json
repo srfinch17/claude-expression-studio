@@ -345,7 +345,7 @@
       "frame_ms": 520,
       "loop": 0,
       "description": "Red beating heart — appreciation, warmth, 'love it'. Expands then contracts/dips on a ~1s lub-dub.",
-      "group": "bored",
+      "group": "wired",
       "approved": false
     },
     {
@@ -881,7 +881,7 @@
       "frame_ms": 240,
       "loop": 0,
       "description": "Eyes looking forward, then the right eye winks shut while a little smile pops up, then back to both open. Charming idle goof — part of the bored-Claude rotation.",
-      "group": "bored",
+      "group": "wired",
       "approved": false
     },
     {
@@ -965,7 +965,7 @@
       "frame_ms": 240,
       "loop": 0,
       "description": "A sleepy yawn — eyes squeeze from open to slits while a big round mouth swells open, holds, then relaxes. Part of the bored-Claude idle rotation.",
-      "group": "bored",
+      "group": "wired",
       "approved": false
     },
     {
@@ -989,7 +989,7 @@
       "frame_ms": 150,
       "loop": 0,
       "description": "Sad face — something failed or didn't go to plan (gentle, not alarming).",
-      "group": "canned",
+      "group": "wired",
       "approved": false
     },
     {
@@ -1132,7 +1132,7 @@
       "frame_ms": 150,
       "loop": 0,
       "description": "Thumbs up — approval, good job, agreed.",
-      "group": "canned",
+      "group": "wired",
       "approved": false
     },
     {
@@ -1156,7 +1156,7 @@
       "frame_ms": 150,
       "loop": 0,
       "description": "Green 'OK' text — acknowledged, settings applied.",
-      "group": "canned",
+      "group": "wired",
       "approved": false
     },
     {
@@ -1413,7 +1413,7 @@
       "frame_ms": 70,
       "loop": 0,
       "description": "Frostbite-style shimmer — an icy mist glows across the whole panel while bright cyan points fade in and out on smooth sine-bell curves, staggered so they twinkle. Delight, a nice find, a magic moment. The 4 brightness levels are pinned to distinct bri-5 bands so they stay visible.",
-      "group": "canned",
+      "group": "wired",
       "approved": false
     },
     {
@@ -1532,7 +1532,7 @@
       "frame_ms": 120,
       "loop": 0,
       "description": "Orange exclamation mark that glows up and down (never off, never inverts) — INPUT NEEDED / waiting on the human. Bordered top and bottom; brightness breathes low→high→low on one hue (baked steps survive low board brightness). Loops forever. Show when blocked on a question or permission.",
-      "group": "canned",
+      "group": "ask",
       "approved": false
     },
     {
@@ -1750,7 +1750,7 @@
       "frame_ms": 600,
       "loop": 0,
       "description": "Drifting Zz — idle, waiting quietly, nothing needs attention.",
-      "group": "bored",
+      "group": "wired",
       "approved": false
     },
     {
@@ -2144,7 +2144,7 @@
       "frame_ms": 110,
       "loop": 0,
       "description": "atomic symbol: pulsing warm-white/red nucleus with two crossed elliptical orbits, four electrons (cyan + green pairs) circling",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -2579,7 +2579,7 @@
       "frame_ms": 140,
       "loop": 0,
       "description": "Blooming flower: a gold bud unfurls 4 magenta-tipped pink petals outward in stages, holds the open bloom a beat, then gently closes back to the bud and loops. Calm radial 'finished' beat with a green stem and leaf. Petals sit on the diagonals with negative-space gaps so it reads as a flower, never a solid disk.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -2830,7 +2830,7 @@
       "frame_ms": 130,
       "loop": 0,
       "description": "lit cartoon bomb: dark round bomb, spark travels down the fuse, then a full-screen flash explosion scatters into twinkling embers that fade to an empty panel before looping to a fresh bomb",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -2890,7 +2890,7 @@
       "frame_ms": 150,
       "loop": 0,
       "description": "colorful butterfly flapping wings open and closed, magenta/cyan wings with yellow spots, dark body, gentle flutter bob, seamless loop",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -3024,7 +3024,7 @@
       "frame_ms": 250,
       "loop": 0,
       "description": "The Claude mascot (orange Space-Invader alien) amusing himself when idle/bored: glances left, glances right, does a happy side-to-side sway, then a slow blink. Playful/wistful. Fire when idle.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -3246,7 +3246,7 @@
       "frame_ms": 150,
       "loop": 0,
       "description": "compactor: a white full-width bar on a 2px piston descends from the top, SHOVING a randomly scattered multicolor field down ahead of it; the dots pile up from the BOTTOM ROW first then stack onto row 6, crushing into two dense rows with the bar resting on top (a 3-row stack). Holds, retracts (strip stays), then a fresh DIFFERENT random scatter and it compacts again. Two full cycles. PreCompact / folding memory down.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -3585,7 +3585,7 @@
       "frame_ms": 150,
       "loop": 0,
       "description": "crystal ball thinking it through - violet orb with swirling teal mist and a white glint when the answer lands",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -3856,7 +3856,7 @@
       "frame_ms": 110,
       "loop": 0,
       "description": "double-slit interference: cyan photons accumulate into several narrow vertical fringes separated by dark gaps, brightest at the central maximum and fading symmetrically outward, then resets",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -4124,7 +4124,7 @@
       "frame_ms": 200,
       "loop": 0,
       "description": "Dusk - a white-hot/gold/orange round sun starts high and sinks straight down through the whole 8x8 banded sky (orange->magenta->violet, cooling as it drops) until it is fully below the bottom. Then stars twinkle gently in the darkened sky before the sun rises high to restart. A calm signing-off / goodnight beat.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -4469,7 +4469,7 @@
       "frame_ms": 150,
       "loop": 0,
       "description": "Fireflies — 5 warm dots drift on smooth curved paths across a black night, each breathing up and down through baked brightness steps (dim->bright->dim yellow-green glow, two in amber). Sparse, well-spaced, peaceful idle scene; seamless modular loop.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -4707,7 +4707,7 @@
       "frame_ms": 150,
       "loop": 0,
       "description": "A little orange goldfish swimming right, gold forked tail (3-pixel back fin) swishing, blowing pale-cyan bubbles off its snout. Warm idle goof.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -4823,7 +4823,7 @@
       "frame_ms": 200,
       "loop": 0,
       "description": "Hourglass with a cyan glass silhouette and orange sand, narrowed to a 1-pixel throat. Grains trickle one at a time through the single hole; the top surface sinks funnel-first while the bottom builds a spreading mound (base widens, then peaks) like real sand — not uniform rows. When the top empties the sand resets to the top and trickles again. Endless clean loop.",
-      "group": "orphan",
+      "group": "wait",
       "approved": true
     },
     {
@@ -4900,7 +4900,7 @@
       "frame_ms": 180,
       "loop": 0,
       "description": "A lightbulb that breathes dim-to-bright and back — \"I have an idea / a suggestion.\" Glass bulb on top, tapered white base.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -5116,7 +5116,7 @@
       "frame_ms": 175,
       "loop": 0,
       "description": "green inchworm with a yellow head bunching into an arch and stretching forward (inching) left-to-right across the panel, re-entering from the left",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -5296,7 +5296,7 @@
       "frame_ms": 140,
       "loop": 0,
       "description": "carved jack-o-lantern: deep dark orange pumpkin + green stem, bright glowing triangle eyes + jagged toothy grin flickering like candlelight",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -5435,7 +5435,7 @@
       "frame_ms": 130,
       "loop": 0,
       "description": "bioluminescent jellyfish pulsing upward through dark water; a rounded cyan bell with a white highlight contracts and expands, a purple underglow at the rim, and magenta tentacles undulating below",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -5498,7 +5498,7 @@
       "frame_ms": 320,
       "loop": 0,
       "description": "Jupiter, bottom-right quadrant crop: the planet center sits off the top-left corner, the warm-banded disc fills the panel and curves away into black at the lower-right limb. Bands brighten toward the upper-left interior, darken toward the limb. The Great Red Spot is a 2x2 storm of red+orange that rotates slowly clockwise. Loops seamlessly.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -5757,7 +5757,7 @@
       "frame_ms": 220,
       "loop": 0,
       "description": "lava lamp: warm pink & orange blobs pinch off a glowing base, slowly rise and wobble, cool at the top, sink and merge back — one continuous hypnotic cycle on a dark tube; loops seamlessly",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -5998,7 +5998,7 @@
       "frame_ms": 85,
       "loop": 0,
       "description": "lightning: a thin 1px jagged white-hot bolt cracks from the cloud base — it flashes up (lifting the whole night sky for an instant) then fades to dark, then after a varied pause strikes again on a different path. Intermittent, almost random timing (whoa/alert/error).",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -6188,7 +6188,7 @@
       "frame_ms": 85,
       "loop": 0,
       "description": "Icy white-blue shooting star streaks from upper-right to lower-left with a baked fading tail; three faint stars twinkle in fixed spots on a night sky; a beat, then it streaks again. Seamless loop.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -6336,7 +6336,7 @@
       "frame_ms": 130,
       "loop": 0,
       "description": "Nuclear mushroom-cloud explosion: white-hot flash at the base, an expanding condensation shockwave ring that races outward and dissipates, a rising thin stem column, then the cap billows outward at the top into the classic wide-rounded-cap-on-narrow-stem silhouette, roils, settles, and loops. White-hot/yellow/orange/red channel-distinct warm bands.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -6474,7 +6474,7 @@
       "frame_ms": 110,
       "loop": 0,
       "description": "Newton's cradle: end balls swing out and up alternately while the middle balls hold still, click-clack momentum transfer",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -6616,7 +6616,7 @@
       "frame_ms": 150,
       "loop": 0,
       "description": "Round-bottomed potion bottle with a glowing green liquid, internal bubbles popping at the surface, and little bubbles escaping out the neck into the air above",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -6754,7 +6754,7 @@
       "frame_ms": 110,
       "loop": 0,
       "description": "grey rain cloud across the top with blue raindrops falling in staggered streaks and cyan splash ripples on the puddle line; steady continuous rainfall, seamless loop",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -7427,7 +7427,7 @@
       "frame_ms": 120,
       "loop": 0,
       "description": "Targeting reticle: four green corner brackets snap inward to frame center, cyan/white blip pulses on lock, then reopens. Tool lock-on blip.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -7546,7 +7546,7 @@
       "frame_ms": 200,
       "loop": 0,
       "description": "ringed planet (Saturn): small shaded gold disc encircled by a wide icy ring — near side crosses the lower body, far side arcs behind the top, tips overhang both sides; traveling glint; calm ambient space emote",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -7833,7 +7833,7 @@
       "frame_ms": 90,
       "loop": 0,
       "description": "rainbow equalizer: 8 hue-coded bars bouncing bottom-up like a spectrum analyzer - the 'heard you, taking in your prompt' beat",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -8031,7 +8031,7 @@
       "frame_ms": 90,
       "loop": 0,
       "description": "gold coin spinning about its vertical axis; widens to a shaded disc then narrows to a bright edge sliver, a thin white-hot glint sweeping across",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -8231,7 +8231,7 @@
       "frame_ms": 190,
       "loop": 0,
       "description": "Sunrise — the sun starts completely down behind a steady blue ocean, then rises straight up: its halo of single-pixel ray-beams emerges from the water in pairs (top pair first, then the next, then the sides) as the round gold sun crests the horizon; once settled the rays glow slowly up and down a few times, then it re-rises.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -8426,7 +8426,7 @@
       "frame_ms": 120,
       "loop": 0,
       "description": "Task complete — an empty box with a green checkmark drawing itself in, then holding. A completion/done glyph (formerly ask-confirm; the '?' now covers plan-approval). Currently unwired — assign to an event in the Studio.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -8606,7 +8606,7 @@
       "frame_ms": 110,
       "loop": 0,
       "description": "tornado: dark cloud bank up top, swaying grey funnel narrowing to a point with rotating spiral bands, warm dust spinning at the base",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -8842,7 +8842,7 @@
       "frame_ms": 150,
       "loop": 0,
       "description": "classic UFO abduction: a silver saucer (top light, blue-green dome, pulsing light-strip) flies in over a waiting two-pixel cow and stops; its green tractor beam extends DOWN to the ground, the cow floats up the beam and switches off as it enters the ship, then the beam RETRACTS back up and the saucer flies away to the right; loops.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -9102,7 +9102,7 @@
       "frame_ms": 150,
       "loop": 0,
       "description": "volcano eruption: a dark mountain first SMOKES ominously — grey ash puffs build and rise from the crater for several frames — then it erupts a white-hot lava fountain; ejecta arcs up and falls down the slopes while glowing lava streaks flow down the sides, then it cools and repeats.",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     },
     {
@@ -10550,7 +10550,7 @@
       "frame_ms": 110,
       "loop": 0,
       "description": "war rocket blasting off, dragging a billowing triangular smoke plume up behind it; after it exits the top the plume fills the panel then dissipates to empty before repeating",
-      "group": "orphan",
+      "group": "wired",
       "approved": true
     }
   ],
@@ -10574,6 +10574,7 @@
   "groups": {
     "wait": [
       "working",
+      "hourglass",
       "wait-claude",
       "wait-logo-boot",
       "wait-logo-breathe",
@@ -10583,6 +10584,7 @@
       "wait-rainbow"
     ],
     "ask": [
+      "alert",
       "ask-attention",
       "ask-question"
     ],
@@ -10590,47 +10592,38 @@
       "bored-eyes",
       "bounce",
       "dizzy",
-      "heart",
       "pacman",
       "rocket",
-      "shooting-star",
-      "wink",
-      "yawn",
-      "sleep"
+      "shooting-star"
     ],
     "wired": [
+      "heart",
       "party",
       "smiley",
-      "cross",
-      "aurora",
-      "black-hole",
-      "confetti",
-      "done",
-      "galaxy",
-      "skull",
-      "swarm-merge"
-    ],
-    "canned": [
+      "wink",
+      "yawn",
       "sad",
+      "cross",
       "thumbsup",
       "ok",
       "sparkle",
-      "alert",
-      "spaceship"
-    ],
-    "orphan": [
+      "sleep",
       "atom",
+      "aurora",
+      "black-hole",
       "bloom",
       "bomb",
       "butterfly",
       "claude-idle",
       "compactor",
+      "confetti",
       "crystal-ball",
+      "done",
       "double-slit",
       "dusk",
       "fireflies",
+      "galaxy",
       "goldfish",
-      "hourglass",
       "idea",
       "inchworm",
       "jack-o-lantern",
@@ -10645,15 +10638,22 @@
       "rain",
       "reticle",
       "ringed-planet",
+      "skull",
       "soundwave",
       "spinning-coin",
       "sunrise",
+      "swarm-merge",
       "task-complete",
       "tornado",
       "ufo",
       "volcano",
-      "warp-portal",
       "warrocket"
+    ],
+    "canned": [
+      "spaceship"
+    ],
+    "orphan": [
+      "warp-portal"
     ]
   }
 }
