@@ -49,10 +49,16 @@
     .tile .x { position:absolute; top:3px; right:3px; width:15px; height:15px; line-height:13px;
       text-align:center; border-radius:50%; background:#000a; border:1px solid #333; cursor:pointer; font-size:.66rem; }
     .empty { font-size:.68rem; color:var(--faint); padding:12px; border:1px dashed #2a2a34; border-radius:8px; }
-    .opts { margin-top:7px; font-size:.68rem; color:var(--dim); display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
-    .opts input[type=number] { width:50px; font:inherit; background:#000; color:var(--text); border:1px solid #2a2a34; border-radius:4px; }
-    .fire { margin-top:7px; display:flex; gap:8px; align-items:center; }
-    .fire canvas { width:46px; height:46px; border-radius:5px; background:var(--panel-sub); }
+    /* Controls footer: a hairline rule sets the controls apart from the animation tiles above,
+       and thin vertical separators keep noRepeat / brightness / test reading as distinct groups. */
+    .controls { margin-top:12px; padding-top:11px; border-top:1px solid var(--hair);
+      display:flex; align-items:center; gap:14px; flex-wrap:wrap; font-size:.68rem; color:var(--dim); }
+    .controls > * + * { border-left:1px solid var(--hair); padding-left:14px; }
+    .controls label { display:inline-flex; align-items:center; gap:6px; }
+    .controls input[type=number] { width:60px; padding:4px 6px; font:inherit; background:#000;
+      color:var(--text); border:1px solid var(--hair); border-radius:5px; }
+    .ctl-test { display:inline-flex; align-items:center; gap:8px; }
+    .ctl-test canvas { width:46px; height:46px; border-radius:5px; background:var(--panel-sub); }
     aside { position:sticky; top:64px; background:linear-gradient(180deg, rgba(255,255,255,.018), transparent); border:1px solid var(--hair); border-radius:12px; padding:12px; }
     aside h2 { font-size:.72rem; letter-spacing:.2em; text-transform:uppercase; color:var(--dim); margin:0 0 4px; }
     .legend { font-size:.64rem; color:var(--dim); margin-bottom:10px; display:flex; gap:14px; }
@@ -124,7 +130,7 @@
     const revertBtn = document.getElementById("revert");
 
     let manifest = null, readOnly = false, byName = new Map(), allItems = [], dirty = false;
-    let panels = [];   // live Panels to tick each frame (rebuilt on render)
+    const animating = new Set();   // ONLY hovered Panels animate; everything else holds a still frame
 
     // Drive an existing Panel to play a library item (firmware sim OR frame-expression).
     function drive(panel, name) {
@@ -133,11 +139,32 @@
       else if (it) { const ex = resolveExpression(it.entry); panel.setFrames(ex.frames, ex.frame_ms); }
       else { panel.setFrames([[]], 1e9); } // unknown name -> blank
     }
-    function makePanel(cv, name) { const p = new Panel(cv); drive(p, name); return p; }
+    function makePanel(cv, name) {
+      const p = new Panel(cv); drive(p, name);
+      // Firmware sims are continuous (no discrete frames) — run a few steps so the frozen tile
+      // shows a developed state, not the blank first frame.
+      const it = byName.get(name);
+      if (it && it.kind === "firmware") for (let i = 0; i < 10; i++) p.tick(p.frameMs, performance.now());
+      freezeMid(p);
+      return p;
+    }
+    // Park a panel on a representative STILL: a frame-expression holds a MIDDLE frame; a continuous
+    // firmware sim holds wherever it stopped. Called at build time and whenever the mouse leaves.
+    function freezeMid(p) {
+      if (p.frames && p.frames.length > 1) { p.fi = Math.floor(p.frames.length / 2); p.acc = 0; }
+      p._dirty = true; p.draw(performance.now());
+    }
+    // Animate ONLY while hovered — playing every tile at once was the page's CPU sink + sensory
+    // overload. Enter -> play; leave -> re-park on the middle frame.
+    function wireHover(el, p) {
+      el.addEventListener("mouseenter", () => animating.add(p));
+      el.addEventListener("mouseleave", () => { animating.delete(p); freezeMid(p); });
+    }
 
     function setDirty(d) { dirty = d; statusEl.textContent = readOnly ? "read-only (no engine)" : d ? "unsaved changes" : "saved"; saveBtn.disabled = readOnly || !d; }
 
-    if (!REDUCE) { let last = performance.now(); (function loop(now){ for (const p of panels) p.tick(now-last, now); last=now; requestAnimationFrame(loop); })(last); }
+    // Only the hovered tile(s) tick; the page stays near-idle otherwise.
+    if (!REDUCE) { let last = performance.now(); (function loop(now){ const dt = now - last; last = now; for (const p of animating) p.tick(dt, now); requestAnimationFrame(loop); })(performance.now()); }
 
     function apply(fn) { manifest = fn(manifest); setDirty(true); render(); }
     // For param/label edits that don't change tile layout (% / counts / membership): update the
@@ -221,7 +248,7 @@
     }
 
     function render() {
-      panels = [];
+      animating.clear();   // re-render replaces every tile; drop stale hover state
       intentsEl.innerHTML = "";
       const bindings = ownBindings(manifest, RID);
       for (const intent of Object.keys(manifest.intents || {})) {
@@ -242,7 +269,7 @@
             const tile = document.createElement("div"); tile.className = "tile"; tile.draggable = true;
             tile.addEventListener("dragstart", (ev) => ev.dataTransfer.setData("text/plain", JSON.stringify({ name, from: intent })));
             const cv = document.createElement("canvas"); cv.width = 72; cv.height = 72; tile.appendChild(cv);
-            panels.push(makePanel(cv, name));
+            wireHover(tile, makePanel(cv, name));
             const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = name; tile.appendChild(nm);
             if (byName.get(name)?.entry?.source === "saved") { const ed = document.createElement("a"); ed.className = "editlink";
               ed.href = `./frame-editor.html?name=${encodeURIComponent(name)}`; ed.textContent = "✎"; ed.title = "Edit pixels";
@@ -263,30 +290,40 @@
             pool.appendChild(tile);
           }
           sec.appendChild(pool);
-          if (!readOnly) {
-            const opts = document.createElement("div"); opts.className = "opts";
-            if (poolMode) {
-              const nr = document.createElement("label"); nr.innerHTML = `<input type="checkbox" ${binding.noRepeat?"checked":""}> noRepeat`;
-              nr.querySelector("input").onchange = (e) => apply((m) => setPoolOption(m, RID, intent, "noRepeat", e.target.checked)); opts.appendChild(nr);
-              const br = document.createElement("label"); br.innerHTML = `brightness <input type="number" min="0" max="255" value="${binding.brightness ?? ""}">`;
-              br.querySelector("input").onchange = (e) => apply((m) => setPoolOption(m, RID, intent, "brightness", e.target.value === "" ? null : Number(e.target.value))); opts.appendChild(br);
-              if (bindingEntries(binding).length === 1) { const c = document.createElement("button"); c.textContent = "→ single"; c.onclick = () => apply((m) => poolToSingle(m, RID, intent)); opts.appendChild(c); }
-            } else { const c = document.createElement("button"); c.textContent = "→ pool"; c.onclick = () => apply((m) => singleToPool(m, RID, intent)); opts.appendChild(c); }
-            sec.appendChild(opts);
-          }
+          // (pool options + test live in the .controls footer below, divided from the tiles)
+        }
+
+        // --- controls footer: a hairline divider (see .controls) sets these apart from the tiles ---
+        const controls = document.createElement("div"); controls.className = "controls";
+
+        // pool options (only when editable and a binding exists)
+        if (binding != null && !readOnly) {
+          if (isPool(binding)) {
+            const nr = document.createElement("label"); nr.innerHTML = `<input type="checkbox" ${binding.noRepeat?"checked":""}> noRepeat`;
+            nr.querySelector("input").onchange = (e) => apply((m) => setPoolOption(m, RID, intent, "noRepeat", e.target.checked)); controls.appendChild(nr);
+            const br = document.createElement("label"); br.innerHTML = `brightness <input type="number" min="0" max="255" value="${binding.brightness ?? ""}">`;
+            br.querySelector("input").onchange = (e) => apply((m) => setPoolOption(m, RID, intent, "brightness", e.target.value === "" ? null : Number(e.target.value))); controls.appendChild(br);
+            if (bindingEntries(binding).length === 1) { const c = document.createElement("button"); c.textContent = "→ single"; c.onclick = () => apply((m) => poolToSingle(m, RID, intent)); controls.appendChild(c); }
+          } else { const c = document.createElement("button"); c.textContent = "→ pool"; c.onclick = () => apply((m) => singleToPool(m, RID, intent)); controls.appendChild(c); }
         }
 
         // test-fire: one preview Panel per intent; ▶ re-drives it with a fresh weighted pick.
-        const fire = document.createElement("div"); fire.className = "fire";
+        const ctlTest = document.createElement("div"); ctlTest.className = "ctl-test";
         const btn = document.createElement("button"); btn.textContent = "▶ test";
         const pv = document.createElement("canvas"); pv.width = 46; pv.height = 46;
-        const pvPanel = new Panel(pv); panels.push(pvPanel);
+        const pvPanel = new Panel(pv); freezeMid(pvPanel); wireHover(pv, pvPanel);
         btn.onclick = () => {
           const b = ownBindings(manifest, RID)[intent];
           const pick = isPool(b) ? pickWeighted(b.pool) : (typeof b === "string" ? b : null);
-          if (pick) drive(pvPanel, pick);
+          if (!pick) return;
+          drive(pvPanel, pick);
+          animating.add(pvPanel);                      // play the fresh pick briefly, then re-park
+          clearTimeout(pvPanel._t);
+          pvPanel._t = setTimeout(() => { animating.delete(pvPanel); freezeMid(pvPanel); }, 4000);
         };
-        fire.appendChild(btn); fire.appendChild(pv); sec.appendChild(fire);
+        ctlTest.append(btn, pv);
+        controls.appendChild(ctlTest);
+        sec.appendChild(controls);
 
         // drop target: assign (from tray) or move (from another intent)
         sec.addEventListener("dragover", (ev) => { if (!readOnly) { ev.preventDefault(); sec.classList.add("drop"); } });
@@ -319,7 +356,7 @@
         t.draggable = true;
         t.addEventListener("dragstart", (ev) => ev.dataTransfer.setData("text/plain", JSON.stringify({ name: it.name, from: null })));
         const cv = document.createElement("canvas"); cv.width = 46; cv.height = 46; t.appendChild(cv);
-        panels.push(makePanel(cv, it.name));
+        wireHover(t, makePanel(cv, it.name));
         const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = it.name; t.appendChild(nm);
         if (n > 0) { const c = document.createElement("div"); c.className = "cnt"; c.textContent = `(${n})`; t.appendChild(c); }
         trayEl.appendChild(t);
@@ -344,8 +381,10 @@
         const r = await fetch("/api/manifest", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(manifest) });
         const res = await r.json();
         if (res.ok) { setDirty(false); statusEl.textContent = "saved · behavior is live"; }
-        else { statusEl.textContent = "validation failed: " + (res.errors || []).join("; "); setDirty(true); }
-      } catch (e) { statusEl.textContent = "save error: " + e.message; setDirty(true); }
+        // setDirty(true) FIRST, then the message: setDirty also writes statusEl, so doing it last
+        // would clobber the reason with "unsaved changes" (the bug that hid earlier save failures).
+        else { setDirty(true); statusEl.textContent = "validation failed: " + (res.errors || []).join("; "); }
+      } catch (e) { setDirty(true); statusEl.textContent = "save error: " + e.message; }
     };
     revertBtn.onclick = async () => { await loadManifest(); setDirty(false); render(); };
 
