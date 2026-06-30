@@ -1,6 +1,6 @@
 // mcp_server/manifest-assets.test.ts
 // Regression guard: every esp32-8x8 binding leaf name in shared/manifest.json must
-// resolve to a REAL renderable asset — i.e. present in CANNED, in FIRMWARE_NAMES,
+// resolve to a REAL renderable asset, i.e. present in CANNED, in FIRMWARE_NAMES,
 // or on disk as expressions/<name>.json.  This is the test that would have caught
 // the missing `done` asset (fixed in the Plan 3b fix wave).
 import { test } from "node:test";

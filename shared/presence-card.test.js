@@ -38,7 +38,7 @@ test("motionClass composes motion + urgency, urgency defaults ambient", () => {
 });
 
 test("formatAge: dash / seconds / minutes", () => {
-  assert.equal(formatAge(0, Date.now()), "—");
+  assert.equal(formatAge(0, Date.now()), ", ");
   assert.equal(formatAge(1000, 1000 * 1000 + 12_000), "12s ago");
   assert.equal(formatAge(1000, 1000 * 1000 + 125_000), "2m ago");
 });

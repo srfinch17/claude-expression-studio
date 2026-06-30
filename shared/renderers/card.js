@@ -1,4 +1,4 @@
-// shared/renderers/card.js — the desktop presence-card renderer. render(value) writes a
+// shared/renderers/card.js, the desktop presence-card renderer. render(value) writes a
 // { glyph, text, color } binding to an injected card element (.glyph / .text text nodes +
 // the element's border color). The element is injected so this is testable with a fake.
 export function makeCardRenderer({ el }) {

@@ -1,7 +1,7 @@
 // Reusable "on your desk" floating companion component.
 // Injects a fixed-corner glowing 8x8 LED panel with a label and optional
 // dismiss button. Carries its own CSS (injected once via a <style> element).
-// No DOM globals are touched at module load time — all DOM access is deferred
+// No DOM globals are touched at module load time, all DOM access is deferred
 // into mountDeskSim() so the module imports cleanly in Node (e.g. for the
 // import-sanity check: node -e "import('./shared/desk-sim.js').then(...)").
 //
@@ -128,7 +128,7 @@ export function mountDeskSim({ expression, dismissible = false } = {}) {
     x.addEventListener("click", () => {
       // Keep the fade animation, then destroy after transition completes.
       // Under reduced-motion the transition is suppressed (transition:none),
-      // so transitionend may never fire — destroy immediately in that case.
+      // so transitionend may never fire, destroy immediately in that case.
       el.classList.add("desk-sim-hidden");
       if (REDUCE) {
         destroy();
@@ -170,7 +170,7 @@ export function mountDeskSim({ expression, dismissible = false } = {}) {
     panel.draw(0);
   }
 
-  // ── Animation loop (own RAF — independent of any page loop) ──
+  // ── Animation loop (own RAF, independent of any page loop) ──
   let rafId = null;
 
   if (!REDUCE) {

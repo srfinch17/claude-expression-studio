@@ -1,4 +1,4 @@
-// shared/wire.js — char-art expression → the board's /api/display/frames wire format.
+// shared/wire.js, char-art expression → the board's /api/display/frames wire format.
 // Each frame is 64 cells (row-major) × "RRGGBB"; an off cell ('.', unknown, or
 // unmapped char) is "000000". Mirrors matrix_signal.py art_to_hex + the MCP's
 // expressionToWire so all senders agree on the bytes.

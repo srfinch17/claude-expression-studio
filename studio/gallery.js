@@ -1,3 +1,10 @@
+// studio/gallery.js, the Gallery page's browser renderer. Fetches the prebuilt
+// ./gallery-data.json (emitted by scripts/build-gallery-data.mjs), then draws every
+// expression onto its own bloom Panel canvas, sectioned by rotation role (orphan / wired /
+// canned / wait / ask / bored / firmware) so you can SEE the whole library and which moments
+// each piece is wired to. Saved expressions render from baked frames; firmware entries run
+// their JS sim live. Edit/approve affordances appear only when a live engine is reachable
+// (the POST routes exist), on a static Pages host the Gallery is browse-only.
 import { resolveExpression } from "../shared/expressions.js";
 import { Panel } from "../shared/render.js";
 import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";

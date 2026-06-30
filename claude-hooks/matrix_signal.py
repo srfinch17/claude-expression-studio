@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-matrix_signal.py — fire the manifest-resolved expression on the ESP32-S3 LED
+matrix_signal.py, fire the manifest-resolved expression on the ESP32-S3 LED
 matrix from the command line, so Claude Code HOOKS can drive the board.
 
 Why this exists: hooks can't call the MCP server. This script resolves a
@@ -38,7 +38,7 @@ HOOK_DIR = os.path.dirname(os.path.abspath(__file__))
 def _load_config():
     """Resolve (board_url, mcp_dir): env vars win, then ~/.claude/hooks/matrix_config.json
     (written by `npm run setup`), then neutral defaults. Keeps any machine-specific repo
-    path OUT of source — the installer injects it, so the hooks run on any machine."""
+    path OUT of source, the installer injects it, so the hooks run on any machine."""
     cfg = {}
     try:
         with open(os.path.join(HOOK_DIR, "matrix_config.json"), "r", encoding="utf-8") as f:
@@ -58,7 +58,7 @@ IDLE_WATCHER = os.path.join(HOOK_DIR, "matrix_idle.py")     # the "bored" watche
 sys.path.insert(0, HOOK_DIR)            # manifest_resolver.py sits next to this script
 from manifest_resolver import resolve   # pure mirror of shared/resolver.js
 
-# Firmware animation names — MIRROR of shared/firmware-names.js (keep in sync). These
+# Firmware animation names, MIRROR of shared/firmware-names.js (keep in sync). These
 # render via POST /api/display/animation (transient); everything else is a frame-expression.
 FIRMWARE_NAMES = {
     "fire", "rainbow", "breathe", "wave", "solid", "liquid", "imu", "chiptemp",
@@ -84,7 +84,7 @@ MOMENT_PRESENCE = {
 
 
 def _engine_url():
-    """Where the local Studio engine listens — for mirroring hook renders to its SSE virtual
+    """Where the local Studio engine listens, for mirroring hook renders to its SSE virtual
     board so the web panel (board.html) shows them even with NO board. Override with
     MATRIX_ENGINE_URL; else read the engine's port cache (.engine-url); else the default."""
     u = os.environ.get("MATRIX_ENGINE_URL")
@@ -103,7 +103,7 @@ def _engine_url():
 def broadcast_engine(event):
     """Best-effort: mirror a DisplayEvent ({"kind":"frames","wire":{...}} or
     {"kind":"animation","type":...}) to the engine's POST /api/render so board.html (the no-board
-    web panel) shows hook-driven renders. NEVER blocks or raises — the board path is primary."""
+    web panel) shows hook-driven renders. NEVER blocks or raises, the board path is primary."""
     try:
         data = json.dumps(event).encode("utf-8")
         req = urllib.request.Request(
@@ -112,7 +112,7 @@ def broadcast_engine(event):
         )
         urllib.request.urlopen(req, timeout=1.0).read()
     except Exception:
-        pass  # engine not running / unreachable — the board is still the primary target
+        pass  # engine not running / unreachable, the board is still the primary target
 
 
 def load_manifest():
@@ -127,7 +127,7 @@ def load_manifest():
     return None
 
 
-# (frames, colors, frame_ms, loop) — copied verbatim from expressions.ts
+# (frames, colors, frame_ms, loop), copied verbatim from expressions.ts
 EXPR = {
     "working": (
         [
@@ -232,7 +232,7 @@ def post_frames(frames_hex, frame_ms, loop, idle=False):
     try:
         urllib.request.urlopen(req, timeout=TIMEOUT).read()
     except Exception:
-        pass  # board offline / unreachable — never block a turn
+        pass  # board offline / unreachable, never block a turn
 
 
 def post_brightness(level):
@@ -255,7 +255,7 @@ def presence_body(intent, **fields):
 
 
 def post_presence(intent, **fields):
-    """Best-effort POST /api/presence — keep the SEMANTIC status store in sync with Claude's
+    """Best-effort POST /api/presence, keep the SEMANTIC status store in sync with Claude's
     lifecycle so the presence card mirrors it. Posted to TWO independent targets:
       1) the board (source-of-truth when present); its POST is a pure store (no LED render, no
          screensaver disarm), so this never affects the display.
@@ -269,13 +269,13 @@ def post_presence(intent, **fields):
             headers={"Content-Type": "application/json"}, method="POST")
         urllib.request.urlopen(req, timeout=TIMEOUT).read()
     except Exception:
-        pass  # board offline / unreachable — never block a turn
+        pass  # board offline / unreachable, never block a turn
     try:
         req = urllib.request.Request(_engine_url() + "/api/presence", data=data,
             headers={"Content-Type": "application/json"}, method="POST")
         urllib.request.urlopen(req, timeout=1.0).read()
     except Exception:
-        pass  # engine not running / unreachable — the board path is still primary
+        pass  # engine not running / unreachable, the board path is still primary
 
 
 def post_animation(anim_type, params=None, transient=True):

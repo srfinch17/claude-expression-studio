@@ -1,9 +1,9 @@
-// shared/renderers/web-sim.js — the in-browser canvas renderer. render(name) drives a
+// shared/renderers/web-sim.js, the in-browser canvas renderer. render(name) drives a
 // shared/render.js Panel: a firmware-sim name plays its JS port via setStepper, a
 // frame-expression name is resolved to pixel frames via setFrames. The Panel and the
 // data loaders are injected so this dispatch logic is unit-testable with fakes.
 //
-// firmwareSims shape: { name: () => ({ frame_ms, frame() }) } — each value is a FACTORY
+// firmwareSims shape: { name: () => ({ frame_ms, frame() }) }, each value is a FACTORY
 // (matching the real shared/firmware-sims.js FIRMWARE_SIMS export). Call it to get an
 // instance before reading frame_ms / frame.
 import { resolveExpression } from "../expressions.js";

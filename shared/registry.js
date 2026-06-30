@@ -1,4 +1,4 @@
-// shared/registry.js — renderer registry + the fire() dispatcher over the resolver.
+// shared/registry.js, renderer registry + the fire() dispatcher over the resolver.
 // fire() resolves the intent FOR EACH active renderer (bindings differ per renderer),
 // then hands each renderer its own leaf binding value. It also owns the
 // "pool entry names a missing animation -> skip & re-pick" fail-safe that the pure

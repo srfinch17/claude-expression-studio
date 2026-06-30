@@ -1,4 +1,4 @@
-// Pure expression resolution — char-art frames → flat lit-pixel arrays.
+// Pure expression resolution, char-art frames → flat lit-pixel arrays.
 // No DOM. Shared by the canvas renderer, the gallery, and Node tests.
 
 export function hexRGB(hex) {

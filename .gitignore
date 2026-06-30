@@ -1,7 +1,7 @@
-# WiFi credentials — copy secrets.h.example to secrets.h and fill in your details
+# WiFi credentials, copy secrets.h.example to secrets.h and fill in your details
 esp32_matrix_webserver/secrets.h
 
-# Node.js dependencies — recreated by running: npm install
+# Node.js dependencies, recreated by running: npm install
 mcp_server/node_modules/
 
 # TypeScript compiled output
@@ -13,11 +13,11 @@ mcp_server/.env
 # Arduino IDE temporary files
 *.tmp.*
 
-# Arduino "Export Compiled Binary" output — build artifacts, machine-specific, and
+# Arduino "Export Compiled Binary" output, build artifacts, machine-specific, and
 # (with a local secrets.h) the .bin has WiFi creds baked in. Never commit.
 esp32_matrix_webserver/build/
 
-# Claude Code — local/machine-specific settings (permissions, local overrides)
+# Claude Code, local/machine-specific settings (permissions, local overrides)
 .claude/settings.local.json
 
 # Superpowers local brainstorm/cache (machine-specific, not part of the repo)
@@ -39,7 +39,7 @@ __pycache__/
 # Playwright MCP scratch output (browser snapshots/console logs)
 .playwright-mcp/
 
-# Release build output (merged firmware, manifest, .mcpb) — produced by scripts/build-release.mjs
+# Release build output (merged firmware, manifest, .mcpb), produced by scripts/build-release.mjs
 release/
 
 # Generated: shared engine copied into the MCP bundle for packing (see scripts/copy-shared-runtime.mjs)
@@ -55,5 +55,5 @@ mcp_server/mcp_launch.cmd
 # Generated: read-only static showcase bundle for GitHub Pages (scripts/build-pages.mjs)
 pages-dist/
 
-# Hook runtime artifacts (activity token / kill switch) — created when the hook runs
+# Hook runtime artifacts (activity token / kill switch), created when the hook runs
 claude-hooks/.matrix_*

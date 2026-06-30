@@ -27,7 +27,7 @@ const DEFAULT_BOARD = process.env.ESP32_URL ?? "http://esp32matrix.local";
 export async function checkVersions({ root = REPO_ROOT, boardUrl = DEFAULT_BOARD, fetchFn = fetch } = {}) {
   const expected = await readVersion(root);
 
-  // MCP version is local — read it straight from its manifest.
+  // MCP version is local, read it straight from its manifest.
   let mcpVersion = "unknown";
   try {
     const pkg = JSON.parse(await readFile(path.join(root, "mcp_server", "package.json"), "utf8"));

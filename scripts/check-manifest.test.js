@@ -80,6 +80,15 @@ test("collectAnimationNames includes canned, saved, bored, firmware", () => {
   for (const n of ["done", "skull", "claudesweep"]) assert.ok(NAMES.has(n), `${n} known`);
 });
 
+// Firmware names must come from shared/firmware-names.js (the single source), not a stale
+// hardcoded subset, else the Studio can assign a real firmware sim the validator then rejects
+// on Save. wave/sun/comet/spiral/starfield/liquid/rainbow/breathe are sims that the old 8-name
+// list omitted. This case fails against that stale list and passes once it's single-sourced.
+test("collectAnimationNames knows every firmware sim the Studio offers (not just the old 8)", () => {
+  for (const n of ["wave", "sun", "comet", "spiral", "starfield", "liquid", "rainbow", "breathe"])
+    assert.ok(NAMES.has(n), `${n} must be a recognized firmware name`);
+});
+
 // --- Task 3: rich pool shape + duplicate-moment rule ---
 
 const RICH_NAMES = new Set(["a-info", "a-work", "a-done", "a-att", "a-fail", "fire", "snow"]);

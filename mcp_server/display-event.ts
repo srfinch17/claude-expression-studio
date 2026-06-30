@@ -1,4 +1,4 @@
-// mcp_server/display-event.ts — PURE map from a RenderPlan to the wire DisplayEvent the
+// mcp_server/display-event.ts, PURE map from a RenderPlan to the wire DisplayEvent the
 // virtual board consumes. The `wire` arg is the expressionToWire() payload index.ts has
 // already computed for the board POST (frames path); we just forward it so the virtual
 // board renders the exact same frames the hardware does.

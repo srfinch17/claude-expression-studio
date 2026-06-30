@@ -1,4 +1,4 @@
-// shared/renderers/esp32.js — the LED board renderer. render(name, meta) either fires a
+// shared/renderers/esp32.js, the LED board renderer. render(name, meta) either fires a
 // firmware animation (transient, with optional meta.params forwarded) or loads the named
 // frame-expression, converts it to the board wire format, and POSTs the frames. When
 // meta.brightness is provided, setBrightness is called first (ambient idle dimming, etc.).

@@ -1,6 +1,6 @@
 // shared/resolver.js
 // Pure, data-driven resolution for the Expression Trigger Manifest.
-// No I/O — the caller passes an already-parsed manifest object (cf. catalog.js).
+// No I/O, the caller passes an already-parsed manifest object (cf. catalog.js).
 // MIRRORED in claude-hooks/manifest_resolver.py; keep the two in lockstep
 // (both are proven against shared/resolver-fixtures.json).
 
@@ -39,10 +39,10 @@ export function resolveBoundIntent(manifest, rendererId, intent) {
 }
 
 // Weighted random pick. weights: { name: number>=0 }. rng() in [0,1).
-// `exclude`: a name to avoid when alternatives exist — this is the noRepeat guard,
+// `exclude`: a name to avoid when alternatives exist, this is the noRepeat guard,
 // applied ONLY when a binding sets noRepeat (e.g. the idle/screensaver pool). The
 // working/wait pool deliberately does NOT set noRepeat (pure weighted random, repeats
-// allowed, so weights are honored exactly — same as the old wait.ts pickWait did).
+// allowed, so weights are honored exactly, same as the old wait.ts pickWait did).
 export function pickWeighted(weights, rng = Math.random, exclude = null) {
   let names = Object.keys(weights);
   if (names.length === 0) return null;
@@ -66,7 +66,7 @@ export function pickWeighted(weights, rng = Math.random, exclude = null) {
 }
 
 // Top-level resolve. opts: { harness, renderer, moment?, intent? }.
-// ctx: { rng?, last? } — `last` is a mutable map keyed `${renderer}:${bound}`
+// ctx: { rng?, last? }, `last` is a mutable map keyed `${renderer}:${bound}`
 // (the fallback-RESOLVED intent, not the raw input intent) giving noRepeat its
 // memory. Returns { intent, value, params?, label?, brightness? } or null (degrade to nothing).
 // (params/label appear only when the picked pool entry is an object carrying them;

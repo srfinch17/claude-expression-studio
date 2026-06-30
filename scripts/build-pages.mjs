@@ -1,4 +1,4 @@
-// scripts/build-pages.mjs — assemble the read-only static showcase bundle for GitHub Pages.
+// scripts/build-pages.mjs, assemble the read-only static showcase bundle for GitHub Pages.
 // Mirrors the repo-root dev layout (studio/ + shared/ as siblings) so every relative import the
 // studio + landing already use (`../shared/`, `./gallery-data.json`) resolves unchanged. Only the
 // landing moves up a level (site/index.html -> bundle root), so only its `../studio/` and
@@ -11,7 +11,7 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 
 // Pure: rewrite the landing's sibling-relative links for life at the bundle root.
 // site/index.html lives in site/, so it references ../studio/ and ../shared/. At the bundle
-// root those become ./studio/ and ./shared/ — note the leading "./" is REQUIRED: the landing
+// root those become ./studio/ and ./shared/, note the leading "./" is REQUIRED: the landing
 // has ES-module `import` statements, and a browser rejects a bare specifier ("shared/render.js"),
 // so the rewrite must keep an explicit relative prefix.
 export function rewriteLandingPaths(html) {
@@ -23,7 +23,7 @@ export function buildPages({ repoRoot = REPO_ROOT, outDir = path.join(REPO_ROOT,
   mkdirSync(outDir, { recursive: true });
 
   // 1. studio/ and shared/ copied as siblings (preserve the dev layout so ../shared resolves).
-  //    Skip *.test.js — dev unit tests aren't loaded by any page and don't belong in the public bundle.
+  //    Skip *.test.js, dev unit tests aren't loaded by any page and don't belong in the public bundle.
   const skipTests = (src) => !src.endsWith(".test.js");
   cpSync(path.join(repoRoot, "studio"), path.join(outDir, "studio"), { recursive: true, filter: skipTests });
   cpSync(path.join(repoRoot, "shared"), path.join(outDir, "shared"), { recursive: true, filter: skipTests });
@@ -38,7 +38,7 @@ export function buildPages({ repoRoot = REPO_ROOT, outDir = path.join(REPO_ROOT,
   return outDir;
 }
 
-// CLI entry — guarded so importing this module in a test does not run the build.
+// CLI entry, guarded so importing this module in a test does not run the build.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const out = buildPages();
   console.log(`pages bundle written to ${out}`);

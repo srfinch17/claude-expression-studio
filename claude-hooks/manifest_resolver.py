@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Python mirror of shared/resolver.js — pure, no I/O. Keep in lockstep with the
+"""Python mirror of shared/resolver.js, pure, no I/O. Keep in lockstep with the
 JS version (both proven against shared/resolver-fixtures.json). Returns dicts with
 the SAME keys as the JS object ({"intent":..., "value":...}) so fixtures match."""
 import random

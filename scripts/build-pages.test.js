@@ -36,7 +36,7 @@ test("buildPages mirrors the dev tree into outDir", () => {
     const root = readFileSync(path.join(out, "index.html"), "utf8");
     assert.ok(!root.includes("../studio"), "root index still has ../studio");
     assert.ok(!root.includes("../shared"), "root index still has ../shared");
-    // landing imports must be ./shared (explicit relative), never bare — browser ESM rule
+    // landing imports must be ./shared (explicit relative), never bare, browser ESM rule
     assert.ok(root.includes('"./shared/render.js"'), "landing module import must be ./shared, not bare");
     // studio file keeps its own sibling import untouched
     assert.ok(

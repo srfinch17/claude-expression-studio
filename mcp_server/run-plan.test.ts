@@ -1,12 +1,12 @@
 // mcp_server/run-plan.test.ts
-// NOTE: imports the COMPILED ./dist/run-plan.js — run via `npm test` (which runs tsc first).
+// NOTE: imports the COMPILED ./dist/run-plan.js, run via `npm test` (which runs tsc first).
 // run-plan.ts uses `.js`-specifier sibling imports that Node's type-strip can't resolve from
 // source, so the test exercises the build (the same pattern as engine-server.test.ts).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { executePlan } from "./dist/run-plan.js";
 
-// A board that is UNREACHABLE: fetch rejects. This is the bug-scenario the fix exists for —
+// A board that is UNREACHABLE: fetch rejects. This is the bug-scenario the fix exists for, 
 // the broadcast to the virtual board must STILL fire (it sat after a bare `await post` before,
 // so a rejected fetch unwound past it and board.html froze on its last frame).
 const unreachablePost = async () => {

@@ -1,4 +1,4 @@
-// scripts/check-expression.mjs — pure validator for a frame-expression payload, shared by the
+// scripts/check-expression.mjs, pure validator for a frame-expression payload, shared by the
 // engine's PUT /api/expression write surface (trust boundary) and optionally the editor UI
 // (pre-save UX). Mirrors check-manifest.mjs: a pure validateExpression(name, expr) -> string[].
 

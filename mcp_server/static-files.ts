@@ -1,4 +1,4 @@
-// mcp_server/static-files.ts — serve the Studio + shared tree over http. Base is the
+// mcp_server/static-files.ts, serve the Studio + shared tree over http. Base is the
 // repo root in dev (live edits) or the packed studio-dist/ in the .mcpb. All path
 // resolution is sandboxed to `base` (no `..` escape).
 import { readFile } from "node:fs/promises";

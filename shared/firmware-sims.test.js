@@ -57,7 +57,7 @@ test("matrix_rain sim yields in-bounds frames and stays lit through the window",
     if (px.length > 0) litFrames++;
   }
   // The 8 columns each go briefly dark between fall cycles, so an all-dark frame is rare-but-VALID
-  // (all 8 aligning dark ≈ 0.04%/frame) — not a bug. The old per-frame "px.length > 0" assertion
+  // (all 8 aligning dark ≈ 0.04%/frame), not a bug. The old per-frame "px.length > 0" assertion
   // flaked on that alignment. Assert the sim is lit across the vast majority of the window instead
   // (expected ~50/50; P(<45) is astronomically small), which still catches a broken/all-black sim
   // without pinning to a brittle RNG seed.
@@ -67,7 +67,7 @@ test("matrix_rain sim yields in-bounds frames and stays lit through the window",
 test("snow sim yields in-bounds frames and floor bank present after accumulation", () => {
   const sim = FIRMWARE_SIMS.snow({ frame_ms: 110, flakeColor: "#dce6ff" });
   assert.equal(typeof sim.frame_ms, "number");
-  // run 50 frames — floor bank is always drawn so it's present from frame 1
+  // run 50 frames, floor bank is always drawn so it's present from frame 1
   for (let i = 0; i < 50; i++) {
     const px = sim.frame();
     assertInBounds(px);
@@ -106,7 +106,7 @@ test("dancefloor sim yields in-bounds frames and many pixels lit every frame", (
 
   // State machine must cycle: across ~120 frames (several crossfade cycles) the floor must show
   // more than one distinct frame. The old assertion compared only frame-1 vs frame-41, which can
-  // coincide on the same palette permutation under a fixed RNG order — so it flaked deterministically
+  // coincide on the same palette permutation under a fixed RNG order, so it flaked deterministically
   // in the full-file run (passed in isolation). Distinct-over-the-window asserts the same intent
   // robustly without pinning a seed (P(all ~6 cycles draw an identical permutation) ≈ (1/24)^5).
   assert.ok(seen.size > 1, `dancefloor colors must change over time (got ${seen.size} distinct frames)`);
@@ -162,7 +162,7 @@ test("comet: bright head at the right edge, bobbing, with a trailing tail", () =
   const sim = FIRMWARE_SIMS.comet();
   const frames = [];
   for (let i = 0; i < 40; i++) { const f = sim.frame(); assertInBounds(f); frames.push(f); }
-  // Head lives at the right edge (cols 6–7) and is present every frame.
+  // Head lives at the right edge (cols 6-7) and is present every frame.
   for (const f of frames) assert.ok(f.some((p) => p.x >= 6), "head at right edge");
   // There is a tail to the left of the head (cols < 6 lit at least sometimes).
   assert.ok(frames.some((f) => f.some((p) => p.x <= 5)), "tail extends left");

@@ -1,4 +1,4 @@
-// mcp_server/engine.ts — the bridge from the shared Trigger Manifest resolver to the
+// mcp_server/engine.ts, the bridge from the shared Trigger Manifest resolver to the
 // board's HTTP API. The resolver (shared/resolver.js) is the single brain; this module
 // only decides HOW to render a resolved pick and WHERE to load the manifest/resolver from.
 import { existsSync } from "node:fs";
@@ -30,7 +30,7 @@ export function decideRender(resolved: Resolved | null, isFirmware: (n: string) 
 }
 
 // Locate the shared engine assets: prefer the live repo source (always fresh in dev),
-// fall back to the in-bundle copy (the packed .mcpb has no ../shared — see Task 9).
+// fall back to the in-bundle copy (the packed .mcpb has no ../shared, see Task 9).
 export function engineDir(mcpDir: string): string {
   const repo = path.join(mcpDir, "..", "shared");
   if (existsSync(path.join(repo, "manifest.json"))) return repo;
@@ -38,7 +38,7 @@ export function engineDir(mcpDir: string): string {
 }
 
 // Load the manifest (JSON) + the resolver and firmware-name helpers (dynamic import of a
-// computed file URL — typed `any`, so no .d.ts is needed for the plain-JS shared modules).
+// computed file URL, typed `any`, so no .d.ts is needed for the plain-JS shared modules).
 export async function loadEngine(mcpDir: string) {
   const dir = engineDir(mcpDir);
   const manifest = JSON.parse(await readFile(path.join(dir, "manifest.json"), "utf8"));

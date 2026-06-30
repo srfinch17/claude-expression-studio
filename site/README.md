@@ -1,4 +1,4 @@
-# `site/` — the public showcase
+# `site/`, the public showcase
 
 `index.html` is a **self-contained landing page** for the project: a live, in-browser
 8×8 LED-matrix simulation that plays Claude's *real* expression frames (the same
@@ -7,7 +7,7 @@ presence-protocol pitch, and the install steps.
 
 - **No build step, no dependencies to install.** One HTML file. Fonts load from the
   Google Fonts CDN; everything else (the renderer + frame data) is inline.
-- **No hardware required** — the simulation is pure canvas. Respects
+- **No hardware required**, the simulation is pure canvas. Respects
   `prefers-reduced-motion` (falls back to static lit frames).
 
 ## Preview locally
@@ -17,14 +17,14 @@ python -m http.server 8765 --directory site
 # open http://localhost:8765/
 ```
 
-(Open over `http://`, not `file://` — the page is fine either way, but a server
+(Open over `http://`, not `file://`, the page is fine either way, but a server
 matches how it'll be hosted.)
 
 ## Publish on GitHub Pages
 
-Pick one — the page is portable, so any of these work:
+Pick one, the page is portable, so any of these work:
 
-**A. GitHub Actions (recommended — keeps `site/` where it is).**
+**A. GitHub Actions (recommended, keeps `site/` where it is).**
 Add `.github/workflows/pages.yml`:
 ```yaml
 name: Deploy site to Pages
@@ -47,7 +47,7 @@ Then in **Settings → Pages → Source**, choose **GitHub Actions**. The site l
 **B. Deploy from a folder.** Copy `index.html` into `/docs` and set
 **Settings → Pages → Deploy from a branch → `/docs`**. Simplest, no Actions.
 
-**C. Any static host.** Netlify / Vercel / Cloudflare Pages — point it at `site/`.
+**C. Any static host.** Netlify / Vercel / Cloudflare Pages, point it at `site/`.
 
 ## Wiring up the one-click browser flasher (later)
 
@@ -63,12 +63,12 @@ firmware needs to be served over `https` next to a manifest:
 3. Surface the flasher from the install section.
 
 Until then the offline `flash.bat` / `flash.sh` in the release is the working install
-path — which is what the page says.
+path, which is what the page says.
 
 ## Deploying the full studio to Pages
 
 The landing page here is the front door, but the Pages deploy publishes the **whole
-read-only showcase** — landing + Expression Studio Gallery + the desk/board sim —
+read-only showcase**, landing + Expression Studio Gallery + the desk/board sim, 
 assembled by `scripts/build-pages.mjs` into a gitignored `pages-dist/` bundle.
 
 - **Workflow:** `.github/workflows/pages.yml` runs the build and deploys on every push to

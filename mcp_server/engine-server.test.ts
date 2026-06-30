@@ -1,7 +1,7 @@
 // mcp_server/engine-server.test.ts
 // NOTE: this test imports the COMPILED ./dist/*.js (Node type-strip can't resolve
 // engine-server's .js-specifier sibling imports to .ts). Run it via `npm test`, which
-// runs `tsc` FIRST — running `node --test` on this file standalone tests STALE dist and
+// runs `tsc` FIRST, running `node --test` on this file standalone tests STALE dist and
 // can pass against old code. (See Plan 4 / the "tests must discriminate" project rule.)
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
@@ -183,7 +183,7 @@ test("/api/presence rejects non-GET/POST verbs with 405", async () => {
 });
 
 test("GET /api/presence falls back to the store when the board responds non-2xx", async () => {
-  // The board is reachable but errors (e.g. its own 503 low-memory guard) — the engine must treat
+  // The board is reachable but errors (e.g. its own 503 low-memory guard), the engine must treat
   // that like unreachable and serve the stored copy, not relay the error as authoritative.
   const board = http.createServer((req, res) => {
     if (req.url === "/api/presence") {
@@ -306,7 +306,7 @@ test("PUT /api/expression/:name writes the file, un-approves, regenerates galler
   const seed = { frames: [blank], colors: {}, frame_ms: 150, loop: 0, description: "seed" };
   writeFileSync(exprPath, JSON.stringify(seed, null, 2));
   const approvedRaw = readFileSync(approvedPath, "utf8");
-  const galleryRaw = readFileSync(galleryPath, "utf8");   // the engine regenerates this mid-test — restore it too
+  const galleryRaw = readFileSync(galleryPath, "utf8");   // the engine regenerates this mid-test, restore it too
   const approvedBefore = JSON.parse(approvedRaw); approvedBefore.approved.push("zzz-test");
   writeFileSync(approvedPath, JSON.stringify(approvedBefore, null, 2));
 

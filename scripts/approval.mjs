@@ -1,4 +1,4 @@
-// scripts/approval.mjs — pure approval-set mutation for studio/approved.json. setApproval returns
+// scripts/approval.mjs, pure approval-set mutation for studio/approved.json. setApproval returns
 // a NEW { approved: string[] } with `name` added (approved=true, no duplicate) or removed (false),
 // never mutating the input. Imported by the engine's POST /api/approval write surface.
 

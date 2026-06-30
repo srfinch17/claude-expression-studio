@@ -1,11 +1,11 @@
-// mcp_server/run-plan.ts — execute a resolved RenderPlan against the board.
+// mcp_server/run-plan.ts, execute a resolved RenderPlan against the board.
 //
 // The single rule that keeps the virtual board honest: the intent is ALWAYS broadcast to the
-// SSE hub (D2 — the virtual board mirrors the panel even with no hardware present), and an
+// SSE hub (D2, the virtual board mirrors the panel even with no hardware present), and an
 // unreachable board is a BRANCH, not a thrown exception. Before this, the broadcast sat after
 // a bare `await post(...)`; when the board was unplugged the fetch REJECTED, unwound past the
-// broadcast (out to the tool's top-level "could not reach board" catch), and board.html — when
-// offline — got no new event, so it froze on its last frame. Dependencies are injected so this
+// broadcast (out to the tool's top-level "could not reach board" catch), and board.html, when
+// offline, got no new event, so it froze on its last frame. Dependencies are injected so this
 // is unit-testable without booting the MCP server (see run-plan.test.ts).
 import type { RenderPlan } from "./engine.js";
 import { planToDisplayEvent } from "./display-event.js";
@@ -43,7 +43,7 @@ export async function executePlan(plan: RenderPlan, deps: PlanRunnerDeps): Promi
   if (plan.kind === "animation") {
     const r = await tryPost("/api/display/animation", { type: plan.type, ...plan.params, transient: true });
     deps.broadcast(planToDisplayEvent(plan));
-    if (unreachable) return `${plan.type} — board unreachable, shown on virtual board`;
+    if (unreachable) return `${plan.type}, board unreachable, shown on virtual board`;
     return r.ok ? `${plan.type} (transient anim)` : `anim error ${r.status}`;
   }
 
@@ -53,6 +53,6 @@ export async function executePlan(plan: RenderPlan, deps: PlanRunnerDeps): Promi
   const wire = expressionToWire(expr);
   const r = await tryPost("/api/display/frames", wire);
   deps.broadcast(planToDisplayEvent(plan, wire));
-  if (unreachable) return `${plan.name} — board unreachable, shown on virtual board`;
+  if (unreachable) return `${plan.name}, board unreachable, shown on virtual board`;
   return r.ok ? plan.name : `frames error ${r.status}`;
 }

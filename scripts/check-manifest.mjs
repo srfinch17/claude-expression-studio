@@ -7,15 +7,17 @@
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { dirname, join, basename } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+// Firmware animation type names come from the SINGLE source of truth, not a private copy:
+// a stale hardcoded subset here silently rejects valid firmware sims the Studio offers (e.g.
+// "wave", "sun") on Save. shared/firmware-names.js is also what manifest-assets.test.ts uses.
+import { FIRMWARE_NAMES } from "../shared/firmware-names.js";
 
 export const REQUIRED_ROOTS = ["info", "working", "done", "attention", "fail", "idle"];
-// Firmware animation types that are valid references but are not JSON files.
-const FIRMWARE = ["fire", "dancefloor", "fireworks", "clock", "frostbite", "matrix_rain", "snow", "claudesweep"];
 
 // Gather every name a binding may legally reference: saved + bored JSON file
 // stems, canned keys (from the compiled MCP module), and firmware types.
 export function collectAnimationNames(root) {
-  const names = new Set(FIRMWARE);
+  const names = new Set(FIRMWARE_NAMES);   // firmware types are valid references but not JSON files
   const addDir = (dir) => {
     if (!existsSync(dir)) return;
     for (const fn of readdirSync(dir)) if (fn.endsWith(".json")) names.add(basename(fn, ".json"));
@@ -32,8 +34,13 @@ export function collectAnimationNames(root) {
       for (const m of src.matchAll(/["'`]([a-z0-9_-]+)["'`]\s*:/gi)) names.add(m[1]);
     }
   } catch { /* canned optional */ }
-  // Always include the canned names this manifest relies on, in case dist is stale.
-  for (const n of ["smiley", "done", "cross", "party", "working", "ok", "sleep", "alert"]) names.add(n);
+  // The full canned vocabulary (mcp_server/expressions.ts CANNED), listed explicitly: tsc
+  // compiles CANNED with UNQUOTED identifier keys that the quoted-key regex above never matches,
+  // and the dist may be stale or unbuilt. So this list, not the regex, is what actually lets a
+  // manifest bind a canned glyph. Keep it in sync with CANNED; manifest-assets.test.ts checks the
+  // live CANNED import for the authoritative guarantee.
+  for (const n of ["smiley", "sad", "heart", "cross", "thumbsup", "ok", "sparkle", "alert",
+                   "working", "party", "spaceship", "sleep"]) names.add(n);
   return names;
 }
 
@@ -67,7 +74,7 @@ export function validateManifest(manifest, animationNames) {
     let cur = name;
     while (cur != null) {
       if (seen.has(cur)) {
-        // Only report this cycle once — skip if any implicated node was already reported.
+        // Only report this cycle once, skip if any implicated node was already reported.
         if (![...seen].some((n) => reportedCycle.has(n)))
           errors.push(`intent "${name}" is in a fallback cycle`);
         for (const n of seen) reportedCycle.add(n);
@@ -154,4 +161,8 @@ function main() {
   for (const e of errors) console.error("  - " + e);
   process.exit(1);
 }
-if (import.meta.url === pathToFileURL(process.argv[1]).href) main();
+// Run main() only when invoked directly as the CLI. Guard process.argv[1]: it is undefined when
+// this module is imported from an argv-less context (e.g. `node -e`, or the engine's dynamic
+// import in manifest-api.ts), and pathToFileURL(undefined) throws, which previously surfaced as
+// a swallowed "engine error" 500 on the Studio's Save (PUT /api/manifest).
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
