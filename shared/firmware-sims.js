@@ -6,7 +6,7 @@
 const scale8 = (v, s) => (v * s) >> 8;
 const nscale8 = ([r, g, b], s) => [scale8(r, s), scale8(g, s), scale8(b, s)];
 
-// beatsin8(bpm, lo, hi, phaseU8) — FastLED-style BPM sine helper.
+// beatsin8(bpm, lo, hi, phaseU8), FastLED-style BPM sine helper.
 // phaseU8 is a 0-255 phase counter driving one full sine cycle (0=mid-rise, 64=peak,
 // 128=mid-fall, 192=trough). Output mapped to [lo, hi] inclusive.
 // `bpm` is kept for FastLED-signature parity; cycle speed is actually driven by how fast
@@ -65,7 +65,7 @@ function hexToRGB(hex) {
   return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
 }
 
-// FastLED-style CHSV → RGB: h, s, v ∈ 0–255.
+// FastLED-style CHSV → RGB: h, s, v ∈ 0-255.
 // Uses a 6-section rainbow hue wheel (not standard HSV) with 43 steps per section.
 // Full hue sweep: red(0)→orange(32)→yellow(64)→green(96)→cyan(128)→blue(172)→magenta(214)→red.
 function chsv8(h, s, v) {
@@ -178,7 +178,7 @@ function heatToColor(h, palette) {
   return [r, g, b];
 }
 
-// qadd8: saturating add — clamps at 255 (matches FastLED qadd8)
+// qadd8: saturating add, clamps at 255 (matches FastLED qadd8)
 function qadd8(a, b) { return Math.min(255, a + b); }
 
 function makeFire(opts = {}) {
@@ -320,7 +320,7 @@ function makeFire(opts = {}) {
 
 // ---- matrix_rain (port of anim_matrix.ino + initMatrixDrops) ----
 // Per-column falling drops: a bright "head" + TRAIL_LEN fading pixels above it.
-// Each drop has its own random speed (1–3 ticks/step). Drops start staggered
+// Each drop has its own random speed (1-3 ticks/step). Drops start staggered
 // above the top edge (random headY in −1..−8) so columns don't sync.
 // When the head + entire trail clear the bottom, the drop recycles with a new
 // random starting position above the screen and a new speed.
@@ -400,7 +400,7 @@ function makeMatrixRain(opts = {}) {
 }
 
 // ---- snow (port of anim_snow.ino) ----
-// Continuous snowfall with a fixed floor bank — flakes fall and vanish when
+// Continuous snowfall with a fixed floor bank, flakes fall and vanish when
 // they hit their column's floor surface, then respawn at the top. No accumulation.
 //
 // FLOOR: SNOW_FLOOR_TOP[col] = first lit row of the floor bank in that column.
@@ -409,7 +409,7 @@ function makeMatrixRain(opts = {}) {
 //
 // COLOR:
 //   opts.flakeColor  → fixed hex color used for all flakes AND the floor
-//                      (gallery deterministic mode — overrides random pick)
+//                      (gallery deterministic mode, overrides random pick)
 //   opts.confetti    → each flake picks a random SNOW_PALETTE entry; floor = rgb(210,220,255)
 //   default (neither) → one random SNOW_PALETTE entry for all flakes + floor (single-hue mode)
 
@@ -514,7 +514,7 @@ function makeSnow(opts = {}) {
   };
 }
 
-// ---- fireworks (port of anim_fireworks.ino, FW1 variant — "fireworks" animation type) ----
+// ---- fireworks (port of anim_fireworks.ino, FW1 variant, "fireworks" animation type) ----
 // Phase machine: IDLE (wait ~700 ms) → LAUNCH (mortar rises col 2-6, explodes at row 2-5)
 //   → EXPLODE (flash fwColor1 for 2 frames) → FADE (12 tendrils radiate + decay then loop).
 // fwTendrilColor maps brightness 255→0 through color2→color1 / color3→color2 / black→color3.
@@ -666,9 +666,9 @@ function makeFireworks(opts = {}) {
   };
 }
 
-// ---- fireworks2 (port of anim_fireworks.ino, FW2 variant — "fireworks2") ----
+// ---- fireworks2 (port of anim_fireworks.ino, FW2 variant, "fireworks2") ----
 // Same launch/burst machine as fireworks, but the payload reads differently:
-//   • EXPLODE: a "cross-bloom" flash — a bright white plus (+) at the burst
+//   • EXPLODE: a "cross-bloom" flash, a bright white plus (+) at the burst
 //     center instead of a single pixel.
 //   • FADE: every tendril is a bright COLORED TIP dragging a short, dimming
 //     WHITE COMET TAIL behind it (the last few cells it passed through).
@@ -785,15 +785,15 @@ function makeFireworks2(opts = {}) {
 // Each cycle a Fisher-Yates shuffle assigns a new permutation of the 4 palette
 // colors to the 4 slots. Transitions crossfade over DF_BLEND_F frames, then
 // hold for dfHoldMin + random(DF_HOLD_RNG) frames before the next cycle.
-// Per-tile brightness jitter (160–255) stays fixed across cycles.
+// Per-tile brightness jitter (160-255) stays fixed across cycles.
 //
-// Palette: DF_PALETTES[0..63][4] — a 64-entry table ported verbatim from
+// Palette: DF_PALETTES[0..63][4], a 64-entry table ported verbatim from
 // the firmware. No FastLED built-in palette used; the table is self-contained.
 
 const DF_BLEND_F  = 10;   // frames to crossfade between cycles
 const DF_HOLD_RNG = 20;   // random extra hold frames per cycle
 
-// DF_PALETTES[64][4] — ported verbatim from anim_dance_floor.ino
+// DF_PALETTES[64][4], ported verbatim from anim_dance_floor.ino
 // Each entry is [r,g,b] instead of CRGB; COLOR_ORDER is RGB (straight-through).
 const DF_PALETTES = [
   // ── 0-7: Neon / Club ──────────────────────────────────────
@@ -982,7 +982,7 @@ function makeWave(opts = {}) {
 // ---- rainbow (port of anim_effects.ino runRainbowFrame) ----
 // 8 vertical hue stripes: column x gets hue = rainbowHue + x*32, color CHSV(hue,255,200).
 // rainbowHue advances each frame so the stripes scroll continuously across the hue wheel.
-// Full-spectrum mode only (palette mode optional — ignored in v1 as per task spec).
+// Full-spectrum mode only (palette mode optional, ignored in v1 as per task spec).
 function makeRainbow(opts = {}) {
   let rainbowHue = 0;
   // advance ≈ 400/animationSpeed; at ~90ms/frame that's ~4.  Default matches C++ medium speed.
@@ -1006,7 +1006,7 @@ function makeRainbow(opts = {}) {
 
 // ---- breathe (port of anim_effects.ino runBreatheFrame) ----
 // Fills the whole panel with a single hue, then scales every LED's brightness by a
-// sine wave — beatsin8(20 BPM, 10, 255) — so the panel pulses in and out together.
+// sine wave, beatsin8(20 BPM, 10, 255), so the panel pulses in and out together.
 // solidColor is user-set on the board; default here is cyan #28c8ff (overridable via opts.color).
 // The phase counter advances each frame at ~20 BPM so one pulse cycle is ~3 seconds.
 function makeBreathe(opts = {}) {
@@ -1125,7 +1125,7 @@ function makeComet(opts = {}) {
           s.active = false;
           continue;
         }
-        // C++ cull condition: x<0, y<0, y>7 (no x>7 check — sparks only drift left)
+        // C++ cull condition: x<0, y<0, y>7 (no x>7 check, sparks only drift left)
         if (s.x < 0 || s.y < 0 || s.y > 7) { s.active = false; continue; }
         const sx = Math.floor(s.x), sy = Math.floor(s.y);
         if (sx >= 0 && sx < 8 && sy >= 0 && sy < 8) {
@@ -1241,7 +1241,7 @@ function makeStarfield(opts = {}) {
       for (let i = 0; i < density; i++) {
         const s = stars[i];
 
-        // Respawn if first init, inactive, or aged out — mirrors C++ condition
+        // Respawn if first init, inactive, or aged out, mirrors C++ condition
         if (!initialized || !s.active || s.age >= s.maxAge) spawnStar(s);
 
         // Advance position and age (always, even after respawn)
@@ -1249,7 +1249,7 @@ function makeStarfield(opts = {}) {
         s.y += s.dy;
         s.age++;
 
-        // Death checks — respawn and skip this frame's draw (matches C++ continue)
+        // Death checks, respawn and skip this frame's draw (matches C++ continue)
         const offScreen = s.x < 0 || s.x > 7 || s.y < 0 || s.y > 7;
         const atCenter  = inward && (Math.abs(s.x - 3.5) < 0.7 && Math.abs(s.y - 3.5) < 0.7);
         if (offScreen || atCenter) { spawnStar(s); continue; }
@@ -1271,7 +1271,7 @@ function makeStarfield(opts = {}) {
 }
 
 // ---- sun (port of anim_gradient.ino runSunFrame) ----
-// A rounded 4x4 disc (rows/cols 2–5, minus the 4 corner pixels) in a warm yellow,
+// A rounded 4x4 disc (rows/cols 2-5, minus the 4 corner pixels) in a warm yellow,
 // with 4 colored dots (light→dark) orbiting 8 outer ray positions one slot per frame.
 // Each dot keeps its own color as they revolve together around the sun.
 
@@ -1369,7 +1369,7 @@ function makeLiquid(opts = {}) {
         for (let x = 0; x < 8; x++)
           pot[y * 8 + x] = x * liquidGX + y * liquidGY;
 
-      // Sort descending — O(64) in practice; matches C++ insertion sort logic
+      // Sort descending, O(64) in practice; matches C++ insertion sort logic
       const sorted = Array.from(pot).sort((a, b) => b - a);
       const Teq     = sorted[LIQUID_CELLS - 1];  // 32nd-largest: equilibrium level
       const deepest = sorted[0];                  // most-downhill cell potential
@@ -1388,7 +1388,7 @@ function makeLiquid(opts = {}) {
       liquidLevel    += liquidLevelVel;
 
       // ── Froth amount and depth range ─────────────────────────────
-      const turb = Math.min(1.0, Math.abs(liquidLevelVel) * 1.6);  // 0–1
+      const turb = Math.min(1.0, Math.abs(liquidLevelVel) * 1.6);  // 0-1
       let range = deepest - liquidLevel;
       if (range < 1.0) range = 1.0;                                 // guard div-by-zero
       const surfaceBand = range / 8;                                 // MATRIX_H = 8
@@ -1406,7 +1406,7 @@ function makeLiquid(opts = {}) {
 
           // Gradient: deep→surface color by s (s=1 bright at surface, 0 dark at depth).
           // Reuse the shared blendRGB (deep at t=0, surface at t=255) for helper consistency
-          // with wave/spiral/starfield — identical math to the prior inline lerp.
+          // with wave/spiral/starfield, identical math to the prior inline lerp.
           const s = 1.0 - depth;
           let [r, g, b] = blendRGB(deepColor, surfaceColor, s * 255);
 

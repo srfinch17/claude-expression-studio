@@ -1,4 +1,4 @@
-// shared/presence-vocab.js — canonical web copy of the presence card's intent -> appearance
+// shared/presence-vocab.js, canonical web copy of the presence card's intent -> appearance
 // table (the 10 PresenceMessage intents in mcp_server/presence.ts). Kept content-identical to
 // esp32_matrix_webserver/data/presence-vocab.js (the board's copy); the parity test enforces it.
 // glyph = a single char drawn large; color = CSS hex; motion = a CSS animation key.

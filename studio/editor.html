@@ -141,7 +141,7 @@
     }
     function makePanel(cv, name) {
       const p = new Panel(cv); drive(p, name);
-      // Firmware sims are continuous (no discrete frames) — run a few steps so the frozen tile
+      // Firmware sims are continuous (no discrete frames), run a few steps so the frozen tile
       // shows a developed state, not the blank first frame.
       const it = byName.get(name);
       if (it && it.kind === "firmware") for (let i = 0; i < 10; i++) p.tick(p.frameMs, performance.now());
@@ -154,7 +154,7 @@
       if (p.frames && p.frames.length > 1) { p.fi = Math.floor(p.frames.length / 2); p.acc = 0; }
       p._dirty = true; p.draw(performance.now());
     }
-    // Animate ONLY while hovered — playing every tile at once was the page's CPU sink + sensory
+    // Animate ONLY while hovered, playing every tile at once was the page's CPU sink + sensory
     // overload. Enter -> play; leave -> re-park on the middle frame.
     function wireHover(el, p) {
       el.addEventListener("mouseenter", () => animating.add(p));

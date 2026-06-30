@@ -3,7 +3,7 @@
 esp32_matrix_webserver/data/*.html linguist-documentation=true
 
 # Shell scripts must keep LF so their `#!/usr/bin/env sh` shebang works on
-# macOS/Linux — this repo is distributed and install/flash.sh is the non-Windows
+# macOS/Linux, this repo is distributed and install/flash.sh is the non-Windows
 # install path. Without this a contributor's core.autocrlf=true could commit CRLF
 # and silently break the script for end users.
 *.sh text eol=lf

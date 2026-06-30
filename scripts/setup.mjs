@@ -1,4 +1,4 @@
-// scripts/setup.mjs — `npm run setup`: turnkey Claude Code onboarding for the LED-matrix
+// scripts/setup.mjs, `npm run setup`: turnkey Claude Code onboarding for the LED-matrix
 // companion. Wires the hooks (~/.claude/settings.json) + the MCP server (~/.claude.json)
 // into the user's GLOBAL config, deploys the hook scripts to ~/.claude/hooks/, and points
 // them at this repo via ~/.claude/hooks/matrix_config.json. No board required (panel-first).
@@ -123,7 +123,7 @@ export async function run(opts) {
   const config = { mcp_dir: mcpServerDir, board_url: args.board || null };
 
   if (args.dryRun) {
-    log("DRY RUN — nothing written.\n");
+    log("DRY RUN, nothing written.\n");
     log(`python: ${python}`);
     log(`would deploy to: ${hooksDir}`);
     log(`would write ${settingsPath}:\n` + JSON.stringify(plannedSettings, null, 2));
@@ -165,11 +165,11 @@ export async function run(opts) {
   log("\n✅ Installed.");
   log(`  hooks deployed to ${hooksDir}`);
   log(`  python: ${python}`);
-  log(`  board: ${args.board || "(none — using the no-board web panel)"}`);
+  log(`  board: ${args.board || "(none, using the no-board web panel)"}`);
   if (backups.length) log(`  backups: ${backups.map((b) => path.basename(b)).join(", ")}`);
   log("\nNext:");
   log("  1. Restart Claude Code (hooks + MCP servers load at session start).");
-  log("  2. The MCP `matrix_studio` tool prints the local Studio/panel URL — open it to");
+  log("  2. The MCP `matrix_studio` tool prints the local Studio/panel URL, open it to");
   log("     watch the companion and assign which animation fires on which hook.");
   log("  3. Silence everything anytime: `touch ~/.claude/hooks/.matrix_off` (delete to re-enable).");
   if (!args.board) log("  4. Have a board? Re-run with `npm run setup -- --board http://<board-ip>`.");

@@ -2,7 +2,7 @@
 //
 //   npm run bump:patch | bump:minor | bump:major
 //
-// Deliberate, manual — you run it when a change is worth a release. It does
+// Deliberate, manual, you run it when a change is worth a release. It does
 // NOT push or flash; you still flash/upload/reconnect to make the bump live on
 // each artifact (that's the whole point of the drift check).
 

@@ -1,4 +1,4 @@
-// settings.ts — pure helpers for the MCP settings tools. The board validates and
+// settings.ts, pure helpers for the MCP settings tools. The board validates and
 // clamps; these just shape a partial patch (drop unknown keys, coerce types) so
 // Claude's free-form args become a clean POST body.
 

@@ -1,4 +1,4 @@
-// scripts/dump-sim-frames.mjs — step a firmware sim N frames into the board wire
+// scripts/dump-sim-frames.mjs, step a firmware sim N frames into the board wire
 // format ({frames:["<384 hex>"], frame_ms, raw:true}) so render-contact-sheet.py can
 // render a generative (continuous-color) sim board-free for the animator/critic loop.
 import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";
@@ -10,7 +10,7 @@ const hex2 = (n) => Math.max(0, Math.min(255, n | 0)).toString(16).padStart(2, "
 // Step a sim N frames → { frames: ["<384 hex row-major>"], frame_ms, raw:true }.
 export function dumpSim(name, frames = 12, opts = {}) {
   const make = FIRMWARE_SIMS[name];
-  if (!make) throw new Error(`unknown sim "${name}" — known: ${Object.keys(FIRMWARE_SIMS).join(", ")}`);
+  if (!make) throw new Error(`unknown sim "${name}", known: ${Object.keys(FIRMWARE_SIMS).join(", ")}`);
   const sim = make(opts);
   const out = [];
   for (let n = 0; n < frames; n++) {

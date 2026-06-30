@@ -1,4 +1,4 @@
-// mcp_server/engine-server.ts — the engine's localhost HTTP face. Coexists with the MCP
+// mcp_server/engine-server.ts, the engine's localhost HTTP face. Coexists with the MCP
 // stdio transport (separate channel). Serves the Studio tree, a validated manifest API,
 // and an SSE stream of DisplayEvents to virtual boards. Binds 127.0.0.1 ONLY.
 import http from "node:http";
@@ -176,7 +176,7 @@ export async function startEngineServer(opts: { mcpDir: string; port?: number; m
 
       if (url.startsWith("/api/render")) {
         // Receive an already-resolved DisplayEvent (from the Claude Code hook, which renders to the
-        // board directly) and fan it out to the SSE virtual boards — so board.html shows hook-driven
+        // board directly) and fan it out to the SSE virtual boards, so board.html shows hook-driven
         // renders even with NO board. Localhost-only (the server binds 127.0.0.1); best-effort relay.
         try {
           const ev = JSON.parse(await readBody(req));

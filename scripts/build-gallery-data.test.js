@@ -46,11 +46,11 @@ test("buildGalleryData merges canned + saved, classifies, lists firmware", async
   const groupOf = (n) => data.expressions.find((e) => e.name === n)?.group;
 
   // The gallery firmware list IS the registry (Task 1 wired FIRMWARE = Object.keys(FIRMWARE_SIMS)),
-  // so assert that invariant — auto-tracks every sim added, never needs a hardcoded count bump.
+  // so assert that invariant, auto-tracks every sim added, never needs a hardcoded count bump.
   assert.ok(data.firmware.includes("claudesweep"), "includes a known firmware sim");
   assert.equal(data.firmware.length, Object.keys(FIRMWARE_SIMS).length, "gallery lists every registered firmware sim");
 
-  // Classification INVARIANT — derived from the LIVE manifest so it survives re-wiring in the
+  // Classification INVARIANT, derived from the LIVE manifest so it survives re-wiring in the
   // Studio (binding membership is now editable taste data, not a fixed snapshot): orphan ==
   // saved AND bound nowhere; a saved expression the manifest binds is in a rotation tier, never
   // orphan. (The tier-assignment logic itself is unit-tested in shared/catalog.test.js.)

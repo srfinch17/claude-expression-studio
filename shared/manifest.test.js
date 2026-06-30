@@ -9,7 +9,7 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const MANIFEST = JSON.parse(readFileSync(join(HERE, "manifest.json"), "utf8"));
 const ROOTS = ["info", "working", "done", "attention", "fail", "idle"];
 
-// These assert the manifest's STABLE CONTRACT — the layers the Studio editor never touches:
+// These assert the manifest's STABLE CONTRACT, the layers the Studio editor never touches:
 // the moment->intent lifecycle wiring, root coverage, renderer inheritance, and "no lifecycle
 // moment ever resolves to a blank board." They deliberately do NOT pin which animation an intent
 // binds to: bindings are user-owned taste data (edited live in the editor and re-saved), so

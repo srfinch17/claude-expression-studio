@@ -1,8 +1,8 @@
-// scripts/build-gallery-data.mjs — the Gallery's build step. Bakes studio/gallery-data.json
+// scripts/build-gallery-data.mjs, the Gallery's build step. Bakes studio/gallery-data.json
 // (the static data studio/gallery.js fetches) so the Gallery renders with no server: it
-// merges expression data from all three sources — canned glyphs (the compiled MCP module),
+// merges expression data from all three sources, canned glyphs (the compiled MCP module),
 // saved JSON (mcp_server/expressions/), and the bored watcher's lineup
-// (claude-hooks/bored_animations/) — de-duped by name (saved > canned > bored), then tags
+// (claude-hooks/bored_animations/), de-duped by name (saved > canned > bored), then tags
 // each with its manifest-derived rotation role via shared/catalog.js. "orphan" = saved but
 // unbound by the manifest (the unwired library). Pure buildGalleryData() is unit-tested; main()
 // wires the real repo paths. Run via `npm run build:gallery` (also part of build:pages).

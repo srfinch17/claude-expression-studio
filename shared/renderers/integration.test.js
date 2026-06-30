@@ -7,7 +7,7 @@ import { makeCardRenderer } from "./card.js";
 import { FIRMWARE_SIMS } from "../firmware-sims.js";
 import { isFirmwareName } from "../firmware-names.js";
 
-// This file tests DISPATCH WIRING — frame-expression -> postFrames, firmware -> postAnimation,
+// This file tests DISPATCH WIRING, frame-expression -> postFrames, firmware -> postAnimation,
 // card -> object, plus per-renderer independent fallback. It uses a CONTROLLED fixture manifest
 // (not shared/manifest.json) on purpose: the live bindings are user-editable taste data, so a
 // dispatch test must own its inputs or it breaks whenever the user rebinds an intent (e.g. setting
@@ -92,7 +92,7 @@ test("screensaver pool resolves a firmware sim on web-sim and an animation+brigh
   assert.equal(out.length, 3);
   const byR = Object.fromEntries(out.map((o) => [o.renderer, o]));
   // esp32 + web-sim bind `screensaver` directly. The card has NO screensaver binding,
-  // so it gracefully falls back to `idle` (its quiet Zzz glyph) — board runs the show,
+  // so it gracefully falls back to `idle` (its quiet Zzz glyph), board runs the show,
   // the card says "Idle". That per-renderer independent fallback is the intended design.
   assert.equal(byR["esp32-8x8"].intent, "screensaver");
   assert.equal(byR["web-sim"].intent, "screensaver");
@@ -110,7 +110,7 @@ test("idle resolves to its OWN binding (a frame-expression), distinct from the s
   const b = build();
   const out = await fire(FIX, { intent: "idle" }, b.reg, { rng: () => 0 });
   for (const o of out) assert.equal(o.intent, "idle");
-  // idle -> "zzz" glyph: esp32 posts frames (not an animation) — the idle/screensaver split holds.
+  // idle -> "zzz" glyph: esp32 posts frames (not an animation), the idle/screensaver split holds.
   assert.equal(b.board.frames.length, 1);
   assert.equal(b.board.anims.length, 0);
 });

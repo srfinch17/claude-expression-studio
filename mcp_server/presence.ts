@@ -1,4 +1,4 @@
-// Presence Protocol — the device-agnostic semantic message + its validator.
+// Presence Protocol, the device-agnostic semantic message + its validator.
 // This is the canonical IR definition; the MCP presence_set tool and (later)
 // other renderers normalize through here. Pure + dependency-free so it unit-tests
 // with the Node built-in runner (no board, no build step).
@@ -90,5 +90,5 @@ export function normalizePresence(input: unknown): PresenceMessage {
 
   const data = normalizeData(input.data);
   if (data) msg.data = data;
-  return msg; // ts intentionally omitted — the board stamps it
+  return msg; // ts intentionally omitted, the board stamps it
 }

@@ -29,9 +29,9 @@ export function nextVersion(current, type) {
 /**
  * Compare an artifact's self-reported version against the repo's expected
  * version. Returns one of:
- *   "match"   — reported === expected
- *   "drift"   — reported is a real version but differs from expected
- *   "unknown" — artifact reported nothing usable (absent / "unknown" / pre-versioning)
+ *   "match", reported === expected
+ *   "drift", reported is a real version but differs from expected
+ *   "unknown", artifact reported nothing usable (absent / "unknown" / pre-versioning)
  */
 export function compareArtifact(reported, expected) {
   if (reported == null || reported === "" || reported === "unknown") return "unknown";

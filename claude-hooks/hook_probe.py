@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""hook_probe.py — TEMPORARY instrumentation to learn what Claude Code hooks
+"""hook_probe.py, TEMPORARY instrumentation to learn what Claude Code hooks
 actually fire (and in what ORDER) when Claude waits for input.
 
 Why: the awaiting-input display feature
 (docs/superpowers/specs/2026-06-21-awaiting-input-display-design.md) depends on
-unverified hook behavior — does PreToolUse fire for the built-in AskUserQuestion /
+unverified hook behavior, does PreToolUse fire for the built-in AskUserQuestion /
 ExitPlanMode tools? does Stop fire while a question is pending (and clobber the
-'?' animation)? when does PostToolUse fire for those tools — on display or on the
+'?' animation)? when does PostToolUse fire for those tools, on display or on the
 user's answer? does Notification fire with permission_prompt? Rather than guess,
 we measure.
 
@@ -21,7 +21,7 @@ HOW TO USE (≈5 min):
        c. trigger a tool that needs permission.
      Then ANSWER each, so we also see the post-answer events.
   4. Send me ~/.claude/hook_probe.log (or paste it). Then REMOVE the probe block
-     from settings.json and restart — it's only for this measurement.
+     from settings.json and restart, it's only for this measurement.
 
 It appends one line per event to ~/.claude/hook_probe.log and never blocks.
 The event name is passed as argv[1]; tool / notification details come from the
@@ -47,7 +47,7 @@ def main():
     try:
         d = json.loads(raw) if raw.strip() else {}
         tool = d.get("tool_name", "") or ""
-        # notification type lives under different keys across versions — grab any.
+        # notification type lives under different keys across versions, grab any.
         extra = (d.get("notification_type") or d.get("type")
                  or d.get("message") or "")
         if isinstance(extra, str):

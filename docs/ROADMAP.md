@@ -1,18 +1,18 @@
-# Roadmap — ESP32-S3 Matrix
+# Roadmap, ESP32-S3 Matrix
 
 Living backlog. Each item is a one-liner until we start it, then it graduates
 into a full spec in `docs/superpowers/specs/`. **Specs are written
-just-in-time** (one per feature, when we begin) — not all up front — to save
+just-in-time** (one per feature, when we begin), not all up front, to save
 tokens and avoid designing things we'll redesign anyway.
 
 Status: 🔵 planned · 🟡 spec'd · 🟠 in progress · ✅ done
 
 ---
 
-## 🎯 v1.0.0 milestone — "calibrated everywhere" (defined 2026-06-21)
+## 🎯 v1.0.0 milestone, "calibrated everywhere" (defined 2026-06-21)
 
 **v1.0.0 = ALL lessons learned from the LED calibration battery implemented across
-the ENTIRE suite of board apps.** Not just measured and recorded — actually applied:
+the ENTIRE suite of board apps.** Not just measured and recorded, actually applied:
 the per-channel floors, white balance, gamma, and verified palette become the active
 correction layer + the new defaults for every animation, expression, and app the
 board renders. When the board "looks as good as the hardware allows, everywhere," we
@@ -20,25 +20,25 @@ board renders. When the board "looks as good as the hardware allows, everywhere,
 
 This is the deliberate stopping point **before** the next thrust (building out the
 broader docs/specs and the RAG corpus this repo will feed). Sequence:
-1. 🟡 **Calibration Lab harness** (Phase 1) — spec'd + planned, not built. Plan:
+1. 🟡 **Calibration Lab harness** (Phase 1), spec'd + planned, not built. Plan:
    `docs/superpowers/plans/2026-06-21-calibration-lab-phase1.md`.
 2. 🔵 Run the eyeball battery → produce `data/calibration.json` (Phase 2).
-3. 🔵 Active correction layer — firmware + ledsim + MCP (Phase 3).
+3. 🔵 Active correction layer, firmware + ledsim + MCP (Phase 3).
 4. 🔵 Re-review + apply lessons across the **entire app suite** (Phase 4) → **v1.0.0**.
 
 Full design: `docs/superpowers/specs/2026-06-21-led-calibration-battery-design.md`.
 
 > ⚠️ The "Where we are" section below is stale (2026-06-15, pre-v0.x). The current
-> shipped state is master @ v0.9.0 — see git history / auto-memory `project-status`.
+> shipped state is master @ v0.9.0, see git history / auto-memory `project-status`.
 
 ---
 
-## 🔭 v2 — Presence Fabric: multi-board addressing & consent (vision'd 2026-06-21)
+## 🔭 v2, Presence Fabric: multi-board addressing & consent (vision'd 2026-06-21)
 
 **Parked until v1.0.0 ships.** 🟡 Single hardcoded board → a registry of *named*,
 *consented* display appliances + an addressing layer, so one Claude session drives specific
 boards (the office one) and leaves others alone (the kitchen one showing weather). Extends
-the presence north star — "one message, many renderers" — to many *physical* renderers.
+the presence north star, "one message, many renderers", to many *physical* renderers.
 
 Model: **two-key consent** = board-side policy (`llm_drivable`, owner-set ceiling, lives on
 the board) ∩ client-side enlistment (each Claude install's own opt-in list). Hands-off is
@@ -47,14 +47,14 @@ Architecture = incremental evolution of the HTTP API, shaped as a small identity
 capability **descriptor** (protocol, not bolted-on settings); no hub.
 
 Decomposes into ordered sub-specs (each spec'd just-in-time): (1) 🔵 board identity & consent
-[firmware] → (2) 🔵 client enlistment & name addressing [MCP+hooks] — **(1)+(2) = MVP** → (3)
+[firmware] → (2) 🔵 client enlistment & name addressing [MCP+hooks], **(1)+(2) = MVP** → (3)
 🔵 consent handshake → (4) 🔵 multi-board control UX [web+conversational] → (5) 🔵 generalize
 to other display types. Full vision:
 `docs/superpowers/specs/2026-06-21-presence-fabric-multi-board-design.md`.
 
 ---
 
-## ▶ Where we are (updated 2026-06-15 — read this first after a restart)
+## ▶ Where we are (updated 2026-06-15, read this first after a restart)
 
 **✅ 2026-06-15: FULL HARDWARE VERIFICATION COMPLETE.** Every 🟠 "built, pending
 hardware test" item below is now hardware-confirmed (brightness, ledsim, sketch,
@@ -71,20 +71,20 @@ palette, S4 ledsim, liquid fixes, Sketch (+20 starters), Emoji vibrance,
 Calendar (4 styles), Sound (IMU VU), auto-resume (NVS), DST timezones, and a
 long WiFi-stability fight (see `docs/PITFALLS.md`).
 
-**2026-06-10: pre-merge multi-agent review pass** — 33 findings raised, 23
+**2026-06-10: pre-merge multi-agent review pass**, 33 findings raised, 23
 unique confirmed by adversarial verification, all fixed. Highlights: weather
-stream-parse broke on chunked encoding (`useHTTP10(true)` fix — weather NEVER
+stream-parse broke on chunked encoding (`useHTTP10(true)` fix, weather NEVER
 updated as built, so re-verify on hardware), bright.js no longer clobbers board
 brightness on page load (board is source of truth via /api/status), grid-test
 255 can't persist to NVS (brownout guard), calendar scroll slider now honored,
 unknown animation types rejected, MCP fetches time out at 8s + tz (DST) param
 exposed, README flash settings corrected to 4MB.
 
-**⭐ 2026-06-11: NEW TOP PRIORITY — Claude expression display** (user: "the
+**⭐ 2026-06-11: NEW TOP PRIORITY, Claude expression display** (user: "the
 natural evolution of this interface"). The matrix becomes Claude's autonomous
 status/emotion window: canned vetted glyphs (working/done/alert/party/
 spaceship/…), Claude-drawn custom frame animations, and a saved library that
-grows. ✅ Built — hardware-verified 2026-06-15. Spec:
+grows. ✅ Built, hardware-verified 2026-06-15. Spec:
 `docs/superpowers/specs/2026-06-11-claude-expression-display.md`. Firmware
 `/api/display/frames` + `anim_frames.ino`; MCP `matrix_express` /
 `matrix_animate` / `matrix_list_expressions`; canned art in
@@ -94,13 +94,13 @@ restart, then the spec's verification list.
 
 **Immediate next steps (hardware):**
 1. **Flash the latest firmware + LittleFS upload**, then **reconnect WiFi via the
-   portal** (`ESP32-Matrix-Setup` → 192.168.4.1) — creds were wiped during the
+   portal** (`ESP32-Matrix-Setup` → 192.168.4.1), creds were wiped during the
    WiFi debugging. Confirm **PSRAM is Enabled** in Tools (see CLAUDE.md).
 2. **Verify** with Serial open (115200): weather/sketch stay online (`[heap]`
    stable), WiFi self-heals (`WiFi DISCONNECTED reason=` then reconnect), calendar
    grid shows a full month, calendar month/day style (no colon) looks right,
    auto-resume + DST work.
-3. **Empirical brightness table** — drop real `grid_test` numbers into
+3. **Empirical brightness table**, drop real `grid_test` numbers into
    `docs/LED_BRIGHTNESS.md` (the user said "next round").
 4. When hardware-confirmed, flip the 🟠 items below to ✅ and consider merging the
    branch to master.
@@ -113,18 +113,18 @@ Several requested features are the same machinery wearing different hats. The
 order below is chosen so we build each shared component once, then every later
 feature just consumes it. Three reusable pieces carry most of the work:
 
-### S1 · Brightness widget (per-app brightness control) ✅ built — hardware-verified 2026-06-15
+### S1 · Brightness widget (per-app brightness control) ✅ built, hardware-verified 2026-06-15
 Spec: `docs/superpowers/specs/2026-06-08-per-app-brightness-design.md`.
 Shipped as `data/bright.js` (auto-mount or explicit). On index.html + 9 pages
 that lacked brightness, AND migrated animations/matrix_rain/emoji to the shared
-widget (animations' bespoke Sun-panel slider removed 2026-06-10 — it bypassed
+widget (animations' bespoke Sun-panel slider removed 2026-06-10, it bypassed
 the heat lock). Only grid_test keeps a bespoke control (brightness IS its
 calibration tool). Mount reads the board's brightness from /api/status and
-never POSTs on load — the board is the source of truth (see spec's 2026-06-10
+never POSTs on load, the board is the source of truth (see spec's 2026-06-10
 scope update).
 A small reusable HTML/JS snippet that hits the existing `POST /api/brightness`.
 You want it on **every** app page. Build it once as an include and drop it into
-each page — and into every *new* page from the start, so we never retrofit.
+each page, and into every *new* page from the start, so we never retrofit.
 **Consumed by:** all pages. **Firmware:** already done (`/api/brightness` exists).
 
 ### S2 · Palette + color-picker component 🟢 built
@@ -132,118 +132,118 @@ Shipped as `data/palette.js` (global `Palette`): `Palette.mount(el, {count, labe
 defaults, presets, onChange})` renders preset swatch chips + N labeled color
 pickers, unified look, self-styled. Spec:
 `docs/superpowers/specs/2026-06-09-palette-component-design.md`. Consumers:
-Calendar, Sound, **clock** (migrated — 3-color), and **liquid** custom gradient
-(migrated — 2-color).
+Calendar, Sound, **clock** (migrated, 3-color), and **liquid** custom gradient
+(migrated, 2-color).
 
 **`animations.html` migration DEFERRED (deliberate, 2026-06-09).** Its 12 effects
 wire bespoke pickers into `buildPayload` by element ID, and dancefloor/rainbow use
 the 64-preset DF_PAL (not an N-color-picker pattern S2 models). A full rewrite of
-that 1100-line file — with no compiler/hardware test loop — is high regression
+that 1100-line file, with no compiler/hardware test loop, is high regression
 risk for low benefit (cross-page uniformity is already achieved by the standalone
 clock/liquid pages). Revisit only if animations.html is being reworked anyway.
 
 ### S3 · 8×8 canvas + matrix-push pipeline
 `POST /api/display/matrix` (8×8 hex) already exists on the firmware. A shared JS
 "8×8 grid renderer / paint surface" + the POST wrapper means **sketch and emoji
-are mostly front-end work** — the board already knows how to display a static
+are mostly front-end work**, the board already knows how to display a static
 frame. **Consumed by:** sketch (paint→push), emoji (downscale→push), any
 "show this image" feature. The image **downscale + color-quantize** routine
 (the emoji problem) lives here too and is reused anywhere we shrink an image to
 8×8.
 
-> Net effect: once S1–S3 exist, **sketch ≈ S3 paint grid + S1**, and
+> Net effect: once S1-S3 exist, **sketch ≈ S3 paint grid + S1**, and
 > **emoji ≈ sketch + the quantizer + image import**. We build the hard part once.
 
-### S4 · `ledsim.js` — brightness-accurate preview model ✅ built — hardware-verified 2026-06-15
+### S4 · `ledsim.js`, brightness-accurate preview model ✅ built, hardware-verified 2026-06-15
 Spec: `docs/superpowers/specs/2026-06-08-ledsim-preview-design.md`. Shipped as
 `data/ledsim.js` (global `LedSim`) + a `matrixbrightness` broadcast in
 `bright.js`. The FastLED dimming + visibility-threshold + gamma math, extracted
-from `emoji.html`/`grid_test.html` into one include. **Accurate-dim is opt-in** —
+from `emoji.html`/`grid_test.html` into one include. **Accurate-dim is opt-in**, 
 animation previews intentionally stay full-bright (prior UX decision); use
 `LedSim` where color fidelity matters. **Consumed by:** emoji, sketch,
 calibration. Reference + threshold table: `docs/LED_BRIGHTNESS.md`. The same
 threshold (`minVisibleChannel(bri) = ceil(256/(bri+1))`) is what the **emoji
-quantizer** must clamp colors above — so S4 and the emoji work share the model.
+quantizer** must clamp colors above, so S4 and the emoji work share the model.
 
 ---
 
 ## Recommended order
 
-### Phase 0 — Tooling (now) ✅/🟠
+### Phase 0, Tooling (now) ✅/🟠
 - ✅ Project `CLAUDE.md`, `docs/PITFALLS.md`, dev-loop memory
 - 🟠 `add-animation` + `flash-and-verify` skills
 - 🔵 Targeted code review of the **liquid module** when we open Phase 2 (find the
-  color bug at its root) — prefer per-module reviews as we touch code over one
+  color bug at its root), prefer per-module reviews as we touch code over one
   whole-repo review (cheaper, more relevant).
 
-### Phase 1 — Shared UI components 🔵
+### Phase 1, Shared UI components 🔵
 Build **S1 (brightness widget)** first and retrofit existing pages, then **S2**
 and **S3** scaffolding. Everything downstream assumes these exist.
 
-### Phase 2 — Liquid/fluid fixes ✅ built — hardware-verified 2026-06-15 + IMU calibration
+### Phase 2, Liquid/fluid fixes ✅ built, hardware-verified 2026-06-15 + IMU calibration
 Spec: `docs/superpowers/specs/2026-06-08-liquid-fixes-design.md`. Color bug fixed
 (reuses fire's `activePalette`), physics reworked to a 2D gravity-projection
 closed container, custom top/bottom gradient added. **First flash is an IMU
-axis-calibration pass** — see the spec's "VERIFY ON HARDWARE" mapping block.
+axis-calibration pass**, see the spec's "VERIFY ON HARDWARE" mapping block.
 Actively annoying, and self-contained (firmware physics + color). Three parts:
-1. **Color bug** — the 4 color selectors don't work / colors wrong. Root-cause
+1. **Color bug**, the 4 color selectors don't work / colors wrong. Root-cause
    first (suspect palette→CRGB mapping or an assumption fighting the RGB order;
    see PITFALLS). Get the 4 fixed selectors working correctly.
-2. **Physics** — currently sloshes only to ~45° then stops. Should behave like a
+2. **Physics**, currently sloshes only to ~45° then stops. Should behave like a
    **closed container**: tip past 45° and the fluid spills onto the next edge in
    the rotation (gravity vector follows full 360° tilt, not clamped to one axis).
-3. **Gradient mode** — top layer vs bottom layer different colors (uses **S2**
+3. **Gradient mode**, top layer vs bottom layer different colors (uses **S2**
    palette pickers, clock-style) to show frothiness. Full per-page color
    selector can come later; for now the 4 presets + gradient.
 
-### Phase 3 — Static-image apps (share the most) ✅ hardware-verified 2026-06-15
-- **Sketch app** ✅ built — hardware-verified 2026-06-15. `data/sketch.html`: 8×8 paint
+### Phase 3, Static-image apps (share the most) ✅ hardware-verified 2026-06-15
+- **Sketch app** ✅ built, hardware-verified 2026-06-15. `data/sketch.html`: 8×8 paint
   grid (mouse+touch), swatches, eraser, ledsim board preview, POSTs
   `/api/display/matrix`. Reuses bright.js + ledsim.js. Spec:
   `docs/superpowers/specs/2026-06-09-sketch-app-design.md`.
-- **Emoji app** ✅ built — hardware-verified 2026-06-15. Added a **vibrance/saturation
+- **Emoji app** ✅ built, hardware-verified 2026-06-15. Added a **vibrance/saturation
   punch** (HSV) + a Vibrance slider to `emoji.html`: averaging to 8×8 desaturates
   colors into gray soup, so we push saturation (and lift dim cells) toward bold,
-  fewer hues that read at 8×8 — exactly the "degrade quality so it shrinks
+  fewer hues that read at 8×8, exactly the "degrade quality so it shrinks
   better" the user asked for. Reuses the existing downscale + normalize pipeline.
 
-### Phase 4 — Calendar app ✅ built — hardware-verified 2026-06-15
+### Phase 4, Calendar app ✅ built, hardware-verified 2026-06-15
 Spec: `docs/superpowers/specs/2026-06-09-calendar-app-design.md`. Firmware
-`anim_calendar.ino` (5 styles: scroll / bignum / grid / clock / square — square
+`anim_calendar.ino` (5 styles: scroll / bignum / grid / clock / square, square
 added 2026-06-11: 2-letter weekday over big day number; NTP wait now shows an
 animated hourglass instead of the white pulse, shared with the clock) reusing the
 clock's NTP + the font helpers; web `calendar.html` hub with style buttons +
 **S2 palette** (its first consumer) + brightness widget; home Calendar card; MCP
 `calendar` mode. Reuses clock NTP + S1/S2.
 
-### Phase 5 — Sound/vibration visualizer ✅ built — hardware-verified 2026-06-15
+### Phase 5, Sound/vibration visualizer ✅ built, hardware-verified 2026-06-15
 Spec: `docs/superpowers/specs/2026-06-09-sound-visualizer-design.md`. Firmware
 `anim_sound.ino`: VU bar driven by IMU vibration-energy (baseline-subtracted
 magnitude → fast-attack/slow-release level + peak hold), gradient + S2 colors;
 web `sound.html` (S2 palette + sensitivity + brightness); home Sound card; MCP
-`sound` mode. Beat/energy visualizer only — not a spectrum EQ (see note below).
+`sound` mode. Beat/energy visualizer only, not a spectrum EQ (see note below).
 
 ---
 
 ## Feature notes
 
-### Sound visualizer — feasibility (you asked for input)
+### Sound visualizer, feasibility (you asked for input)
 **Honest verdict: a beat/vibration-energy visualizer is plausible; a real
 frequency-band equalizer is not, with this sensor.**
-- Audio is 20 Hz–20 kHz. The accelerometer's usable sample rate here is the
+- Audio is 20 Hz-20 kHz. The accelerometer's usable sample rate here is the
   animation poll rate (~tens of Hz). Nyquist: polling at ~60 Hz lets you resolve
-  vibration only up to ~30 Hz — nowhere near a music spectrum. **No FFT EQ.**
+  vibration only up to ~30 Hz, nowhere near a music spectrum. **No FFT EQ.**
 - It *can* feel **low-frequency structural vibration**: rest the board on/near a
   speaker or resonant surface and bass/kick will physically shake it. So a
   **"lights pulse/spread to the bass"** mode (track accel-magnitude variance over
   a short window → map to brightness/spread/color) is realistic and fun.
-- If you ever want a true spectrum EQ, that needs a real mic — a ~$1 I2S MEMS mic
+- If you ever want a true spectrum EQ, that needs a real mic, a ~$1 I2S MEMS mic
   (e.g. INMP441) wired to spare GPIO. That's a hardware add, not software.
 - **Recommendation:** ship it as a *beat/energy* mode with honest framing; leave
   the door open for an I2S mic upgrade later.
 
 ### Per-app brightness
-Every app page gets the **S1** widget. No firmware change — `/api/brightness`
+Every app page gets the **S1** widget. No firmware change, `/api/brightness`
 already exists. This is the cheapest high-value win; do it in Phase 1.
 
 ---

@@ -1,5 +1,5 @@
 // shared/firmware-names.js
-// Single source of truth for FIRMWARE animation type names — the names launched via
+// Single source of truth for FIRMWARE animation type names, the names launched via
 // POST /api/display/animation (the firmware renders them) rather than pushed as
 // frame-expressions via POST /api/display/frames. The manifest engines use this to
 // pick the wire path for a resolved animation name.

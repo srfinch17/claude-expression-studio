@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-matrix_idle.py — the "bored Claude" idle watcher for the ESP32-S3 LED matrix.
+matrix_idle.py, the "bored Claude" idle watcher for the ESP32-S3 LED matrix.
 
 Spawned (detached) by matrix_signal.py when the `done` checkmark fires. It waits,
-then — if the user still hasn't come back — plays a RANDOM fun animation, and keeps
+then, if the user still hasn't come back, plays a RANDOM fun animation, and keeps
 doing so on a randomized cadence while the board stays idle. The point is the
 board looking like Claude got bored waiting for input and started goofing off.
 
@@ -20,7 +20,7 @@ Honors the .matrix_off kill switch (checked every loop). Fails silent if the boa
 is unreachable. Reuses matrix_signal's art_to_hex/post_frames (same dir).
 
 ──────────────────────────────────────────────────────────────────────────────
-ADDING / MODIFYING ANIMATIONS  (this is the easy part — no code edits needed):
+ADDING / MODIFYING ANIMATIONS  (this is the easy part, no code edits needed):
 The rotation is just a FOLDER of JSON files (default: ./bored_animations next to
 this script). Each file is one animation in the SAME format `matrix_animate
 save_as` writes:  { "description", "frames", "colors", "frame_ms", "loop" }.
@@ -28,12 +28,12 @@ save_as` writes:  { "description", "frames", "colors", "frame_ms", "loop" }.
                    to <repo>/mcp_server/expressions/<name>.json).
   • REMOVE one  -> delete (or move) its .json file.
   • EDIT one    -> tweak the frames/colors/frame_ms in its .json.
-Changes are picked up automatically on the watcher's next goof — no restart.
+Changes are picked up automatically on the watcher's next goof, no restart.
 Point MATRIX_IDLE_POOL_DIR at a different folder to use a different set.
 ──────────────────────────────────────────────────────────────────────────────
 
 Usage:  python matrix_idle.py <activity_token>   (normally only the hook calls it)
-Env overrides (seconds) — handy for testing without waiting minutes:
+Env overrides (seconds), handy for testing without waiting minutes:
   MATRIX_IDLE_FIRST_MIN / _FIRST_MAX  first wait after the checkmark (def 75/120)
   MATRIX_IDLE_MIN / _MAX              gap between goofs while idle  (def 45/90)
   MATRIX_IDLE_CAP                     stop goofing after this much idle (def 600)
@@ -97,7 +97,7 @@ def load_pool():
             pool.append((d["frames"], d["colors"],
                          int(d.get("frame_ms", 150)), int(d.get("loop", 0))))
         except Exception:
-            continue  # bad/partial JSON — just skip it, never crash the watcher
+            continue  # bad/partial JSON, just skip it, never crash the watcher
     return pool or DEFAULT_POOL
 
 
@@ -131,7 +131,7 @@ def main():
         if current_token() != my_token:
             return 0                      # the user's back, or a newer watcher owns the board
         if time.monotonic() - start >= CAP_SECS:
-            play(REST)                    # idle too long — settle on a calm face and stop
+            play(REST)                    # idle too long, settle on a calm face and stop
             ms.post_presence("idle")      # display first; presence is best-effort (matches matrix_signal)
             return 0
         play(random.choice(load_pool()))  # reload each time so dropped-in JSONs appear live

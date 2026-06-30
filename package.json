@@ -2,7 +2,7 @@
   "name": "esp32-matrix-tooling",
   "private": true,
   "type": "module",
-  "description": "Repo-level versioning tooling (bump/stamp/check). NOT a version source — the canonical version is the /VERSION file.",
+  "description": "Repo-level versioning tooling (bump/stamp/check). NOT a version source, the canonical version is the /VERSION file.",
   "version": "0.0.0",
   "scripts": {
     "bump:patch": "node scripts/version-bump.js patch",
@@ -10,7 +10,8 @@
     "bump:major": "node scripts/version-bump.js major",
     "setup": "node scripts/setup.mjs",
     "stamp": "node scripts/version-stamp.js",
-    "check": "node scripts/version-check.js",
+    "check": "node scripts/version-check.js && node scripts/check-emdash.mjs",
+    "check:emdash": "node scripts/check-emdash.mjs",
     "check:manifest": "node scripts/check-manifest.mjs",
     "studio": "node scripts/studio.mjs",
     "test": "node scripts/check-manifest.mjs && cd mcp_server && npx tsc --project tsconfig.json && cd .. && node --test \"scripts/**/*.test.js\" \"mcp_server/**/*.test.ts\" \"shared/**/*.test.js\" \"studio/**/*.test.js\"",

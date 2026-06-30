@@ -1,6 +1,6 @@
 // Unit tests for the versioning tooling. Run with `npm test` (node --test).
 // Covers the pure logic (semver math, drift comparison) and the check
-// report-building against mock /api/status payloads — no board required.
+// report-building against mock /api/status payloads, no board required.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";

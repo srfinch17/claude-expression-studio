@@ -1,4 +1,4 @@
-// mcp_server/expression-api.ts — the engine's frame-expression write surface. Mirrors
+// mcp_server/expression-api.ts, the engine's frame-expression write surface. Mirrors
 // manifest-api.ts: writes are VALIDATED through the same shared validator the editor uses
 // (scripts/check-expression.mjs), the source JSON is written to mcp_server/expressions/, the
 // edited name is removed from studio/approved.json (edit -> orange), and studio/gallery-data.json
@@ -32,7 +32,7 @@ export async function writeExpressionValidated(opts: ExprWriteOpts): Promise<Res
   const errors: string[] = validateExpression(opts.name, opts.expr);
   if (errors.length) return { ok: false, status: 400, errors };
 
-  // 1. write the source JSON (pretty, 2-space) — NO trailing newline, matching the canonical
+  // 1. write the source JSON (pretty, 2-space), NO trailing newline, matching the canonical
   //    MCP save_as writer (index.ts) and the existing expressions/*.json, so an edit doesn't flip EOF.
   await writeFile(file, JSON.stringify(opts.expr, null, 2), "utf8");
 

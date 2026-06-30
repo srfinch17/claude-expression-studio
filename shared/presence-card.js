@@ -1,4 +1,4 @@
-// shared/presence-card.js — the web presence-card render core. Pure helpers (unit-tested) +
+// shared/presence-card.js, the web presence-card render core. Pure helpers (unit-tested) +
 // one DOM render fn (renderPresenceCard), factored out of the board's presence-card.html so the
 // Studio web surface (studio/presence.html) shares one implementation rather than a third copy.
 import { GENERIC } from "./presence-vocab.js";
@@ -37,9 +37,9 @@ export function motionClass(entry, urgency) {
   return `m-${(entry && entry.motion) || "none"} u-${urgency || "ambient"}`;
 }
 
-// "Ns ago" / "Nm ago" / "—". tsSeconds is unix-seconds (0/falsey => "—").
+// "Ns ago" / "Nm ago" / ", ". tsSeconds is unix-seconds (0/falsey => ", ").
 export function formatAge(tsSeconds, nowMs) {
-  if (!tsSeconds) return "—";
+  if (!tsSeconds) return ", ";
   const s = Math.max(0, Math.floor(nowMs / 1000) - tsSeconds);
   return s < 60 ? `${s}s ago` : `${Math.floor(s / 60)}m ago`;
 }

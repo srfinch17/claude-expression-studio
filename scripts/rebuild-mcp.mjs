@@ -10,7 +10,7 @@
 // Why this exists: the live MCP server runs the COMPILED dist, so TS edits are
 // invisible until rebuilt. Forgetting to rebuild left a stale dist (root cause of a
 // debugging session on 2026-06-18). This removes the manual `npx tsc` step from the
-// loop. The one thing it can't do is reconnect the already-running server — that's a
+// loop. The one thing it can't do is reconnect the already-running server, that's a
 // user action (/mcp reconnect), which the success message reminds you to do.
 
 import { readdirSync, statSync, existsSync } from 'node:fs';
@@ -42,7 +42,7 @@ function newestTsMtime(dir) {
 
 const srcMtime = newestTsMtime(mcpDir);
 const distMtime = existsSync(distEntry) ? statSync(distEntry).mtimeMs : 0;
-if (srcMtime <= distMtime) process.exit(0); // dist is current — nothing to do
+if (srcMtime <= distMtime) process.exit(0); // dist is current, nothing to do
 
 // On Windows the npm shim is npx.cmd; elsewhere it's npx. execFileSync with shell
 // lets the platform resolve it without us hardcoding a path.
@@ -60,6 +60,6 @@ try {
   process.exit(0);
 } catch (err) {
   const out = (err.stdout?.toString() || '') + (err.stderr?.toString() || '');
-  process.stderr.write('MCP server build FAILED — fix these TypeScript errors:\n' + out + '\n');
+  process.stderr.write('MCP server build FAILED, fix these TypeScript errors:\n' + out + '\n');
   process.exit(2); // exit 2 surfaces the errors back to Claude so they get fixed
 }

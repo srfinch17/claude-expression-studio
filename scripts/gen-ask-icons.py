@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """Generate the awaiting-input + completion expressions for the ESP32-S3 8x8 matrix:
 ask-question / ask-attention (awaiting input) plus task-complete (a completion glyph,
-formerly ask-confirm — the '?' now covers plan-approval too, so ExitPlanMode fires
+formerly ask-confirm, the '?' now covers plan-approval too, so ExitPlanMode fires
 ask-question). Fired by the Claude Code hooks (see the awaiting-input spec).
 
 Design notes (emoting-on-8x8 + docs/LED_BRIGHTNESS.md):
 - These play at the board's CURRENT brightness, which is often the bri-5 ambient
-  floor — where FastLED's (channel x (bri+1))>>8 kills any channel below ~43. So:
+  floor, where FastLED's (channel x (bri+1))>>8 kills any channel below ~43. So:
   - the confirm BOX uses a bright gray #b8b8b8 (184 -> survives) not a dim gray that
     would vanish at bri 5;
   - the question mark uses cyan #44eeff (red 0x44=68, survives) like the wait-logo set;
-  - the attention BELL is amber #ffb000 — note its green channel (176) lands near the
+  - the attention BELL is amber #ffb000, note its green channel (176) lands near the
     floor at bri 5, so amber reads more orange/red there; the bell SHAPE carries the
     meaning. Flagged for live tuning with the user's eyes.
 - loop:0 so each HOLDS until a later display command replaces it (Claude waiting).
@@ -151,15 +151,15 @@ def ask_attention():
 
 SPECS = {
     "ask-question": (ask_question,
-        "Awaiting input — a pulsing cyan '?' with a white shine sweeping its stroke. "
+        "Awaiting input, a pulsing cyan '?' with a white shine sweeping its stroke. "
         "Fired when Claude poses a questionnaire and is waiting for the user's answer. "
         "Holds (loop 0) until replaced."),
     "task-complete": (task_complete,
-        "Task complete — an empty box with a green checkmark drawing itself in, then "
+        "Task complete, an empty box with a green checkmark drawing itself in, then "
         "holding. A completion/done glyph (formerly ask-confirm; the '?' now covers "
-        "plan-approval). Currently unwired — assign to an event in the Studio."),
+        "plan-approval). Currently unwired, assign to an event in the Studio."),
     "ask-attention": (ask_attention,
-        "Awaiting input — an amber bell ringing (clapper swings, side ticks flash). "
+        "Awaiting input, an amber bell ringing (clapper swings, side ticks flash). "
         "Fired when Claude needs the user's permission. Holds (loop 0) until replaced."),
 }
 

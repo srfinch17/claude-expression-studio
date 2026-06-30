@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Generate wait-rainbow.json — a spinning rainbow color-wheel wait animation
+"""Generate wait-rainbow.json, a spinning rainbow color-wheel wait animation
 (old-Mac "spinning pinwheel" vibe) for the ESP32-S3 8x8 matrix.
 
 Design notes (see emoting-on-8x8 skill):
 - At board brightness ~5 a true rainbow collapses (red/orange/yellow merge). So we
-  use 6 CHANNEL-DISTINCT hues — each lights a different R/G/B combination — which is
+  use 6 CHANNEL-DISTINCT hues, each lights a different R/G/B combination, which is
   the most separable palette at low brightness. The spinning motion carries the
   "wait spinner" read even where adjacent hues blur.
 - The disc has 6 SECTORS but each is a DIFFERENT color, so the pattern only maps
@@ -20,7 +20,7 @@ import json
 import math
 import os
 
-# 6 channel-distinct hues (R / R+G / G / G+B / B / R+B) — maximally separable at bri 5.
+# 6 channel-distinct hues (R / R+G / G / G+B / B / R+B), maximally separable at bri 5.
 PALETTE = {
     "R": "#ff0000",  # red      (R)
     "Y": "#ffff00",  # yellow   (R+G)
@@ -55,7 +55,7 @@ def frame(rot_deg: float) -> list[str]:
 def main() -> None:
     expr = {
         "description": (
-            "Spinning rainbow color wheel (old-Mac pinwheel) — a wait/working "
+            "Spinning rainbow color wheel (old-Mac pinwheel), a wait/working "
             "spinner. Auto-joins the random 'wait' pool via its wait- name."
         ),
         "frames": [frame(i * STEP_DEG) for i in range(N_FRAMES)],

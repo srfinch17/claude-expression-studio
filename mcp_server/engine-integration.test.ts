@@ -1,8 +1,8 @@
-// mcp_server/engine-integration.test.ts — capstone integration test: engine boot, static
+// mcp_server/engine-integration.test.ts, capstone integration test: engine boot, static
 // serving, SSE broadcast, and manifest round-trip (side-effect-free).
 // NOTE: this test imports the COMPILED ./dist/*.js (Node type-strip can't resolve
 // engine-server's .js-specifier sibling imports to .ts). Run it via `npm test`, which
-// runs `tsc` FIRST — running `node --test` on this file standalone tests STALE dist and
+// runs `tsc` FIRST, running `node --test` on this file standalone tests STALE dist and
 // can pass against old code. (See Plan 4 / the "tests must discriminate" project rule.)
 import { test, after } from "node:test";
 import assert from "node:assert/strict";

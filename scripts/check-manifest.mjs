@@ -36,7 +36,7 @@ export function collectAnimationNames(root) {
   } catch { /* canned optional */ }
   // The full canned vocabulary (mcp_server/expressions.ts CANNED), listed explicitly: tsc
   // compiles CANNED with UNQUOTED identifier keys that the quoted-key regex above never matches,
-  // and the dist may be stale or unbuilt. So this list — not the regex — is what actually lets a
+  // and the dist may be stale or unbuilt. So this list, not the regex, is what actually lets a
   // manifest bind a canned glyph. Keep it in sync with CANNED; manifest-assets.test.ts checks the
   // live CANNED import for the authoritative guarantee.
   for (const n of ["smiley", "sad", "heart", "cross", "thumbsup", "ok", "sparkle", "alert",
@@ -74,7 +74,7 @@ export function validateManifest(manifest, animationNames) {
     let cur = name;
     while (cur != null) {
       if (seen.has(cur)) {
-        // Only report this cycle once — skip if any implicated node was already reported.
+        // Only report this cycle once, skip if any implicated node was already reported.
         if (![...seen].some((n) => reportedCycle.has(n)))
           errors.push(`intent "${name}" is in a fallback cycle`);
         for (const n of seen) reportedCycle.add(n);
@@ -163,6 +163,6 @@ function main() {
 }
 // Run main() only when invoked directly as the CLI. Guard process.argv[1]: it is undefined when
 // this module is imported from an argv-less context (e.g. `node -e`, or the engine's dynamic
-// import in manifest-api.ts), and pathToFileURL(undefined) throws — which previously surfaced as
+// import in manifest-api.ts), and pathToFileURL(undefined) throws, which previously surfaced as
 // a swallowed "engine error" 500 on the Studio's Save (PUT /api/manifest).
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();

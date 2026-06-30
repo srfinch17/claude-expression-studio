@@ -1,7 +1,7 @@
 // A tiny Server-Sent Events fan-out hub. No HTTP knowledge here:
 // it holds "clients" (anything with write()) and frames each DisplayEvent as one SSE
 // message. A client that throws on write (browser tab closed) is dropped, never
-// propagated — broadcast() is best-effort and MUST NOT throw into runPlan().
+// propagated, broadcast() is best-effort and MUST NOT throw into runPlan().
 
 export interface DisplayEvent {
   kind: "frames" | "animation" | "noop";

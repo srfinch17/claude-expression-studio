@@ -2,7 +2,7 @@
 """Generate the four animated-logo wait expressions for the ESP32-S3 8x8 matrix:
 wait-logo-breathe / chase / boot / ripple.
 
-All four animate the board's quincunx LOGO — five 2x2 blocks:
+All four animate the board's quincunx LOGO, five 2x2 blocks:
   TL green, TR amber, center cyan, BL amber, BR green
 (the same motif as the favicon / header.js logo).
 
@@ -170,25 +170,25 @@ def ripple():
 SPECS = {
     "wait-logo-breathe": (
         breathe,
-        "Animated board logo (quincunx of 5 dots) breathing — all five blocks fade "
+        "Animated board logo (quincunx of 5 dots) breathing, all five blocks fade "
         "in and out together, a calm heartbeat. A wait/working spinner; auto-joins "
         "the random 'wait' pool via its wait- name.",
     ),
     "wait-logo-chase": (
         chase,
-        "Animated board logo — a bright highlight chases clockwise around the four "
+        "Animated board logo, a bright highlight chases clockwise around the four "
         "corners while the cyan center pulses, reading as 'computing'. A wait spinner; "
         "auto-joins the random 'wait' pool via its wait- name.",
     ),
     "wait-logo-boot": (
         boot,
-        "Animated board logo powering up — blocks light one by one clockwise then the "
+        "Animated board logo powering up, blocks light one by one clockwise then the "
         "full logo holds before restarting. A wait spinner; auto-joins the random "
         "'wait' pool via its wait- name.",
     ),
     "wait-logo-ripple": (
         ripple,
-        "Animated board logo as sonar — the cyan core pulses and ripples outward to "
+        "Animated board logo as sonar, the cyan core pulses and ripples outward to "
         "the corners, then fades. A wait spinner; auto-joins the random 'wait' pool "
         "via its wait- name.",
     ),

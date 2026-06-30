@@ -71,7 +71,7 @@
       "manifest": "basic", "renderer": "rich",
       "intent": "idle", "rngSeq": [0.1],
       "expect": { "intent": "idle", "value": "fire", "params": { "speed": 50 }, "label": "fire", "brightness": 5 } },
-    { "name": "rich pool: rng 0.9 picks snow (bare weight 3) — brightness only, no params/label",
+    { "name": "rich pool: rng 0.9 picks snow (bare weight 3), brightness only, no params/label",
       "manifest": "basic", "renderer": "rich",
       "intent": "idle", "rngSeq": [0.9],
       "expect": { "intent": "idle", "value": "snow", "brightness": 5 } },

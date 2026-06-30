@@ -1,4 +1,4 @@
-"""Tests for matrix_signal._load_config — the env/config-file/default resolution that
+"""Tests for matrix_signal._load_config, the env/config-file/default resolution that
 replaced the hardcoded maintainer repo path. Run: python -m unittest (from claude-hooks/)."""
 import os
 import sys
