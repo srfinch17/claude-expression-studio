@@ -3,8 +3,8 @@
 //   npm run bump:patch | bump:minor | bump:major
 //
 // Deliberate, manual, you run it when a change is worth a release. It does
-// NOT push or flash; you still flash/upload/reconnect to make the bump live on
-// each artifact (that's the whole point of the drift check).
+// NOT push or rebuild; you still rebuild the .mcpb + reconnect to make the bump
+// live on the MCP server (that's the whole point of the drift check).
 
 import { readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -17,9 +17,9 @@ const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..
 
 const STAMPED_FILES = [
   "VERSION",
-  "esp32_matrix_webserver/version.h",
-  "esp32_matrix_webserver/data/version.json",
   "mcp_server/package.json",
+  "mcp_server/manifest.json",
+  "shared/manifest.json",
 ];
 
 async function main() {
@@ -35,12 +35,11 @@ async function main() {
   await writeFile(path.join(REPO_ROOT, "VERSION"), next + "\n", "utf8");
   await stamp(next, REPO_ROOT);
 
-  // Stage + commit only the version-controlled stamp targets (data/version.json
-  // is gitignored-free; it IS committed so the web bundle's version is tracked).
+  // Stage + commit only the version-controlled stamp targets.
   execFileSync("git", ["add", ...STAMPED_FILES], { cwd: REPO_ROOT, stdio: "inherit" });
   execFileSync("git", ["commit", "-m", `chore: bump v${next}`], { cwd: REPO_ROOT, stdio: "inherit" });
 
-  console.log(`Bumped ${current} → ${next}. Now flash + LittleFS-upload + reconnect to make it live, then \`npm run check\`.`);
+  console.log(`Bumped ${current} → ${next}. Now rebuild the .mcpb (npm run build:mcpb) + reconnect to make it live, then \`npm run check\`.`);
 }
 
 main();
