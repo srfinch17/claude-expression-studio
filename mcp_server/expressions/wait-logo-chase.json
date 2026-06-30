@@ -1,5 +1,5 @@
 {
-  "description": "Animated board logo \u2014 a bright highlight chases clockwise around the four corners while the cyan center pulses, reading as 'computing'. A wait spinner; auto-joins the random 'wait' pool via its wait- name.",
+  "description": "Animated board logo: a bright highlight chases clockwise around the four corners while the cyan center pulses, reading as 'computing'. A wait spinner; auto-joins the random 'wait' pool via its wait- name.",
   "frames": [
     [
       "AA....BB",

@@ -1,5 +1,5 @@
 {
-  "description": "Task complete \u2014 an empty box with a green checkmark drawing itself in, then holding. A completion/done glyph (formerly ask-confirm; the '?' now covers plan-approval). Currently unwired \u2014 assign to an event in the Studio.",
+  "description": "Task complete: an empty box with a green checkmark drawing itself in, then holding. A completion/done glyph (formerly ask-confirm; the '?' now covers plan-approval). Currently unwired, assign to an event in the Studio.",
   "frames": [
     [
       "........",

@@ -81,7 +81,7 @@
       },
       "frame_ms": 280,
       "loop": 0,
-      "description": "Googly eyes glancing left, right, then a blink — lazy 'I'm bored waiting' idle goof. Part of the bored-Claude idle rotation.",
+      "description": "Googly eyes glancing left, right, then a blink, lazy 'I'm bored waiting' idle goof. Part of the bored-Claude idle rotation.",
       "group": "bored",
       "approved": false
     },
@@ -215,7 +215,7 @@
       },
       "frame_ms": 150,
       "loop": 0,
-      "description": "A cyan 2x2 dot bouncing diagonally off all four walls (DVD-logo style), seamless 12-frame loop. Hypnotic idle motion — part of the bored-Claude rotation.",
+      "description": "A cyan 2x2 dot bouncing diagonally off all four walls (DVD-logo style), seamless 12-frame loop. Hypnotic idle motion, part of the bored-Claude rotation.",
       "group": "bored",
       "approved": false
     },
@@ -310,7 +310,7 @@
       },
       "frame_ms": 120,
       "loop": 0,
-      "description": "Two eyes with pupils rolling around in circles — woozy/dizzy/loopy. Part of the bored-Claude idle rotation.",
+      "description": "Two eyes with pupils rolling around in circles, woozy/dizzy/loopy. Part of the bored-Claude idle rotation.",
       "group": "bored",
       "approved": false
     },
@@ -344,7 +344,7 @@
       },
       "frame_ms": 520,
       "loop": 0,
-      "description": "Red beating heart — appreciation, warmth, 'love it'. Expands then contracts/dips on a ~1s lub-dub.",
+      "description": "Red beating heart: appreciation, warmth, 'love it'. Expands then contracts/dips on a ~1s lub-dub.",
       "group": "bored",
       "approved": false
     },
@@ -499,7 +499,7 @@
       },
       "frame_ms": 130,
       "loop": 0,
-      "description": "Yellow Pac-Man chomping left-to-right across the panel, eating three white pellets as his mouth reaches them. Playful idle goof — part of the bored-Claude rotation.",
+      "description": "Yellow Pac-Man chomping left-to-right across the panel, eating three white pellets as his mouth reaches them. Playful idle goof, part of the bored-Claude rotation.",
       "group": "bored",
       "approved": false
     },
@@ -597,7 +597,7 @@
       },
       "frame_ms": 130,
       "loop": 0,
-      "description": "Falling multicolor confetti — celebration, big win, milestone shipped. 16 pieces drift down continuously; the 8 frames loop seamlessly.",
+      "description": "Falling multicolor confetti: celebration, big win, milestone shipped. 16 pieces drift down continuously; the 8 frames loop seamlessly.",
       "group": "wired",
       "approved": false
     },
@@ -644,7 +644,7 @@
       },
       "frame_ms": 160,
       "loop": 0,
-      "description": "Rocket pointing up with a thrusting flame — playful 'off we go' idle goof. Part of the bored-Claude rotation.",
+      "description": "Rocket pointing up with a thrusting flame, playful 'off we go' idle goof. Part of the bored-Claude rotation.",
       "group": "bored",
       "approved": false
     },
@@ -815,7 +815,7 @@
       },
       "frame_ms": 150,
       "loop": 0,
-      "description": "Friendly yellow smiley face — greeting, contentment, all-is-well.",
+      "description": "Friendly yellow smiley face: greeting, contentment, all-is-well.",
       "group": "wired",
       "approved": false
     },
@@ -880,7 +880,7 @@
       },
       "frame_ms": 240,
       "loop": 0,
-      "description": "Eyes looking forward, then the right eye winks shut while a little smile pops up, then back to both open. Charming idle goof — part of the bored-Claude rotation.",
+      "description": "Eyes looking forward, then the right eye winks shut while a little smile pops up, then back to both open. Charming idle goof, part of the bored-Claude rotation.",
       "group": "bored",
       "approved": false
     },
@@ -964,7 +964,7 @@
       },
       "frame_ms": 240,
       "loop": 0,
-      "description": "A sleepy yawn — eyes squeeze from open to slits while a big round mouth swells open, holds, then relaxes. Part of the bored-Claude idle rotation.",
+      "description": "A sleepy yawn: eyes squeeze from open to slits while a big round mouth swells open, holds, then relaxes. Part of the bored-Claude idle rotation.",
       "group": "bored",
       "approved": false
     },
@@ -988,7 +988,7 @@
       },
       "frame_ms": 150,
       "loop": 0,
-      "description": "Sad face — something failed or didn't go to plan (gentle, not alarming).",
+      "description": "Sad face: something failed or didn't go to plan (gentle, not alarming).",
       "group": "canned",
       "approved": false
     },
@@ -1107,7 +1107,7 @@
       },
       "frame_ms": 120,
       "loop": 0,
-      "description": "Red X inside a red border that glows up and down (never off, never inverts) — failure, error, 'no'. One red hue at 6 baked brightness steps (A = dim floor, still lit … F = peak) so the glow survives low board brightness. Loops forever.",
+      "description": "Red X inside a red border that glows up and down (never off, never inverts), failure, error, 'no'. One red hue at 6 baked brightness steps (A = dim floor, still lit … F = peak) so the glow survives low board brightness. Loops forever.",
       "group": "wired",
       "approved": false
     },
@@ -1131,7 +1131,7 @@
       },
       "frame_ms": 150,
       "loop": 0,
-      "description": "Thumbs up — approval, good job, agreed.",
+      "description": "Thumbs up: approval, good job, agreed.",
       "group": "canned",
       "approved": false
     },
@@ -1155,7 +1155,7 @@
       },
       "frame_ms": 150,
       "loop": 0,
-      "description": "Green 'OK' text — acknowledged, settings applied.",
+      "description": "Green 'OK' text: acknowledged, settings applied.",
       "group": "canned",
       "approved": false
     },
@@ -1412,7 +1412,7 @@
       },
       "frame_ms": 70,
       "loop": 0,
-      "description": "Frostbite-style shimmer — an icy mist glows across the whole panel while bright cyan points fade in and out on smooth sine-bell curves, staggered so they twinkle. Delight, a nice find, a magic moment. The 4 brightness levels are pinned to distinct bri-5 bands so they stay visible.",
+      "description": "Frostbite-style shimmer: an icy mist glows across the whole panel while bright cyan points fade in and out on smooth sine-bell curves, staggered so they twinkle. Delight, a nice find, a magic moment. The 4 brightness levels are pinned to distinct bri-5 bands so they stay visible.",
       "group": "canned",
       "approved": false
     },
@@ -1531,7 +1531,7 @@
       },
       "frame_ms": 120,
       "loop": 0,
-      "description": "Orange exclamation mark that glows up and down (never off, never inverts) — INPUT NEEDED / waiting on the human. Bordered top and bottom; brightness breathes low→high→low on one hue (baked steps survive low board brightness). Loops forever. Show when blocked on a question or permission.",
+      "description": "Orange exclamation mark that glows up and down (never off, never inverts), INPUT NEEDED / waiting on the human. Bordered top and bottom; brightness breathes low→high→low on one hue (baked steps survive low board brightness). Loops forever. Show when blocked on a question or permission.",
       "group": "canned",
       "approved": false
     },
@@ -1667,7 +1667,7 @@
       },
       "frame_ms": 80,
       "loop": 0,
-      "description": "Snake spinner — a 3-chunk (2x2) comet chases clockwise around the panel's perimeter, bright head with a dimming trail. Busy on a long task (compiling, searching, running a workflow). Loops until replaced; show at task start, replace with done/check/cross at the end.",
+      "description": "Snake spinner: a 3-chunk (2x2) comet chases clockwise around the panel's perimeter, bright head with a dimming trail. Busy on a long task (compiling, searching, running a workflow). Loops until replaced; show at task start, replace with done/check/cross at the end.",
       "group": "wait",
       "approved": false
     },
@@ -1714,7 +1714,7 @@
       },
       "frame_ms": 160,
       "loop": 0,
-      "description": "Rocket pointing up with a thrusting flame — playful, 'off we go', kicking something off. The ship is fixed in the top rows; the 2-wide flame's red ember scrolls down through orange to read as upward thrust.",
+      "description": "Rocket pointing up with a thrusting flame, playful, 'off we go', kicking something off. The ship is fixed in the top rows; the 2-wide flame's red ember scrolls down through orange to read as upward thrust.",
       "group": "canned",
       "approved": false
     },
@@ -1749,7 +1749,7 @@
       },
       "frame_ms": 600,
       "loop": 0,
-      "description": "Drifting Zz — idle, waiting quietly, nothing needs attention.",
+      "description": "Drifting Zz: idle, waiting quietly, nothing needs attention.",
       "group": "bored",
       "approved": false
     },
@@ -1844,7 +1844,7 @@
       },
       "frame_ms": 95,
       "loop": 0,
-      "description": "Awaiting input — an amber bell ringing (clapper swings, side ticks flash). Fired when Claude needs the user's permission. Holds (loop 0) until replaced.",
+      "description": "Awaiting input: an amber bell ringing (clapper swings, side ticks flash). Fired when Claude needs the user's permission. Holds (loop 0) until replaced.",
       "group": "ask",
       "approved": false
     },
@@ -1964,7 +1964,7 @@
       },
       "frame_ms": 110,
       "loop": 0,
-      "description": "Awaiting input — a pulsing cyan '?' with a white shine sweeping its stroke. Fired when Claude poses a questionnaire and is waiting for the user's answer. Holds (loop 0) until replaced.",
+      "description": "Awaiting input: a pulsing cyan '?' with a white shine sweeping its stroke. Fired when Claude poses a questionnaire and is waiting for the user's answer. Holds (loop 0) until replaced.",
       "group": "ask",
       "approved": false
     },
@@ -2359,7 +2359,7 @@
       },
       "frame_ms": 140,
       "loop": 0,
-      "description": "Aurora borealis — vertical curtains of light hang from the top of a dark night sky and sway in a slow horizontal wave, colors flowing green->cyan->violet over time, with a few faint static stars. Calm, flowing, ambient. Baked brightness steps with soft bottom-edge falloff so dim curtain survives bri5. Loops over one full wave/color period.",
+      "description": "Aurora borealis: vertical curtains of light hang from the top of a dark night sky and sway in a slow horizontal wave, colors flowing green->cyan->violet over time, with a few faint static stars. Calm, flowing, ambient. Baked brightness steps with soft bottom-edge falloff so dim curtain survives bri5. Loops over one full wave/color period.",
       "group": "wired",
       "approved": true
     },
@@ -3668,7 +3668,7 @@
       },
       "frame_ms": 220,
       "loop": 1,
-      "description": "Done — a green checkmark blinks against its filled inverse (turn/task finished). Ported from the Claude Code hook's done art so the MCP and the hook render an identical done glyph. Bound to the manifest `done` intent (and `ok`/`approve` via fallback).",
+      "description": "Done: a green checkmark blinks against its filled inverse (turn/task finished). Ported from the Claude Code hook's done art so the MCP and the hook render an identical done glyph. Bound to the manifest `done` intent (and `ok`/`approve` via fallback).",
       "group": "wired",
       "approved": false
     },
@@ -4468,7 +4468,7 @@
       },
       "frame_ms": 150,
       "loop": 0,
-      "description": "Fireflies — 5 warm dots drift on smooth curved paths across a black night, each breathing up and down through baked brightness steps (dim->bright->dim yellow-green glow, two in amber). Sparse, well-spaced, peaceful idle scene; seamless modular loop.",
+      "description": "Fireflies: 5 warm dots drift on smooth curved paths across a black night, each breathing up and down through baked brightness steps (dim->bright->dim yellow-green glow, two in amber). Sparse, well-spaced, peaceful idle scene; seamless modular loop.",
       "group": "orphan",
       "approved": true
     },
@@ -4822,7 +4822,7 @@
       },
       "frame_ms": 200,
       "loop": 0,
-      "description": "Hourglass with a cyan glass silhouette and orange sand, narrowed to a 1-pixel throat. Grains trickle one at a time through the single hole; the top surface sinks funnel-first while the bottom builds a spreading mound (base widens, then peaks) like real sand — not uniform rows. When the top empties the sand resets to the top and trickles again. Endless clean loop.",
+      "description": "Hourglass with a cyan glass silhouette and orange sand, narrowed to a 1-pixel throat. Grains trickle one at a time through the single hole; the top surface sinks funnel-first while the bottom builds a spreading mound (base widens, then peaks) like real sand, not uniform rows. When the top empties the sand resets to the top and trickles again. Endless clean loop.",
       "group": "orphan",
       "approved": true
     },
@@ -4899,7 +4899,7 @@
       },
       "frame_ms": 180,
       "loop": 0,
-      "description": "A lightbulb that breathes dim-to-bright and back — \"I have an idea / a suggestion.\" Glass bulb on top, tapered white base.",
+      "description": "A lightbulb that breathes dim-to-bright and back, \"I have an idea / a suggestion.\" Glass bulb on top, tapered white base.",
       "group": "orphan",
       "approved": true
     },
@@ -5756,7 +5756,7 @@
       },
       "frame_ms": 220,
       "loop": 0,
-      "description": "lava lamp: warm pink & orange blobs pinch off a glowing base, slowly rise and wobble, cool at the top, sink and merge back — one continuous hypnotic cycle on a dark tube; loops seamlessly",
+      "description": "lava lamp: warm pink & orange blobs pinch off a glowing base, slowly rise and wobble, cool at the top, sink and merge back, one continuous hypnotic cycle on a dark tube; loops seamlessly",
       "group": "orphan",
       "approved": true
     },
@@ -5997,7 +5997,7 @@
       },
       "frame_ms": 85,
       "loop": 0,
-      "description": "lightning: a thin 1px jagged white-hot bolt cracks from the cloud base — it flashes up (lifting the whole night sky for an instant) then fades to dark, then after a varied pause strikes again on a different path. Intermittent, almost random timing (whoa/alert/error).",
+      "description": "lightning: a thin 1px jagged white-hot bolt cracks from the cloud base, it flashes up (lifting the whole night sky for an instant) then fades to dark, then after a varied pause strikes again on a different path. Intermittent, almost random timing (whoa/alert/error).",
       "group": "orphan",
       "approved": true
     },
@@ -7545,7 +7545,7 @@
       },
       "frame_ms": 200,
       "loop": 0,
-      "description": "ringed planet (Saturn): small shaded gold disc encircled by a wide icy ring — near side crosses the lower body, far side arcs behind the top, tips overhang both sides; traveling glint; calm ambient space emote",
+      "description": "ringed planet (Saturn): small shaded gold disc encircled by a wide icy ring, near side crosses the lower body, far side arcs behind the top, tips overhang both sides; traveling glint; calm ambient space emote",
       "group": "orphan",
       "approved": true
     },
@@ -7643,7 +7643,7 @@
       },
       "frame_ms": 160,
       "loop": 0,
-      "description": "A bone-white skull — rounded cranium, close-set purple eye sockets that glow up and down, a 1px nose hole and a toothy jaw. Spooky/fatal emote.",
+      "description": "A bone-white skull: rounded cranium, close-set purple eye sockets that glow up and down, a 1px nose hole and a toothy jaw. Spooky/fatal emote.",
       "group": "wired",
       "approved": true
     },
@@ -8230,7 +8230,7 @@
       },
       "frame_ms": 190,
       "loop": 0,
-      "description": "Sunrise — the sun starts completely down behind a steady blue ocean, then rises straight up: its halo of single-pixel ray-beams emerges from the water in pairs (top pair first, then the next, then the sides) as the round gold sun crests the horizon; once settled the rays glow slowly up and down a few times, then it re-rises.",
+      "description": "Sunrise: the sun starts completely down behind a steady blue ocean, then rises straight up: its halo of single-pixel ray-beams emerges from the water in pairs (top pair first, then the next, then the sides) as the round gold sun crests the horizon; once settled the rays glow slowly up and down a few times, then it re-rises.",
       "group": "orphan",
       "approved": true
     },
@@ -8425,7 +8425,7 @@
       },
       "frame_ms": 120,
       "loop": 0,
-      "description": "Task complete — an empty box with a green checkmark drawing itself in, then holding. A completion/done glyph (formerly ask-confirm; the '?' now covers plan-approval). Currently unwired — assign to an event in the Studio.",
+      "description": "Task complete: an empty box with a green checkmark drawing itself in, then holding. A completion/done glyph (formerly ask-confirm; the '?' now covers plan-approval). Currently unwired, assign to an event in the Studio.",
       "group": "orphan",
       "approved": true
     },
@@ -9101,7 +9101,7 @@
       },
       "frame_ms": 150,
       "loop": 0,
-      "description": "volcano eruption: a dark mountain first SMOKES ominously — grey ash puffs build and rise from the crater for several frames — then it erupts a white-hot lava fountain; ejecta arcs up and falls down the slopes while glowing lava streaks flow down the sides, then it cools and repeats.",
+      "description": "volcano eruption: a dark mountain first SMOKES ominously, grey ash puffs build and rise from the crater for several frames, then it erupts a white-hot lava fountain; ejecta arcs up and falls down the slopes while glowing lava streaks flow down the sides, then it cools and repeats.",
       "group": "orphan",
       "approved": true
     },
@@ -9251,7 +9251,7 @@
       },
       "frame_ms": 110,
       "loop": 0,
-      "description": "Animated board logo powering up — blocks light one by one clockwise then the full logo holds before restarting. A wait spinner; auto-joins the random 'wait' pool via its wait- name.",
+      "description": "Animated board logo powering up, blocks light one by one clockwise then the full logo holds before restarting. A wait spinner; auto-joins the random 'wait' pool via its wait- name.",
       "group": "wait",
       "approved": false
     },
@@ -9451,7 +9451,7 @@
       },
       "frame_ms": 90,
       "loop": 0,
-      "description": "Animated board logo (quincunx of 5 dots) breathing — all five blocks fade in and out together, a calm heartbeat. A wait/working spinner; auto-joins the random 'wait' pool via its wait- name.",
+      "description": "Animated board logo (quincunx of 5 dots) breathing, all five blocks fade in and out together, a calm heartbeat. A wait/working spinner; auto-joins the random 'wait' pool via its wait- name.",
       "group": "wait",
       "approved": false
     },
@@ -9553,7 +9553,7 @@
       },
       "frame_ms": 120,
       "loop": 0,
-      "description": "Animated board logo — a bright highlight chases clockwise around the four corners while the cyan center pulses, reading as 'computing'. A wait spinner; auto-joins the random 'wait' pool via its wait- name.",
+      "description": "Animated board logo: a bright highlight chases clockwise around the four corners while the cyan center pulses, reading as 'computing'. A wait spinner; auto-joins the random 'wait' pool via its wait- name.",
       "group": "wait",
       "approved": false
     },
@@ -9649,7 +9649,7 @@
       },
       "frame_ms": 110,
       "loop": 0,
-      "description": "Animated board logo as sonar — the cyan core pulses and ripples outward to the corners, then fades. A wait spinner; auto-joins the random 'wait' pool via its wait- name.",
+      "description": "Animated board logo as sonar: the cyan core pulses and ripples outward to the corners, then fades. A wait spinner; auto-joins the random 'wait' pool via its wait- name.",
       "group": "wait",
       "approved": false
     },
@@ -9788,7 +9788,7 @@
       },
       "frame_ms": 80,
       "loop": 0,
-      "description": "Rainbow perimeter orbit — a six-hue arc (red/yellow/green/cyan/blue/magenta) sweeps clockwise around the panel edge in 2x2 blocks, reading as a rotating color wheel. A wait/working spinner; auto-joins the random 'wait' pool via its wait- name. Channel-distinct hues so it stays legible at low brightness.",
+      "description": "Rainbow perimeter orbit: a six-hue arc (red/yellow/green/cyan/blue/magenta) sweeps clockwise around the panel edge in 2x2 blocks, reading as a rotating color wheel. A wait/working spinner; auto-joins the random 'wait' pool via its wait- name. Channel-distinct hues so it stays legible at low brightness.",
       "group": "wait",
       "approved": false
     },
@@ -10047,7 +10047,7 @@
       },
       "frame_ms": 90,
       "loop": 0,
-      "description": "Spinning rainbow color wheel (old-Mac pinwheel) — a wait/working spinner. Auto-joins the random 'wait' pool via its wait- name.",
+      "description": "Spinning rainbow color wheel (old-Mac pinwheel), a wait/working spinner. Auto-joins the random 'wait' pool via its wait- name.",
       "group": "wait",
       "approved": false
     },
@@ -10324,7 +10324,7 @@
       },
       "frame_ms": 110,
       "loop": 0,
-      "description": "warp portal: concentric square color rings fill the panel and a smooth rainbow gradient flows continuously OUTWARD from the center — adjacent colors chase each other ring to ring with no gaps, gliding rather than blinking.",
+      "description": "warp portal: concentric square color rings fill the panel and a smooth rainbow gradient flows continuously OUTWARD from the center, adjacent colors chase each other ring to ring with no gaps, gliding rather than blinking.",
       "group": "orphan",
       "approved": true
     },

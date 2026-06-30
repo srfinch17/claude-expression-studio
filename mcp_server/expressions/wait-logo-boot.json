@@ -1,5 +1,5 @@
 {
-  "description": "Animated board logo powering up \u2014 blocks light one by one clockwise then the full logo holds before restarting. A wait spinner; auto-joins the random 'wait' pool via its wait- name.",
+  "description": "Animated board logo powering up, blocks light one by one clockwise then the full logo holds before restarting. A wait spinner; auto-joins the random 'wait' pool via its wait- name.",
   "frames": [
     [
       "........",

@@ -1,5 +1,5 @@
 {
-  "description": "Spinning rainbow color wheel (old-Mac pinwheel) \u2014 a wait/working spinner. Auto-joins the random 'wait' pool via its wait- name.",
+  "description": "Spinning rainbow color wheel (old-Mac pinwheel), a wait/working spinner. Auto-joins the random 'wait' pool via its wait- name.",
   "frames": [
     [
       "...BB...",

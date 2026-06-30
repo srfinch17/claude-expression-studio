@@ -4,7 +4,7 @@ import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";
 
 const GROUP_ORDER = ["orphan", "wired", "canned", "wait", "ask", "bored", "firmware"];
 const GROUP_TITLE = {
-  orphan:   "Orphans — no rotation",
+  orphan:   "Orphans (no rotation)",
   wired:    "Wired (other moments)",
   canned:   "Canned glyphs (matrix_express)",
   wait:     "Wait pool",
@@ -68,7 +68,7 @@ function cell(grid, name, desc, group, approved, editable, canApprove) {
     el.appendChild(tg);
   }
   const ds = document.createElement("div"); ds.className = "desc"; ds.textContent = desc || ""; el.appendChild(ds);
-  const bd = document.createElement("div"); bd.className = "badge " + group; bd.textContent = GROUP_TITLE[group]; el.appendChild(bd);
+  const bd = document.createElement("div"); bd.className = "badge " + group; bd.textContent = group; el.appendChild(bd);
   grid.appendChild(el);
   return cv;
 }

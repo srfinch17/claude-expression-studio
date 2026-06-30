@@ -3,247 +3,183 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Expression Studio — Matrix Library</title>
+<title>Expression Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg:        #0a0a0e;
-    --panel:     #111118;
-    --panel-sub: #15151b;
-    --text:      #e8e8ef;
-    --dim:       #9a9aa8;
-    --faint:     #5a5a68;
-    --mono:      'IBM Plex Mono', ui-monospace, monospace;
-    --sans:      'IBM Plex Sans', system-ui, sans-serif;
-    --orange:    #ff5008;
-    --cyan:      #22ddff;
+    --bg:        #08080b;
+    --bg-2:      #0c0c10;
+    --panel-sub: #060608;
+    --text:      #ecedf2;
+    --dim:       #9a9ba6;
+    --faint:     #5d5e6a;
+    --hair:      #1c1c24;
+    --emotion:   #ff5008;
+    --info:      #22ddff;
+    --mono:      'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --sans:      'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    --maxw:      1200px;
   }
 
   *, *::before, *::after { box-sizing: border-box; }
 
   body {
     margin: 0;
-    background: var(--bg);
     color: var(--text);
     font-family: var(--sans);
-    padding: 36px 24px 100px;
-    line-height: 1.5;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    padding: 0 0 120px;
+    background:
+      radial-gradient(1200px 700px at 82% -12%, rgba(255, 80, 8, .10), transparent 60%),
+      radial-gradient(900px 600px at -6% 6%, rgba(34, 221, 255, .05), transparent 55%),
+      var(--bg);
   }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 28px; }
 
   /* ── Header ── */
-  header { margin-bottom: 32px; }
+  .studio-header { padding: 46px 0 26px; }
 
-  h1 {
-    font-family: var(--mono);
-    font-size: 1.35rem;
-    letter-spacing: .02em;
-    margin: 0 0 6px;
+  .eyebrow {
+    font-family: var(--mono); font-size: .72rem; font-weight: 600;
+    letter-spacing: .22em; text-transform: uppercase; color: var(--emotion);
+    display: inline-flex; align-items: center; gap: 10px;
   }
+  .eyebrow::before { content: ""; width: 26px; height: 1px; background: var(--emotion); opacity: .6; }
 
-  .subtitle {
-    color: var(--dim);
-    font-size: .88rem;
-    margin: 0 0 10px;
-    max-width: 68ch;
+  .studio-header h1 {
+    font-family: var(--mono); font-weight: 700; letter-spacing: -.02em;
+    font-size: clamp(1.9rem, 4vw, 2.7rem); line-height: 1.03; margin: 15px 0 0;
   }
+  .studio-header h1 .em { color: var(--emotion); }
+
+  .lead { color: var(--dim); font-size: 1.02rem; max-width: 64ch; margin: 15px 0 0; }
 
   .legend {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: .78rem;
-    color: var(--dim);
-    padding: 6px 12px;
-    border: 1px solid #1e1e26;
-    border-radius: 8px;
-    background: var(--panel);
+    display: flex; flex-wrap: wrap; gap: 9px 18px; margin-top: 22px;
+    font-family: var(--mono); font-size: .7rem; color: var(--faint);
   }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .legend i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .legend .l-orphan   { background: var(--emotion); }
+  .legend .l-approved { background: #16a34a; }
+  .legend .l-firmware { background: #88aaff; }
+  .legend .l-wired    { background: #9ab0c8; }
 
-  .legend-dot {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 2px solid var(--orange);
-    background: rgba(255, 80, 8, .12);
-    flex-shrink: 0;
-  }
+  .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--hair), transparent); margin-top: 26px; }
 
   /* ── Section headings ── */
   h2 {
-    font-family: var(--mono);
-    font-size: .72rem;
-    letter-spacing: .18em;
-    text-transform: uppercase;
-    color: var(--faint);
-    margin: 40px 0 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    font-family: var(--mono); font-weight: 600; font-size: .72rem;
+    letter-spacing: .2em; text-transform: uppercase; color: var(--dim);
+    margin: 46px 0 18px; display: flex; align-items: center; gap: 12px;
   }
-
-  h2 .count {
-    color: var(--dim);
-    font-size: .7rem;
-  }
-
-  h2::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: #1e1e26;
-  }
+  h2 .count { color: var(--faint); font-size: .7rem; font-weight: 500; }
+  h2::after { content: ""; flex: 1; height: 1px; background: var(--hair); }
 
   /* ── Grid ── */
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(186px, 1fr));
-    gap: 16px;
-  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; }
 
-  /* ── Cell ── */
+  /* ── Card: a quiet dark frame so the lit animation is the only color ── */
   .cell {
     position: relative;
-    background: var(--panel);
-    border: 1px solid #1c1c24;
-    border-radius: 12px;
-    padding: 14px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transition: border-color .2s;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .018), transparent);
+    border: 1px solid var(--hair);
+    border-radius: 16px;
+    padding: 18px 18px 16px;
+    display: flex; flex-direction: column; align-items: center;
+    transition: border-color .18s, transform .18s;
   }
+  .cell:hover { border-color: #2f2f3a; transform: translateY(-2px); }
 
-  .cell.orphan {
-    border-color: var(--orange);
-    box-shadow: 0 0 0 1px var(--orange), 0 8px 32px rgba(255, 80, 8, .16);
-  }
+  /* status as a quiet border tint, never a glowing ring */
+  .cell.orphan   { border-color: rgba(255, 80, 8, .42); }
+  .cell.approved { border-color: rgba(22, 163, 74, .42); }
 
-  /* user-approved ("done") cards get a green check + green frame, overriding the orphan ring */
-  .cell.approved {
-    border-color: #16a34a;
-    box-shadow: 0 0 0 1px #16a34a, 0 8px 32px rgba(22, 163, 74, .16);
-  }
+  /* approved mark: small and calm, no halo */
   .cell .check {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 21px;
-    height: 21px;
-    border-radius: 50%;
-    background: #16a34a;
-    color: #fff;
-    font-size: 13px;
-    line-height: 21px;
-    text-align: center;
-    font-weight: 700;
-    box-shadow: 0 0 0 2px #0a0a0c, 0 0 10px rgba(22, 163, 74, .6);
-    z-index: 2;
+    position: absolute; top: 10px; right: 10px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #16a34a; color: #04140a;
+    font-size: 10px; line-height: 16px; text-align: center; font-weight: 700;
+    box-shadow: 0 0 0 3px var(--bg); z-index: 2;
   }
 
   canvas {
-    border-radius: 8px;
-    background: #060608;
-    width: 128px;
-    height: 128px;
-    display: block;
+    border-radius: 10px; background: var(--panel-sub);
+    width: 128px; height: 128px; display: block;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .03), inset 0 6px 20px rgba(0, 0, 0, .55);
   }
 
   .name {
-    font-family: var(--mono);
-    font-size: .82rem;
-    margin-top: 11px;
-    color: var(--text);
-    text-align: center;
-    word-break: break-all;
+    font-family: var(--mono); font-size: .82rem; margin-top: 13px;
+    color: var(--text); text-align: center; word-break: break-word;
   }
-
   .desc {
-    font-size: .72rem;
-    color: var(--dim);
-    text-align: center;
-    margin-top: 5px;
-    min-height: 2.6em;
+    font-size: .74rem; color: var(--dim); text-align: center;
+    margin-top: 6px; min-height: 2.4em; line-height: 1.4;
   }
 
-  /* ── Badges ── */
+  /* ── Badges: muted outline chips ── */
   .badge {
-    font-family: var(--mono);
-    font-size: .58rem;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: 99px;
-    margin-top: 9px;
-    border: 1px solid;
-    white-space: nowrap;
+    font-family: var(--mono); font-size: .56rem; letter-spacing: .1em;
+    text-transform: uppercase; padding: 3px 9px; border-radius: 99px;
+    margin-top: 11px; border: 1px solid; white-space: nowrap; opacity: .82;
   }
+  .badge.wired    { color: #9ab0c8;       border-color: #2a3645; }
+  .badge.wait     { color: var(--info);   border-color: #1c4a55; }
+  .badge.ask      { color: #c8a0ff;       border-color: #3a2c55; }
+  .badge.bored    { color: #9affc8;       border-color: #1e4a33; }
+  .badge.orphan   { color: var(--emotion); border-color: rgba(255, 80, 8, .5); background: rgba(255, 80, 8, .06); }
+  .badge.canned   { color: #ffd060;       border-color: #4a3a10; }
+  .badge.firmware { color: #88aaff;       border-color: #1c2a55; }
 
-  /* wired — steel blue */
-  .badge.wired    { color: #9ab0c8;        border-color: #2a3645; }
-  /* wait — cyan */
-  .badge.wait     { color: var(--cyan);    border-color: #1c4a55; }
-  /* ask — purple */
-  .badge.ask      { color: #c8a0ff;        border-color: #3a2c55; }
-  /* bored — green */
-  .badge.bored    { color: #9affc8;        border-color: #1e4a33; }
-  /* orphan — orange, filled */
-  .badge.orphan   { color: var(--orange);  border-color: var(--orange); background: rgba(255, 80, 8, .08); }
-  /* canned — yellow-gold */
-  .badge.canned   { color: #ffd060;        border-color: #4a3a10; }
-  /* firmware — blue-grey */
-  .badge.firmware { color: #88aaff;        border-color: #1c2a55; }
-
-  /* ── Error chip ── */
-  .err {
-    color: #ff6464;
-    font-family: var(--mono);
-    font-size: .7rem;
-    margin-top: 8px;
-    text-align: center;
+  /* ── Edit / approve controls: reveal on hover to cut the clutter ── */
+  .editlink, .approvetoggle { opacity: 0; transition: opacity .15s; }
+  .cell:hover .editlink, .cell:hover .approvetoggle,
+  .cell:focus-within .editlink, .cell:focus-within .approvetoggle { opacity: 1; }
+  .editlink { display: inline-block; margin-top: 8px; font-size: .62rem; color: var(--info); text-decoration: none; }
+  .editlink:hover { text-decoration: underline; }
+  .approvetoggle {
+    display: block; margin-top: 6px; font: inherit; font-size: .58rem; cursor: pointer;
+    color: var(--dim); background: rgba(255, 255, 255, .03);
+    border: 1px solid var(--hair); border-radius: 6px; padding: 3px 8px;
   }
+  .approvetoggle:hover { color: var(--text); border-color: #2f2f3a; }
+  .approvetoggle.on { color: #9affc8; border-color: rgba(22, 163, 74, .5); }
+  .approvetoggle:disabled { opacity: .5; cursor: default; }
 
-  p.err {
-    padding: 16px 20px;
-    background: var(--panel);
-    border: 1px solid #3a1c1c;
-    border-radius: 8px;
-    max-width: 60ch;
-  }
-
-  p.err code {
-    background: #1e1e26;
-    padding: 1px 5px;
-    border-radius: 4px;
-    font-size: .85em;
-  }
-  .editlink { display:inline-block; margin-top:3px; font-size:.6rem; color:var(--cyan,#22ddff); text-decoration:none; }
-  .editlink:hover { text-decoration:underline; }
-  .approvetoggle { display:block; margin-top:4px; font:inherit; font-size:.58rem; cursor:pointer;
-    color:#9a9aa8; background:#15151b; border:1px solid #2a2a34; border-radius:6px; padding:2px 6px; }
-  .approvetoggle:hover { color:#e8e8ef; }
-  .approvetoggle.on { color:#9affc8; border-color:#16a34a; }
-  .approvetoggle:disabled { opacity:.5; cursor:default; }
+  /* ── Errors ── */
+  .err { color: #ff6464; font-family: var(--mono); font-size: .7rem; margin-top: 8px; text-align: center; }
+  p.err { padding: 16px 20px; background: var(--bg-2); border: 1px solid #3a1c1c; border-radius: 12px; max-width: 60ch; }
+  p.err code { background: #1e1e26; padding: 1px 5px; border-radius: 4px; font-size: .85em; }
 </style>
 </head>
 <body>
 <script type="module" src="./studio-nav.js"></script>
 
-<header>
-  <h1>Expression Studio &mdash; Matrix Library</h1>
-  <p class="subtitle">
-    Every expression + firmware animation rendered on the live bloom engine
-    (additive halo + hot core, full brightness), grouped by auto-rotation.
-  </p>
-  <span class="legend">
-    <span class="legend-dot"></span>
-    Orange-ringed = orphan: saved but wired into no rotation
-  </span>
+<header class="studio-header">
+  <div class="wrap">
+    <span class="eyebrow">Expression Studio</span>
+    <h1>The whole library, <span class="em">lit</span>.</h1>
+    <p class="lead">
+      Every saved expression and firmware animation, rendered live on the bloom engine at full
+      brightness, grouped by where it sits in Claude's rotation.
+    </p>
+    <div class="legend">
+      <span><i class="l-orphan"></i> orphan: saved, no rotation</span>
+      <span><i class="l-approved"></i> approved</span>
+      <span><i class="l-firmware"></i> firmware sim</span>
+      <span><i class="l-wired"></i> wired elsewhere</span>
+    </div>
+    <div class="divider"></div>
+  </div>
 </header>
 
-<div id="root"></div>
+<div class="wrap"><div id="root"></div></div>
 
 <script type="module" src="./gallery.js"></script>
 
