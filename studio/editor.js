@@ -1,6 +1,6 @@
-// studio/editor.js — PURE manifest binding-edit operations for the Studio Editor.
+// studio/editor.js, PURE manifest binding-edit operations for the Studio Editor.
 // No DOM, no I/O. Every mutation op returns a NEW manifest (deep JSON clone) and edits
-// only renderers[rendererId].bindings — preserving all other fields (intents, harnesses,
+// only renderers[rendererId].bindings, preserving all other fields (intents, harnesses,
 // other renderers, untouched bindings, per-entry params/label) byte-for-byte. Default
 // renderer is "esp32-8x8" (web-sim inherits it; the card renderer is out of scope).
 import { effectiveBindings } from "../shared/resolver.js";
@@ -51,7 +51,7 @@ export function computeOrphans(manifest, rendererId, allNames) {
   return allNames.filter((n) => !bound.has(n));
 }
 
-// {name: count} — how many distinct intents bind each name (effective bindings).
+// {name: count}, how many distinct intents bind each name (effective bindings).
 // Drives the palette's assigned/available color + the (N) badge. Orphans -> 0.
 export function assignmentCounts(manifest, rendererId, allNames) {
   const counts = {};

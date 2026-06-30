@@ -1,4 +1,4 @@
-// studio/frame-editor.js — pure ops over a frame-expression { description, frames, colors,
+// studio/frame-editor.js, pure ops over a frame-expression { description, frames, colors,
 // frame_ms, loop }. Every op returns a NEW expression (deep-cloned) and never mutates its input;
 // a frame is always 8 strings of 8 chars. Chars are the palette keys ('.' = off); the UI hides
 // them behind color swatches (addColor auto-assigns the next free char).

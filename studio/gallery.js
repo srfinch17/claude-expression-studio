@@ -79,7 +79,7 @@ async function build() {
   try {
     data = await (await fetch("./gallery-data.json")).json();
   } catch (e) {
-    root.innerHTML = `<p class="err">Could not load ./gallery-data.json — run <code>npm run build:gallery</code>. (${e.message})</p>`;
+    root.innerHTML = `<p class="err">Could not load ./gallery-data.json. Run <code>npm run build:gallery</code>. (${e.message})</p>`;
     return;
   }
 

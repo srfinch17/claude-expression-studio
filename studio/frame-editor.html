@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Frame Editor — Expression Studio</title>
+  <title>Frame Editor · Expression Studio</title>
   <style>
     :root { --bg:#0a0a0e; --panel:#111118; --sub:#15151b; --text:#e8e8ef; --dim:#9a9aa8;
       --faint:#5a5a68; --orange:#ff5008; --cyan:#22ddff; --green:#16a34a;
@@ -166,7 +166,7 @@
 
     function renderAll() {
       if (activeFrame >= expr.frames.length) activeFrame = expr.frames.length - 1;
-      titleEl.textContent = `Frame Editor — ${NAME}`;
+      titleEl.textContent = `Frame Editor · ${NAME}`;
       document.getElementById("frameMs").value = expr.frame_ms;
       document.getElementById("loop").value = expr.loop;
       document.getElementById("desc").value = expr.description || "";
@@ -203,7 +203,7 @@
       try {
         const r = await fetch(`/api/expression/${encodeURIComponent(NAME)}`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(expr) });
         const res = await r.json();
-        if (res.ok) { original = JSON.parse(JSON.stringify(expr)); setDirty(false); approved = false; paintApprove(); statusEl.textContent = "saved — now pending re-review (orange)"; }
+        if (res.ok) { original = JSON.parse(JSON.stringify(expr)); setDirty(false); approved = false; paintApprove(); statusEl.textContent = "saved · now pending re-review (orange)"; }
         else { statusEl.textContent = "save failed: " + (res.errors || []).join("; "); setDirty(true); }
       } catch (e) { statusEl.textContent = "save error: " + e.message; setDirty(true); }
     };
@@ -232,13 +232,13 @@
       catch { bannerEl.textContent = "Could not load gallery-data.json."; return; }
       const found = (data.expressions || []).find((e) => e.name === NAME);
       if (!found) { bannerEl.textContent = `No expression named "${NAME}".`; return; }
-      if (found.source !== "saved") { readOnly = true; bannerEl.textContent = `"${NAME}" is a ${found.source} expression — not editable here (only saved expressions).`; }
+      if (found.source !== "saved") { readOnly = true; bannerEl.textContent = `"${NAME}" is a ${found.source} expression, not editable here (only saved expressions).`; }
       expr = { description: found.description || "", frames: found.frames, colors: found.colors || {}, frame_ms: found.frame_ms || 150, loop: found.loop ?? 0 };
       original = JSON.parse(JSON.stringify(expr));
       approved = !!found.approved;
       // Engine gate: a save needs the engine. If /api/manifest isn't reachable, go read-only.
       try { const r = await fetch("/api/manifest"); if (!r.ok) throw 0; }
-      catch { if (!readOnly) { readOnly = true; bannerEl.textContent = "Editing needs the live engine — launch the Studio via matrix_studio. (Read-only; Save disabled.)"; } }
+      catch { if (!readOnly) { readOnly = true; bannerEl.textContent = "Editing needs the live engine. Launch the Studio via matrix_studio. (Read-only; Save disabled.)"; } }
       setDirty(false); renderAll(); paintApprove();
     }
     boot();
