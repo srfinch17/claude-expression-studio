@@ -1,5 +1,5 @@
 {
-  "description": "Awaiting input \u2014 a pulsing cyan '?' with a white shine sweeping its stroke. Fired when Claude poses a questionnaire and is waiting for the user's answer. Holds (loop 0) until replaced.",
+  "description": "Awaiting input: a pulsing cyan '?' with a white shine sweeping its stroke. Fired when Claude poses a questionnaire and is waiting for the user's answer. Holds (loop 0) until replaced.",
   "frames": [
     [
       "..AAA...",

@@ -1,9 +1,9 @@
 // ============================================================
-// Canned expression library — Claude's pre-vetted vocabulary
+// Canned expression library, Claude's pre-vetted vocabulary
 // ============================================================
 // Each expression is drawn as TEXT ART: 8 strings of 8 characters per frame.
 // '.' = off (black); every other character maps to a hex color in `colors`.
-// This format is deliberately human-reviewable — the silhouette test happens
+// This format is deliberately human-reviewable, the silhouette test happens
 // right here in the source.
 //
 // Color notes for this specific board:
@@ -28,7 +28,7 @@ const ALL = (row: string) => [row, row, row, row, row, row, row, row];
 
 export const CANNED: Record<string, Expression> = {
   smiley: {
-    description: "Friendly yellow smiley face — greeting, contentment, all-is-well.",
+    description: "Friendly yellow smiley face: greeting, contentment, all-is-well.",
     colors: { Y: "#ffc800" },
     frames: [[
       "..YYYY..",
@@ -43,7 +43,7 @@ export const CANNED: Record<string, Expression> = {
   },
 
   sad: {
-    description: "Sad face — something failed or didn't go to plan (gentle, not alarming).",
+    description: "Sad face: something failed or didn't go to plan (gentle, not alarming).",
     colors: { Y: "#ffc800" },
     frames: [[
       "..YYYY..",
@@ -58,7 +58,7 @@ export const CANNED: Record<string, Expression> = {
   },
 
   heart: {
-    description: "Red beating heart — appreciation, warmth, 'love it'. Expands then contracts/dips on a ~1s lub-dub.",
+    description: "Red beating heart: appreciation, warmth, 'love it'. Expands then contracts/dips on a ~1s lub-dub.",
     frame_ms: 520,
     loop: 0,
     colors: { R: "#ff1432" },
@@ -88,7 +88,7 @@ export const CANNED: Record<string, Expression> = {
 
   cross: {
     description:
-      "Red X inside a red border that glows up and down (never off, never inverts) — failure, error, 'no'. One red hue at 6 baked brightness steps (A = dim floor, still lit … F = peak) so the glow survives low board brightness. Loops forever.",
+      "Red X inside a red border that glows up and down (never off, never inverts), failure, error, 'no'. One red hue at 6 baked brightness steps (A = dim floor, still lit … F = peak) so the glow survives low board brightness. Loops forever.",
     frame_ms: 120,
     loop: 0,
     colors: {
@@ -205,7 +205,7 @@ export const CANNED: Record<string, Expression> = {
   },
 
   thumbsup: {
-    description: "Thumbs up — approval, good job, agreed.",
+    description: "Thumbs up: approval, good job, agreed.",
     colors: { A: "#ffb414" },
     frames: [[
       "....AA..",
@@ -220,7 +220,7 @@ export const CANNED: Record<string, Expression> = {
   },
 
   ok: {
-    description: "Green 'OK' text — acknowledged, settings applied.",
+    description: "Green 'OK' text: acknowledged, settings applied.",
     colors: { G: "#00d264" },
     frames: [[
       "........",
@@ -236,7 +236,7 @@ export const CANNED: Record<string, Expression> = {
 
   sparkle: {
     description:
-      "Frostbite-style shimmer — an icy mist glows across the whole panel while bright cyan points fade in and out on smooth sine-bell curves, staggered so they twinkle. Delight, a nice find, a magic moment. The 4 brightness levels are pinned to distinct bri-5 bands so they stay visible.",
+      "Frostbite-style shimmer: an icy mist glows across the whole panel while bright cyan points fade in and out on smooth sine-bell curves, staggered so they twinkle. Delight, a nice find, a magic moment. The 4 brightness levels are pinned to distinct bri-5 bands so they stay visible.",
     frame_ms: 70,
     colors: { a: "#1a3440", b: "#2c576b", d: "#509dc0", e: "#62c0eb" },
     frames: [
@@ -269,7 +269,7 @@ export const CANNED: Record<string, Expression> = {
 
   alert: {
     description:
-      "Orange exclamation mark that glows up and down (never off, never inverts) — INPUT NEEDED / waiting on the human. Bordered top and bottom; brightness breathes low→high→low on one hue (baked steps survive low board brightness). Loops forever. Show when blocked on a question or permission.",
+      "Orange exclamation mark that glows up and down (never off, never inverts), INPUT NEEDED / waiting on the human. Bordered top and bottom; brightness breathes low→high→low on one hue (baked steps survive low board brightness). Loops forever. Show when blocked on a question or permission.",
     frame_ms: 120,
     loop: 0,
     // One orange hue at 6 baked brightness steps (R on the band centers 64..235 plus a
@@ -389,7 +389,7 @@ export const CANNED: Record<string, Expression> = {
 
   working: {
     description:
-      "Snake spinner — a 3-chunk (2x2) comet chases clockwise around the panel's perimeter, bright head with a dimming trail. Busy on a long task (compiling, searching, running a workflow). Loops until replaced; show at task start, replace with done/check/cross at the end.",
+      "Snake spinner: a 3-chunk (2x2) comet chases clockwise around the panel's perimeter, bright head with a dimming trail. Busy on a long task (compiling, searching, running a workflow). Loops until replaced; show at task start, replace with done/check/cross at the end.",
     frame_ms: 80,
     // A = bright head, B = mid trail, C = dim tail. Three brightness steps of one
     // cyan-white hue, kept high enough to stay visible at low board brightness.
@@ -520,7 +520,7 @@ export const CANNED: Record<string, Expression> = {
 
   party: {
     description:
-      "Falling multicolor confetti — celebration, big win, milestone shipped. 16 pieces drift down continuously; the 8 frames loop seamlessly.",
+      "Falling multicolor confetti: celebration, big win, milestone shipped. 16 pieces drift down continuously; the 8 frames loop seamlessly.",
     frame_ms: 130,
     colors: { M: "#ff28b4", C: "#28c8ff", Y: "#ffc800", G: "#00c83c", W: "#ffffff" },
     frames: [
@@ -537,7 +537,7 @@ export const CANNED: Record<string, Expression> = {
 
   spaceship: {
     description:
-      "Rocket pointing up with a thrusting flame — playful, 'off we go', kicking something off. The ship is fixed in the top rows; the 2-wide flame's red ember scrolls down through orange to read as upward thrust.",
+      "Rocket pointing up with a thrusting flame, playful, 'off we go', kicking something off. The ship is fixed in the top rows; the 2-wide flame's red ember scrolls down through orange to read as upward thrust.",
     frame_ms: 160,
     colors: { R: "#ff2828", O: "#ff8c00", W: "#ffffff", B: "#2060ff" },
     frames: [
@@ -548,7 +548,7 @@ export const CANNED: Record<string, Expression> = {
   },
 
   sleep: {
-    description: "Drifting Zz — idle, waiting quietly, nothing needs attention.",
+    description: "Drifting Zz: idle, waiting quietly, nothing needs attention.",
     frame_ms: 600,
     colors: { W: "#b4c8e6", B: "#32509b" },
     frames: [

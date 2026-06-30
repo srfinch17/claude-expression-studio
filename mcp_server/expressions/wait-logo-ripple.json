@@ -1,5 +1,5 @@
 {
-  "description": "Animated board logo as sonar \u2014 the cyan core pulses and ripples outward to the corners, then fades. A wait spinner; auto-joins the random 'wait' pool via its wait- name.",
+  "description": "Animated board logo as sonar: the cyan core pulses and ripples outward to the corners, then fades. A wait spinner; auto-joins the random 'wait' pool via its wait- name.",
   "frames": [
     [
       "........",

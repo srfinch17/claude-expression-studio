@@ -1,5 +1,5 @@
 {
-  "description": "Rainbow perimeter orbit — a six-hue arc (red/yellow/green/cyan/blue/magenta) sweeps clockwise around the panel edge in 2x2 blocks, reading as a rotating color wheel. A wait/working spinner; auto-joins the random 'wait' pool via its wait- name. Channel-distinct hues so it stays legible at low brightness.",
+  "description": "Rainbow perimeter orbit: a six-hue arc (red/yellow/green/cyan/blue/magenta) sweeps clockwise around the panel edge in 2x2 blocks, reading as a rotating color wheel. A wait/working spinner; auto-joins the random 'wait' pool via its wait- name. Channel-distinct hues so it stays legible at low brightness.",
   "frames": [
     [
       "RRYYGGCC",

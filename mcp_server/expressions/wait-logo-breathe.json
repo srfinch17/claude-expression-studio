@@ -1,5 +1,5 @@
 {
-  "description": "Animated board logo (quincunx of 5 dots) breathing \u2014 all five blocks fade in and out together, a calm heartbeat. A wait/working spinner; auto-joins the random 'wait' pool via its wait- name.",
+  "description": "Animated board logo (quincunx of 5 dots) breathing, all five blocks fade in and out together, a calm heartbeat. A wait/working spinner; auto-joins the random 'wait' pool via its wait- name.",
   "frames": [
     [
       "AA....BB",

@@ -1,5 +1,5 @@
 {
-  "description": "Awaiting input \u2014 an amber bell ringing (clapper swings, side ticks flash). Fired when Claude needs the user's permission. Holds (loop 0) until replaced.",
+  "description": "Awaiting input: an amber bell ringing (clapper swings, side ticks flash). Fired when Claude needs the user's permission. Holds (loop 0) until replaced.",
   "frames": [
     [
       "...A....",
