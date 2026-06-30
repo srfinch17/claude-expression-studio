@@ -3,48 +3,64 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Claude's Face — Expression Studio</title>
+  <title>Claude's Face · Expression Studio</title>
   <style>
-    :root { --orange:#ff5008; --cyan:#22ddff; --bg:#060608; --dim:#8a8a96; }
+    :root {
+      --bg:#08080b; --bg-2:#0c0c10; --panel-sub:#060608;
+      --text:#ecedf2; --dim:#9a9ba6; --faint:#5d5e6a; --hair:#1c1c24;
+      --emotion:#ff5008; --info:#22ddff; --orange:#ff5008; --cyan:#22ddff;
+      --mono:'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+      --sans:'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    }
     * { box-sizing: border-box; }
-    body { margin:0; background:var(--bg); color:#e8e8ef;
-      font-family: ui-monospace, "IBM Plex Mono", monospace;
+    body { margin:0; color:var(--text); font-family:var(--sans);
+      -webkit-font-smoothing:antialiased;
+      background:
+        radial-gradient(1200px 760px at 50% -14%, rgba(255,80,8,.10), transparent 60%),
+        radial-gradient(900px 600px at -6% 6%, rgba(34,221,255,.045), transparent 55%),
+        var(--bg);
       min-height:100vh; display:flex; flex-direction:column; align-items:center;
-      justify-content:center; gap:18px; padding:24px; }
-    #stage { display:flex; flex-direction:column; align-items:center; gap:12px; }
-    canvas { width:min(82vmin,720px); height:min(82vmin,720px); border-radius:16px;
-      box-shadow:0 0 80px var(--glow, rgba(255,80,8,.35)); image-rendering:pixelated;
-      background:var(--bg); }
-    #status { font-size:13px; color:var(--dim); letter-spacing:.04em; min-height:1.2em; }
-    #status b { color:#e8e8ef; font-weight:500; }
+      justify-content:center; gap:20px; padding:40px 24px; }
+    #stage { display:flex; flex-direction:column; align-items:center; gap:14px; }
+    canvas { width:min(82vmin,720px); height:min(82vmin,720px); border-radius:18px;
+      box-shadow:0 0 90px var(--glow, rgba(255,80,8,.32)); image-rendering:pixelated;
+      background:var(--panel-sub); }
+    #status { font-family:var(--mono); font-size:12px; color:var(--dim);
+      letter-spacing:.04em; min-height:1.2em; }
+    #status b { color:var(--text); font-weight:600; }
     #intro { text-align:center; max-width:min(82vmin,720px);
-      display:flex; flex-direction:column; gap:7px; }
-    #intro h1 { margin:0; font-size:22px; font-weight:600; letter-spacing:.04em; }
+      display:flex; flex-direction:column; align-items:center; gap:9px; }
+    .eyebrow { font-family:var(--mono); font-size:.7rem; font-weight:600; letter-spacing:.22em;
+      text-transform:uppercase; color:var(--emotion); display:inline-flex; align-items:center; gap:10px; }
+    .eyebrow::before { content:""; width:24px; height:1px; background:var(--emotion); opacity:.6; }
+    #intro h1 { margin:4px 0 0; font-family:var(--mono); font-weight:700;
+      letter-spacing:-.01em; font-size:clamp(1.6rem,4vw,2.2rem); line-height:1.05; }
     #intro h1 .accent { color:var(--orange); }
-    #intro p { margin:0; font-size:12.5px; line-height:1.6; color:var(--dim); }
-    #intro p b { color:#e8e8ef; font-weight:500; }
-    .pins-label { font-size:11px; color:var(--dim); letter-spacing:.08em;
+    #intro p { margin:0; font-size:13.5px; line-height:1.6; color:var(--dim); max-width:60ch; }
+    #intro p b { color:var(--text); font-weight:600; }
+    .pins-label { font-family:var(--mono); font-size:.64rem; color:var(--faint); letter-spacing:.16em;
       text-transform:uppercase; margin-bottom:-6px; }
-    #pins { display:flex; flex-wrap:wrap; gap:6px; justify-content:center;
+    #pins { display:flex; flex-wrap:wrap; gap:7px; justify-content:center;
       max-width:min(82vmin,720px); max-height:124px; overflow-y:auto; padding:4px; }
-    #pins button { font:11px ui-monospace,monospace; color:var(--dim);
-      background:#111118; border:1px solid #22222c; border-radius:7px;
-      padding:4px 8px; cursor:pointer; transition:border-color .15s,color .15s; }
-    #pins button:hover { color:#e8e8ef; border-color:#33333f; }
-    #pins button.active { color:var(--orange); border-color:var(--orange); }
-    #pins button.resume { color:var(--cyan); border-color:#1c4a55; }
+    #pins button { font-family:var(--mono); font-size:11px; color:var(--dim);
+      background:rgba(255,255,255,.03); border:1px solid var(--hair); border-radius:8px;
+      padding:5px 10px; cursor:pointer; transition:border-color .15s,color .15s; }
+    #pins button:hover { color:var(--text); border-color:#2f2f3a; }
+    #pins button.active { color:var(--orange); border-color:color-mix(in srgb, var(--orange) 60%, #2a2a32); }
+    #pins button.resume { color:var(--info); border-color:color-mix(in srgb, var(--info) 50%, #2a2a32); }
     #about { display:flex; gap:16px; align-items:center; max-width:min(82vmin,720px);
-      background:#0d0d12; border:1px solid #22222c; border-radius:14px; padding:14px 16px; }
-    #about img { width:150px; height:auto; border-radius:10px; background:#fff; flex:none; }
+      background:linear-gradient(180deg, rgba(255,255,255,.018), transparent);
+      border:1px solid var(--hair); border-radius:16px; padding:16px 18px; }
+    #about img { width:150px; height:auto; border-radius:12px; background:#fff; flex:none; }
     #about .meta { display:flex; flex-direction:column; gap:7px; min-width:0; }
-    #about h2 { margin:0; font-size:15px; font-weight:600; letter-spacing:.02em; }
-    #about p { margin:0; font-size:12px; line-height:1.55; color:var(--dim); }
+    #about h2 { margin:0; font-family:var(--mono); font-size:15px; font-weight:600; letter-spacing:.01em; }
+    #about p { margin:0; font-size:12.5px; line-height:1.55; color:var(--dim); }
     #about .links { display:flex; flex-wrap:wrap; gap:8px; margin-top:2px; }
-    #about a.btn { font:12px ui-monospace,monospace; text-decoration:none; color:var(--dim);
-      background:#111118; border:1px solid #22222c; border-radius:8px; padding:5px 10px;
+    #about a.btn { font-family:var(--mono); font-size:12px; text-decoration:none; color:var(--dim);
+      background:rgba(255,255,255,.03); border:1px solid var(--hair); border-radius:8px; padding:6px 11px;
       transition:border-color .15s,color .15s; white-space:nowrap; }
-    #about a.btn:hover { color:#e8e8ef; border-color:#33333f; }
-    #about a.buy { color:var(--orange); border-color:#5a2a10; }
+    #about a.btn:hover { color:var(--text); border-color:#2f2f3a; }
+    #about a.buy { color:var(--orange); border-color:color-mix(in srgb, var(--orange) 45%, #2a2a32); }
     #about a.buy:hover { border-color:var(--orange); }
     #about a .net { opacity:.55; }
     @media (max-width:520px){ #about { flex-direction:column; text-align:center; align-items:center; } }
@@ -53,9 +69,10 @@
 <body>
   <script type="module" src="./studio-nav.js"></script>
   <header id="intro">
+    <span class="eyebrow">Expression Studio · Board</span>
     <h1>Claude<span class="accent">'</span>s Face</h1>
     <p>A live 8×8 window into what Claude is doing. With a board connected this <b>mirrors the physical
-       panel</b>; with none, it plays the same animation library Claude drives — <b>no hardware needed</b>.</p>
+       panel</b>; with none, it plays the same animation library Claude drives, <b>no hardware needed</b>.</p>
   </header>
   <div id="stage">
     <canvas id="board" width="720" height="720"></canvas>
@@ -66,11 +83,11 @@
 
   <section id="about">
     <img src="./assets/board.webp"
-         alt="Waveshare ESP32-S3-Matrix — an 8×8 (64) WS2812B RGB LED grid on a USB-C ESP32-S3 dev board" />
+         alt="Waveshare ESP32-S3-Matrix: an 8×8 (64) WS2812B RGB LED grid on a USB-C ESP32-S3 dev board" />
     <div class="meta">
       <h2>Waveshare ESP32-S3-Matrix</h2>
       <p>The physical panel this mirrors: 64 WS2812B RGB LEDs (8×8) on an ESP32-S3 with a 6-axis IMU.
-         Flash the firmware and Claude drives it live — or just watch it here, no hardware needed.</p>
+         Flash the firmware and Claude drives it live, or just watch it here, no hardware needed.</p>
       <div class="links">
         <a class="btn buy" target="_blank" rel="noopener noreferrer"
            href="https://www.amazon.com/Waveshare-ESP32-S3-Matrix-Development-QMI8658C-Bluetooth/dp/B0D3DPLFL8">Buy on Amazon ↗</a>
@@ -143,14 +160,14 @@
             panel.setStepper(() => sim.frame(), sim.frame_ms);
             curToken = want;
           }
-          setStatus("● <b>live · board</b> — mirroring <b>" + liveAnim.type + "</b>");
+          setStatus("● <b>live · board</b> · mirroring <b>" + liveAnim.type + "</b>");
         } else {
           curToken = "mirror";
-          setStatus("● <b>live · board</b> — mirroring the panel");
+          setStatus("● <b>live · board</b> · mirroring the panel");
         }
         return;
       }
-      if (src === "live")   { curToken = "live";   setStatus("● <b>live</b> — Claude is driving"); return; }
+      if (src === "live")   { curToken = "live";   setStatus("● <b>live</b> · Claude is driving"); return; }
       if (src === "pin") {
         const want = "pin:" + pinned.name;
         if (curToken !== want) { playItem(pinned); curToken = want; ambNextAt = 0; }
@@ -163,7 +180,7 @@
       if (inAmbient) ambIdx = nextIndex(ambIdx, ambItems.length); // dwell elapsed -> advance
       const it = ambItems[ambIdx];
       if (it) { playItem(it); curToken = "amb:" + it.name; ambNextAt = now + DWELL_MS; setStatus("○ <b>ambient</b> · " + it.name); }
-      else setStatus("○ <b>ambient</b> — no library");
+      else setStatus("○ <b>ambient</b> · no library");
     }
 
     // --- build library + pin strip ---
@@ -196,7 +213,7 @@
       const it = ambItems[0];
       if (it && it.kind === "expression") { const ex = resolveExpression(it.entry); panel.setFrames(ex.frames.slice(0, 1), 1e9); }
       else if (it) { const sim = FIRMWARE_SIMS[it.name](FW_DEFAULTS[it.name] || {}); panel.setFrames([sim.frame()], 1e9); }
-      setStatus("○ <b>ambient</b> · " + (it ? it.name : "—") + " (motion reduced)");
+      setStatus("○ <b>ambient</b> · " + (it ? it.name : "·") + " (motion reduced)");
     } else {
       // main render + control loop
       let last = performance.now();
@@ -228,7 +245,7 @@
             if (r.ok) {
               const { px } = await r.json();
               lastMirrorAt = performance.now();
-              // Don't clobber a locally-played mirror sim with a static framebuffer frame — that
+              // Don't clobber a locally-played mirror sim with a static framebuffer frame: that
               // 333ms reset is exactly what made firmware mirrors choppy. Only push the static frame
               // when the mirror is showing a glyph / un-ported firmware (no local sim running).
               const liveSim = liveAnim && FIRMWARE_SIMS[liveAnim.type];
@@ -238,7 +255,7 @@
             }
             // a non-ok (503) status is NOT a reset: the grace window in mirrorOkAt() holds the last
             // mirror through transient board hiccups, so a brief miss no longer flashes the LIVE layer.
-          } catch { /* transient fetch failure — same: let the grace window hold the mirror */ }
+          } catch { /* transient fetch failure, same: let the grace window hold the mirror */ }
         }
         (async function pollLoop() { await pollFramebuffer(); setTimeout(pollLoop, 333); })();
       })();

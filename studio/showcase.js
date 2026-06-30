@@ -1,7 +1,7 @@
-// studio/showcase.js — the curated AMBIENT showcase: the kinetic-art pieces that
+// studio/showcase.js, the curated AMBIENT showcase: the kinetic-art pieces that
 // play when nobody is driving the face. Firmware sims + scenic saved animations.
 // Communicative glyphs (done/alert/smiley/cross/wait-*/ask-*/idea/task-complete,
-// the mascot claude-idle) are deliberately OUT — they only show when Claude actually
+// the mascot claude-idle) are deliberately OUT, they only show when Claude actually
 // drives the panel, but stay reachable via the click-to-pin strip.
 // Hand-tunable: add or remove a name to change the resting face. Names that don't
 // resolve to a real animation are silently skipped (see buildPlaylists).

@@ -1,4 +1,4 @@
-// studio/studio-nav.js — a tiny shared top-nav linking the Studio surfaces. Self-injecting,
+// studio/studio-nav.js, a tiny shared top-nav linking the Studio surfaces. Self-injecting,
 // no markup required: drop `<script type="module" src="./studio-nav.js"></script>` into any
 // studio page and it prepends a Gallery / Editor / Board switcher (current page highlighted).
 // Non-sticky by design so it never fights each page's own sticky header.
@@ -9,7 +9,7 @@ const PAGES = [
   { file: "board.html", label: "Board" },
   { file: "presence.html", label: "Presence" },
 ];
-// frame-editor.html is a leaf reached via "✎ edit" — it shows the nav (to get back out) but
+// frame-editor.html is a leaf reached via "✎ edit", it shows the nav (to get back out) but
 // highlights its parent, the Gallery.
 const here = (location.pathname.split("/").pop() || "index.html");
 const activeFile = here === "frame-editor.html" ? "index.html" : here;

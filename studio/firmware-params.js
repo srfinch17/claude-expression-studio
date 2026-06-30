@@ -1,4 +1,4 @@
-// studio/firmware-params.js — hand-authored param schema for the editor's typed widgets.
+// studio/firmware-params.js, hand-authored param schema for the editor's typed widgets.
 // These params are consumed by the ESP32 firmware (the esp32-8x8 renderer forwards a pool
 // entry's params to POST /api/display/animation), so names/ranges mirror api_handlers.ino,
 // NOT the JS sims. Firmwares/params NOT listed here fall back to the editor's raw-JSON box.

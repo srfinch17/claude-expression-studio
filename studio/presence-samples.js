@@ -1,4 +1,4 @@
-// studio/presence-samples.js — fixed sample PresenceData for the presence playground's
+// studio/presence-samples.js, fixed sample PresenceData for the presence playground's
 // data-type selector. Pure; unit-tested. Shapes match mcp_server/presence.ts PresenceData.
 export function sampleData(kind) {
   switch (kind) {

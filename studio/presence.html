@@ -3,26 +3,38 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Presence — Expression Studio</title>
+<title>Presence · Expression Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#0a0a0e; --panel:#111118; --text:#e8e8ef; --dim:#9a9aa8; --faint:#5a5a68;
-    --mono:'IBM Plex Mono',ui-monospace,monospace; --sans:'IBM Plex Sans',system-ui,sans-serif;
-    --cyan:#22ddff; --accent:#46506a; }
+  :root { --bg:#08080b; --bg-2:#0c0c10; --panel:#0e0e13; --panel-sub:#060608;
+    --text:#ecedf2; --dim:#9a9ba6; --faint:#5d5e6a; --hair:#1c1c24;
+    --emotion:#ff5008; --info:#22ddff; --cyan:#22ddff; --accent:#46506a;
+    --mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+    --sans:'IBM Plex Sans',system-ui,-apple-system,sans-serif; }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font-family:var(--sans);
-    padding:0 0 80px; line-height:1.5; }
-  .wrap { max-width:880px; margin:0 auto; padding:28px 24px; }
-  h1 { font-family:var(--mono); font-size:1.25rem; margin:0 0 4px; }
-  .sub { color:var(--dim); font-size:.86rem; margin:0 0 24px; max-width:62ch; }
+  body { margin:0; color:var(--text); font-family:var(--sans); line-height:1.55;
+    -webkit-font-smoothing:antialiased; padding:0 0 90px;
+    background:
+      radial-gradient(1100px 640px at 82% -12%, rgba(255,80,8,.09), transparent 60%),
+      radial-gradient(820px 560px at -6% 4%, rgba(34,221,255,.05), transparent 55%),
+      var(--bg); }
+  .wrap { max-width:920px; margin:0 auto; padding:46px 24px 0; }
+  .eyebrow { font-family:var(--mono); font-size:.72rem; font-weight:600; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--emotion); display:inline-flex; align-items:center; gap:10px; }
+  .eyebrow::before { content:""; width:26px; height:1px; background:var(--emotion); opacity:.6; }
+  h1 { font-family:var(--mono); font-weight:700; letter-spacing:-.02em;
+    font-size:clamp(1.7rem,3.6vw,2.4rem); line-height:1.04; margin:14px 0 0; }
+  h1 .em { color:var(--emotion); }
+  .sub { color:var(--dim); font-size:1.0rem; margin:14px 0 26px; max-width:70ch; }
+  .sub code { font-family:var(--mono); font-size:.85em; background:rgba(255,255,255,.05); padding:1px 5px; border-radius:4px; }
   .stage { display:grid; grid-template-columns:1fr; gap:22px; }
   @media (min-width:680px){ .stage { grid-template-columns:360px 1fr; } }
 
   /* ── The card (mirrors the board's presence-card visual) ── */
   #card { min-height:230px; display:grid; grid-template-rows:auto 1fr auto; gap:10px;
-    padding:18px 20px; border-radius:14px; border:1px solid #1c1c24;
+    padding:18px 20px; border-radius:16px; border:1px solid var(--hair);
     background:radial-gradient(120% 90% at 30% 0%, color-mix(in srgb, var(--accent) 28%, #0c0e14), #0c0e14); }
   #card .top { display:flex; align-items:center; gap:14px; }
   #card .glyph { font-size:52px; line-height:1; color:var(--accent);
@@ -58,28 +70,32 @@
   @media (prefers-reduced-motion:reduce){ #card, #card .glyph { animation:none !important; } }
 
   /* ── Playground ── */
-  .pg { background:var(--panel); border:1px solid #1c1c24; border-radius:14px; padding:16px 18px; }
-  .pg h2 { font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
-    color:var(--faint); margin:0 0 12px; }
+  .pg { background:linear-gradient(180deg, rgba(255,255,255,.018), transparent);
+    border:1px solid var(--hair); border-radius:16px; padding:18px 20px; }
+  .pg h2 { font-family:var(--mono); font-size:.7rem; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--dim); margin:0 0 14px; }
   .pg .row { margin-bottom:16px; }
-  .pg .row > .rl { font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); margin-bottom:7px; }
+  .pg .row > .rl { font-family:var(--mono); font-size:.66rem; letter-spacing:.14em; text-transform:uppercase; color:var(--faint); margin-bottom:8px; }
   .chips { display:flex; flex-wrap:wrap; gap:7px; }
-  .chip { font:inherit; font-size:.78rem; cursor:pointer; color:var(--dim); background:#15151b;
-    border:1px solid #2a2a34; border-radius:7px; padding:4px 11px; }
-  .chip:hover { color:var(--text); }
-  .chip.on { color:var(--cyan); border-color:#22ddff66; background:#22ddff14; }
+  .chip { font-family:var(--mono); font-size:.76rem; cursor:pointer; color:var(--dim);
+    background:rgba(255,255,255,.03); border:1px solid var(--hair); border-radius:8px;
+    padding:5px 12px; transition:color .14s, border-color .14s; }
+  .chip:hover { color:var(--text); border-color:#2f2f3a; }
+  .chip.on { color:var(--info); border-color:color-mix(in srgb, var(--info) 55%, #2a2a32);
+    background:color-mix(in srgb, var(--info) 12%, transparent); }
   .hint { color:var(--faint); font-size:.72rem; margin-top:14px; }
 </style>
 </head>
 <body>
 <script type="module" src="./studio-nav.js"></script>
 <div class="wrap">
-  <h1>Presence</h1>
+  <span class="eyebrow">Expression Studio · Presence</span>
+  <h1>One message, <span class="em">any screen</span>.</h1>
   <p class="sub">Claude's semantic status, rendered the same way everywhere from one
-    <code>PresenceMessage</code>. This is the desktop card — board-independent. Drive it below,
+    <code>PresenceMessage</code>. This is the desktop card, board-independent. Drive it below,
     or flip on Live to mirror a real board's last presence message (<code>GET /api/presence</code>).
     Note: that's Claude's <em>status message</em> (set by <code>presence_set</code>), <em>not</em> the
-    LEDs' current animation — a board running the clock or idle screensaver still reports its last
+    LEDs' current animation. A board running the clock or idle screensaver still reports its last
     presence here, and the age shows how stale it is. The <strong>Board</strong> page mirrors the live display.</p>
 
   <div class="stage">
@@ -94,7 +110,7 @@
       <div class="data"></div>
       <div>
         <div class="detail"></div>
-        <div class="foot"><span class="intent">idle</span><span class="age">—</span></div>
+        <div class="foot"><span class="intent">idle</span><span class="age">·</span></div>
       </div>
     </div>
 
@@ -116,7 +132,7 @@
         <div class="rl">Urgency</div>
         <div class="chips" id="urgencies"></div>
       </div>
-      <div class="hint" id="hint">Self-driven demo — no board or engine required.</div>
+      <div class="hint" id="hint">Self-driven demo. No board or engine required.</div>
     </div>
   </div>
 </div>
@@ -181,7 +197,7 @@ apply();
 const liveBtn = document.getElementById("livebtn");
 const hintEl = document.getElementById("hint");
 const ageEl = cardEl.querySelector(".age");
-const DEMO_HINT = "Self-driven demo — no board or engine required.";
+const DEMO_HINT = "Self-driven demo. No board or engine required.";
 let live = false, timer = null, ageTimer = null, lastTs = 0, everOk = false, fails = 0;
 
 async function poll() {
@@ -196,20 +212,20 @@ async function poll() {
       renderPresenceCard(cardEl, m, PRESENCE_VOCAB);
       lastTs = Number(m.ts) > 1e9 ? Number(m.ts) : 0;
       everOk = true; fails = 0;
-      hintEl.textContent = "● Live — mirroring the board's last presence message (not the LED display; see Board for that).";
+      hintEl.textContent = "● Live. Mirroring the board's last presence message (not the LED display; see Board for that).";
       return;
-    } catch { /* body wasn't JSON — treat as a failure below */ }
+    } catch { /* body wasn't JSON, treat as a failure below */ }
   }
   fails++;
   if (everOk) return;                                 // had a live board; ride a transient miss, keep last frame
   if (fails >= 2) {                                   // give it a beat before declaring no source
     const why = !r ? "can't reach this origin."
-      : r.status === 404 ? "no /api/presence here — open the Studio via the matrix_studio URL (the engine serves the proxy)."
+      : r.status === 404 ? "no /api/presence here. Open the Studio via the matrix_studio URL (the engine serves the proxy)."
       : "board not reachable (no board, or it's offline).";
     hintEl.textContent = "○ Live: " + why + " Showing the demo.";
   }
 }
-function tickAge() { ageEl.textContent = (live && everOk) ? formatAge(lastTs, Date.now()) : "—"; }
+function tickAge() { ageEl.textContent = (live && everOk) ? formatAge(lastTs, Date.now()) : "·"; }
 
 liveBtn.onclick = () => {
   live = !live;
@@ -221,7 +237,7 @@ liveBtn.onclick = () => {
     poll(); timer = setInterval(poll, 1500); ageTimer = setInterval(tickAge, 1000);
   } else {
     clearInterval(timer); clearInterval(ageTimer); timer = ageTimer = null;
-    lastTs = 0; ageEl.textContent = "—"; hintEl.textContent = DEMO_HINT; apply(); // restore playground render
+    lastTs = 0; ageEl.textContent = "·"; hintEl.textContent = DEMO_HINT; apply(); // restore playground render
   }
 };
 window.__presenceApply = apply;

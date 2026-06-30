@@ -1,4 +1,4 @@
-// studio/board.js — the virtual board's PURE event dispatch (unit-tested) + the browser
+// studio/board.js, the virtual board's PURE event dispatch (unit-tested) + the browser
 // EventSource glue (skipped under node --test). A frames event carries the exact wire the
 // hardware got; we decode it to Panel frames. An animation event plays the JS firmware sim
 // via the shared web-sim renderer (no-op if that firmware has no JS port).
@@ -45,7 +45,7 @@ export function connectBoard({ panel, webSim, source }) {
 }
 
 // When the board is reachable, its framebuffer poll is the source of truth (it already
-// reflects SSE-driven renders, since those also hit the board) — so SSE events are
+// reflects SSE-driven renders, since those also hit the board), so SSE events are
 // ignored. Only when the board is offline does the SSE stream become the display.
 export function mirrorGate(boardOnline) { return !boardOnline; }
 
@@ -94,13 +94,13 @@ export function arbitrate({ mirrorOk, lastSseAt, now, pinned }) {
 
 // Hysteresis for the mirror: the board's framebuffer endpoint is heavy and a single poll often
 // fails (503) or lags. Without a grace window, one miss instantly drops `mirrorOk` and the panel
-// surrenders to whatever is next in precedence — a latched LIVE render or, when Claude isn't
-// driving, the AMBIENT showcase (claudesweep) — which flashes through before the next good poll
+// surrenders to whatever is next in precedence, a latched LIVE render or, when Claude isn't
+// driving, the AMBIENT showcase (claudesweep), which flashes through before the next good poll
 // restores the mirror. Treat the mirror as still valid for MIRROR_GRACE_MS after the last GOOD
 // poll, so transient hiccups hold the last frame instead of surrendering the panel.
 //
 // Sizing: the engine's /api/framebuffer proxy aborts a slow board fetch at 1500ms, and that failing
-// fetch BLOCKS the 333ms poll loop for its whole duration — so a single board hiccup produces a
+// fetch BLOCKS the 333ms poll loop for its whole duration, so a single board hiccup produces a
 // ~3.2s gap between good polls (measured: longestFbGap 3221ms over a 20s live window). 1500ms was
 // guaranteed to undershoot one timeout. 5000ms clears the measured worst case (~55% margin) and
 // absorbs two back-to-back misses; a truly-gone board still decays to ambient within 5s.
@@ -121,7 +121,7 @@ export function nextIndex(cur, length, rng = Math.random) {
 
 // Does this HTTP status come from our engine routes? 200 = board live, 503 = engine
 // up but board unreachable. Anything else (e.g. 404 from a static host) means no
-// engine — the page runs as a pure local showcase (no mirror poll, no SSE).
+// engine, the page runs as a pure local showcase (no mirror poll, no SSE).
 export function isEngineResponse(status) {
   return status === 200 || status === 503;
 }

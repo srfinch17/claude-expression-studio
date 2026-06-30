@@ -3,30 +3,44 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Editor — Expression Studio</title>
+  <title>Editor · Expression Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    :root { --bg:#0a0a0e; --panel:#111118; --sub:#15151b; --text:#e8e8ef; --dim:#9a9aa8;
-      --faint:#5a5a68; --orange:#ff5008; --cyan:#22ddff; --green:#16a34a;
-      --mono:'IBM Plex Mono',ui-monospace,monospace; }
+    :root { --bg:#08080b; --bg-2:#0c0c10; --panel:#0e0e13; --panel-sub:#060608; --sub:#15151b;
+      --text:#ecedf2; --dim:#9a9ba6; --faint:#5d5e6a; --hair:#1c1c24;
+      --emotion:#ff5008; --info:#22ddff; --orange:#ff5008; --cyan:#22ddff; --green:#16a34a;
+      --mono:'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+      --sans:'IBM Plex Sans', system-ui, -apple-system, sans-serif; }
     * { box-sizing: border-box; }
-    body { margin:0; background:var(--bg); color:var(--text); font:14px var(--mono); padding:0 0 40px; }
-    header { position:sticky; top:0; z-index:5; background:var(--bg); border-bottom:1px solid #1e1e26;
-      display:flex; align-items:center; gap:12px; padding:12px 18px; }
-    header h1 { font-size:1rem; margin:0; flex:0 0 auto; }
+    body { margin:0; color:var(--text); font:14px var(--mono); padding:0 0 60px;
+      -webkit-font-smoothing:antialiased;
+      background:
+        radial-gradient(1100px 620px at 88% -16%, rgba(255,80,8,.07), transparent 60%),
+        var(--bg); }
+    header { position:sticky; top:0; z-index:5; background:rgba(8,8,11,.82);
+      backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+      border-bottom:1px solid var(--hair);
+      display:flex; align-items:center; gap:12px; padding:13px 18px; }
+    header h1 { font-size:.82rem; font-weight:700; letter-spacing:.02em; margin:0; flex:0 0 auto; }
+    header h1::before { content:"◆ "; color:var(--emotion); }
     #banner { color:var(--orange); font-size:.78rem; flex:1; }
-    button { font:inherit; font-size:.8rem; color:var(--text); background:var(--sub);
-      border:1px solid #2a2a34; border-radius:7px; padding:5px 11px; cursor:pointer; }
+    button { font:inherit; font-size:.8rem; color:var(--text); background:rgba(255,255,255,.04);
+      border:1px solid var(--hair); border-radius:8px; padding:5px 12px; cursor:pointer;
+      transition:border-color .14s, color .14s; }
+    button:hover { border-color:#2f2f3a; }
     button:disabled { opacity:.4; cursor:not-allowed; }
-    button.save { border-color:var(--green); color:#9affc8; }
+    button.save { border-color:color-mix(in srgb, var(--green) 55%, #2a2a32); color:#9affc8; }
     #status { font-size:.76rem; color:var(--dim); min-width:14ch; }
     main { display:grid; grid-template-columns:minmax(0,1fr) minmax(360px,46%); gap:16px; padding:16px; align-items:start; }
-    .intent { background:var(--panel); border:1px solid #1c1c24; border-radius:10px; padding:10px; margin-bottom:10px; }
+    .intent { background:linear-gradient(180deg, rgba(255,255,255,.018), transparent); border:1px solid var(--hair); border-radius:12px; padding:10px; margin-bottom:10px; }
     .intent.drop { border-color:var(--cyan); box-shadow:0 0 0 1px var(--cyan); }
     .intent h2 { font-size:.82rem; margin:0 0 2px; }
     .intent .meta { font-size:.66rem; color:var(--faint); margin-bottom:7px; line-height:1.35; }
     .pool { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-start; }
-    .tile { width:84px; background:var(--sub); border:1px solid #22222c; border-radius:8px; padding:6px; position:relative; }
-    .tile canvas { width:72px; height:72px; border-radius:5px; background:#060608; display:block; }
+    .tile { width:84px; background:rgba(255,255,255,.03); border:1px solid var(--hair); border-radius:9px; padding:6px; position:relative; }
+    .tile canvas { width:72px; height:72px; border-radius:5px; background:var(--panel-sub); display:block; }
     .tile .nm { font-size:.62rem; margin-top:4px; word-break:break-all; color:var(--text); line-height:1.1; }
     .tile .pct { font-size:.6rem; color:var(--cyan); }
     .tile .editlink { display:inline-block; font-size:.58rem; color:var(--cyan); text-decoration:none; margin-top:2px; }
@@ -38,9 +52,9 @@
     .opts { margin-top:7px; font-size:.68rem; color:var(--dim); display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
     .opts input[type=number] { width:50px; font:inherit; background:#000; color:var(--text); border:1px solid #2a2a34; border-radius:4px; }
     .fire { margin-top:7px; display:flex; gap:8px; align-items:center; }
-    .fire canvas { width:46px; height:46px; border-radius:5px; background:#060608; }
-    aside { position:sticky; top:64px; background:var(--panel); border:1px solid #1c1c24; border-radius:10px; padding:12px; }
-    aside h2 { font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); margin:0 0 4px; }
+    .fire canvas { width:46px; height:46px; border-radius:5px; background:var(--panel-sub); }
+    aside { position:sticky; top:64px; background:linear-gradient(180deg, rgba(255,255,255,.018), transparent); border:1px solid var(--hair); border-radius:12px; padding:12px; }
+    aside h2 { font-size:.72rem; letter-spacing:.2em; text-transform:uppercase; color:var(--dim); margin:0 0 4px; }
     .legend { font-size:.64rem; color:var(--dim); margin-bottom:10px; display:flex; gap:14px; }
     .legend .sw { display:inline-block; width:9px; height:9px; border-radius:2px; border:2px solid; margin-right:4px; vertical-align:middle; }
     .legend .av { border-color:var(--green); }
@@ -48,7 +62,7 @@
     .tray { display:flex; flex-wrap:wrap; gap:8px; max-height:82vh; overflow-y:auto; align-content:flex-start; }
     .ptile { width:62px; background:var(--sub); border:2px solid var(--green); border-radius:8px; padding:4px; cursor:grab; text-align:center; }
     .ptile.assigned { border-color:var(--orange); }
-    .ptile canvas { width:46px; height:46px; border-radius:5px; background:#060608; display:block; margin:0 auto; }
+    .ptile canvas { width:46px; height:46px; border-radius:5px; background:var(--panel-sub); display:block; margin:0 auto; }
     .ptile .nm { font-size:.56rem; margin-top:3px; word-break:break-all; color:var(--dim); line-height:1.05; }
     .ptile .cnt { font-size:.56rem; color:var(--orange); }
     .tile .gear { width:100%; margin-top:4px; padding:2px; font-size:.58rem; }
@@ -320,7 +334,7 @@
       } catch {
         manifest = await (await fetch("../shared/manifest.json")).json();
         readOnly = true;
-        bannerEl.textContent = "Editing needs the live engine — launch the Studio via matrix_studio. (Exploring read-only; Save disabled.)";
+        bannerEl.textContent = "Editing needs the live engine. Launch the Studio via matrix_studio. (Exploring read-only; Save disabled.)";
       }
     }
 
@@ -329,7 +343,7 @@
       try {
         const r = await fetch("/api/manifest", { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(manifest) });
         const res = await r.json();
-        if (res.ok) { setDirty(false); statusEl.textContent = "saved — behavior is live"; }
+        if (res.ok) { setDirty(false); statusEl.textContent = "saved · behavior is live"; }
         else { statusEl.textContent = "validation failed: " + (res.errors || []).join("; "); setDirty(true); }
       } catch (e) { statusEl.textContent = "save error: " + e.message; setDirty(true); }
     };
