@@ -64,8 +64,10 @@ I/O. `shared/firmware-names.js` decides firmware-animation vs frame-expression p
 ## Install / onboarding
 
 `npm run setup` (`scripts/setup.mjs` + pure `scripts/setup-lib.mjs`), wires the hooks
-into `~/.claude/settings.json` + registers the MCP server in `~/.claude.json` (backed-up,
-idempotent), deploys the hooks, writes `~/.claude/hooks/matrix_config.json`.
+into `~/.claude/settings.json` + registers the MCP server in `~/.claude.json` as
+**`expression-studio`** (backed-up, idempotent; migrates away the pre-rename
+`esp32-matrix` key), deploys the hooks, writes `~/.claude/hooks/matrix_config.json`.
+This is the ONLY MCP server in the system; the board has none (it's plain HTTP).
 **Board-OPTIONAL** by default; `--board <url>` opts hardware in. `--dry-run`/`--uninstall`.
 
 ## Known cross-repo seams (documented, not automated)

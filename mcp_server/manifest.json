@@ -1,9 +1,9 @@
 {
   "manifest_version": "0.3",
-  "name": "esp32-matrix",
-  "display_name": "ESP32-S3 Matrix",
+  "name": "expression-studio",
+  "display_name": "Claude Expression Studio",
   "version": "0.12.0",
-  "description": "Control a Waveshare ESP32-S3 8x8 LED matrix from Claude, animations, text, clock, weather, and Claude's ambient expression display. Talks to the board at http://esp32matrix.local on your local network. Also serves the Expression Studio + a live virtual board at a local URL (use the matrix_studio tool for the link).",
+  "description": "Claude's presence & expression system: ambient 8x8 animations, a presence card, and the Expression Studio web app with a live virtual board (use the matrix_studio tool for the link). Works fully board-free; optionally mirrors to a physical ESP32-S3 LED matrix over your local network (default http://esp32matrix.local).",
   "author": {
     "name": "the user"
   },

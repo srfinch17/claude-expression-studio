@@ -61,11 +61,11 @@ async function fixtureRoot(version) {
   await writeFile(path.join(root, "VERSION"), version + "\n");
   await writeFile(
     path.join(root, "mcp_server", "package.json"),
-    JSON.stringify({ name: "esp32-matrix-mcp", version: "0.0.0", type: "module" }, null, 2) + "\n",
+    JSON.stringify({ name: "expression-studio-mcp", version: "0.0.0", type: "module" }, null, 2) + "\n",
   );
   await writeFile(
     path.join(root, "mcp_server", "manifest.json"),
-    JSON.stringify({ manifest_version: "0.3", name: "esp32-matrix", version: "0.0.0", server: { type: "node", entry_point: "dist/index.js" } }, null, 2) + "\n",
+    JSON.stringify({ manifest_version: "0.3", name: "expression-studio", version: "0.0.0", server: { type: "node", entry_point: "dist/index.js" } }, null, 2) + "\n",
   );
   await writeFile(path.join(root, "shared", "manifest.json"), TRIGGER_MANIFEST);
   return root;
@@ -77,11 +77,11 @@ test("stamp writes the version into the three studio artifacts and nothing else"
 
   const pkg = JSON.parse(await readFile(path.join(root, "mcp_server", "package.json"), "utf8"));
   assert.equal(pkg.version, "0.3.0");
-  assert.equal(pkg.name, "esp32-matrix-mcp", "stamp preserves other package.json fields");
+  assert.equal(pkg.name, "expression-studio-mcp", "stamp preserves other package.json fields");
 
   const manifest = JSON.parse(await readFile(path.join(root, "mcp_server", "manifest.json"), "utf8"));
   assert.equal(manifest.version, "0.3.0");
-  assert.equal(manifest.name, "esp32-matrix", "stamp preserves other manifest fields");
+  assert.equal(manifest.name, "expression-studio", "stamp preserves other manifest fields");
 
   const trigger = JSON.parse(await readFile(path.join(root, "shared", "manifest.json"), "utf8"));
   assert.equal(trigger.appVersion, "0.3.0", "product version stamped into appVersion");

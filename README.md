@@ -13,6 +13,40 @@ A **renderer-agnostic presence & expression system for Claude**. Claude's state 
 - **The MCP server + engine** (`mcp_server/`): Claude's tools (`matrix_express`, `presence_set`, `matrix_idle`, …) plus a localhost engine that serves the Studio, holds presence, and broadcasts a no-board virtual board over SSE.
 - **The Claude Code hooks** (`claude-hooks/`): fire ambient presence/expression per lifecycle moment (prompt submitted, task done, awaiting input, idle).
 
+## How it fits together (one MCP server, board optional)
+
+There is exactly **one** MCP server in this whole system, and it lives here in
+`mcp_server/`. It registers under the name **`expression-studio`** and does two jobs in
+one process: it exposes Claude's tools over MCP, and it runs a localhost **engine**
+(HTTP, port 8787) that serves the Studio web app and the virtual board.
+
+The physical LED panel is just a renderer at the far end of an HTTP contract. It runs
+its own firmware (separate repo) but has **no MCP server of its own** and never needs
+one; boards don't talk MCP, computers do.
+
+```text
+   Claude (Code or Desktop)          Claude Code lifecycle hooks
+            |                             (claude-hooks/)
+        MCP: stdio                             |
+            v                                  |  HTTP: POST presence/express
+  +---------------------------+                |
+  |  expression-studio MCP    | <--------------+
+  |  server + engine          |
+  |  (mcp_server/, one        | --serves--> the Studio web app + virtual
+  |   process, HTTP :8787)    |             board + mini board (SSE, no
+  +---------------------------+             hardware needed)
+            |
+       HTTP (optional): docs/board-api-contract.md
+            v
+   physical ESP32-S3 8x8 panel
+   (firmware repo: peckworks-esp32s3matrix)
+```
+
+So an installer needs exactly one thing: this repo's setup. With no board on the
+network, expressions and presence render on the virtual board in the browser. Adding a
+physical board later changes nothing structural; the same tools start mirroring to it
+over HTTP.
+
 ## Install (Claude Code, board optional)
 
 ```bash
@@ -23,6 +57,10 @@ npm run setup -- --dry-run        # preview    ·    --uninstall   # reverse
 
 Board-optional by default. The board is reached only over HTTP. See
 [`docs/board-api-contract.md`](docs/board-api-contract.md).
+
+> Upgrading from an older install? The server used to register as `esp32-matrix`.
+> Re-run `npm run setup` and it migrates: the old entry is removed, the new
+> `expression-studio` one is written.
 
 ## Run the Studio (edit and wire in your browser)
 

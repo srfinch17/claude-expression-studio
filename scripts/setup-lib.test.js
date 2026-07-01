@@ -161,26 +161,41 @@ test("mcpRegistration on posix launches node directly with dist/index.js", () =>
   assert.equal(reg.env.ESP32_URL, "http://192.168.1.5"); // board passed
 });
 
-test("mergeMcp preserves other servers and replaces a prior esp32-matrix", () => {
+test("mergeMcp preserves other servers and replaces a prior expression-studio", () => {
   const existing = {
     mcpServers: {
       playwright: { command: "npx", args: ["-y", "@playwright/mcp"] },
-      "esp32-matrix": { command: "OLD" },
+      "expression-studio": { command: "OLD" },
     },
   };
   const reg = mcpRegistration({ platform: "linux", mcpDir: "/r/mcp_server", distIndexPath: "/r/mcp_server/dist/index.js", nodePath: "/node", launchCmdPath: "/x", boardUrl: null });
   const out = mergeMcp(existing, reg);
   assert.ok(out.mcpServers.playwright); // preserved
-  assert.equal(out.mcpServers["esp32-matrix"].command, "/node"); // replaced
+  assert.equal(out.mcpServers["expression-studio"].command, "/node"); // replaced
   // idempotent
   const out2 = mergeMcp(out, reg);
-  assert.deepEqual(out2.mcpServers["esp32-matrix"], out.mcpServers["esp32-matrix"]);
+  assert.deepEqual(out2.mcpServers["expression-studio"], out.mcpServers["expression-studio"]);
 });
 
-test("removeMcp drops only our server", () => {
-  const existing = { mcpServers: { playwright: { command: "npx" }, "esp32-matrix": { command: "x" } } };
+test("mergeMcp migrates a legacy esp32-matrix registration (pre-rename installs)", () => {
+  const existing = {
+    mcpServers: {
+      playwright: { command: "npx" },
+      "esp32-matrix": { command: "cmd.exe", args: ["/c", "old\\mcp_launch.cmd"] },
+    },
+  };
+  const reg = mcpRegistration({ platform: "linux", mcpDir: "/r/mcp_server", distIndexPath: "/r/mcp_server/dist/index.js", nodePath: "/node", launchCmdPath: "/x", boardUrl: null });
+  const out = mergeMcp(existing, reg);
+  assert.equal(out.mcpServers["esp32-matrix"], undefined); // legacy key gone
+  assert.equal(out.mcpServers["expression-studio"].command, "/node"); // new key present
+  assert.ok(out.mcpServers.playwright); // unrelated preserved
+});
+
+test("removeMcp drops only our server (new and legacy names)", () => {
+  const existing = { mcpServers: { playwright: { command: "npx" }, "expression-studio": { command: "x" }, "esp32-matrix": { command: "old" } } };
   const out = removeMcp(existing);
   assert.ok(out.mcpServers.playwright);
+  assert.equal(out.mcpServers["expression-studio"], undefined);
   assert.equal(out.mcpServers["esp32-matrix"], undefined);
 });
 

@@ -47,7 +47,7 @@ test("--dry-run writes nothing but reports the merged config", async () => {
     // the planned merge is surfaced for inspection
     const blob = JSON.stringify(res.plannedSettings) + JSON.stringify(res.plannedClaudeJson);
     assert.ok(blob.includes("matrix_signal.py"));
-    assert.ok(blob.includes("esp32-matrix"));
+    assert.ok(blob.includes("expression-studio"));
   } finally {
     fs.rmSync(base, { recursive: true, force: true });
   }
@@ -71,8 +71,8 @@ test("install deploys hooks + config + wires both global files", async () => {
     assert.ok(JSON.stringify(settings.hooks).includes("matrix_signal.py"));
     // mcp wired
     const cj = read(claudeJsonPath(homeDir));
-    assert.ok(cj.mcpServers["esp32-matrix"]);
-    assert.equal(cj.mcpServers["esp32-matrix"].env.MATRIX_MCP_DIR.replace(/\\/g, "/"), path.join(repoDir, "mcp_server").replace(/\\/g, "/"));
+    assert.ok(cj.mcpServers["expression-studio"]);
+    assert.equal(cj.mcpServers["expression-studio"].env.MATRIX_MCP_DIR.replace(/\\/g, "/"), path.join(repoDir, "mcp_server").replace(/\\/g, "/"));
   } finally {
     fs.rmSync(base, { recursive: true, force: true });
   }
@@ -85,7 +85,7 @@ test("--board sets ESP32_URL in the mcp env and the config", async () => {
     const cfg = read(path.join(homeDir, ".claude", "hooks", "matrix_config.json"));
     assert.equal(cfg.board_url, "http://192.168.1.9");
     const cj = read(claudeJsonPath(homeDir));
-    assert.equal(cj.mcpServers["esp32-matrix"].env.ESP32_URL, "http://192.168.1.9");
+    assert.equal(cj.mcpServers["expression-studio"].env.ESP32_URL, "http://192.168.1.9");
   } finally {
     fs.rmSync(base, { recursive: true, force: true });
   }
@@ -121,7 +121,7 @@ test("--uninstall removes our entries + deployed scripts, keeps unrelated", asyn
     assert.ok(!JSON.stringify(settings.hooks || {}).includes("matrix_signal.py"));
     assert.ok(JSON.stringify(settings.hooks.Stop).includes("echo keep")); // unrelated kept
     const cj = read(claudeJsonPath(homeDir));
-    assert.ok(!cj.mcpServers || !cj.mcpServers["esp32-matrix"]);
+    assert.ok(!cj.mcpServers || !cj.mcpServers["expression-studio"]);
     assert.ok(!fs.existsSync(path.join(homeDir, ".claude", "hooks", "matrix_signal.py")));
   } finally {
     fs.rmSync(base, { recursive: true, force: true });
