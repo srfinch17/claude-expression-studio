@@ -34,7 +34,7 @@ import { startEngineServer } from "./engine-server.js";
 import type { SseHub } from "./sse.js";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
 
 // Saved-expression library: JSON files in mcp_server/expressions/ (committed to
@@ -568,6 +568,16 @@ If a drawing lands well (or the user likes it), re-call with save_as (kebab-case
         "Get the local URL of the Expression Studio served by this engine. Open it in a browser to BROWSE the animation library (the Gallery is view-only for now, an editor is planned). The board.html page is a LIVE MIRROR of the physical panel when the board is reachable (it polls the real framebuffer), and falls back to showing fired intents when no board is present. Returns the URLs, or a note if the engine HTTP server is not running.",
       inputSchema: { type: "object", properties: {}, additionalProperties: false },
     },
+    {
+      name: "matrix_mini",
+      description:
+        "Pop the mini-board onto the user's desktop: a tiny, board-sized, near-chromeless window (Chromium --app mode) that mirrors the panel and can be dragged anywhere on the desktop. Use when the user asks for a mini board / desktop widget / a little always-there window of what Claude is doing. Best-effort: opens the window on the machine running this engine and returns whether it launched (or the URL to open manually). Optional: size (window pixels, default 240).",
+      inputSchema: {
+        type: "object",
+        properties: { size: { type: "number", description: "Window size in pixels (square). Default 240." } },
+        additionalProperties: false,
+      },
+    },
   ],
 }));
 
@@ -814,6 +824,28 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           ? `Expression Studio: ${engineUrl}/studio/index.html\nVirtual board (live mirror): ${engineUrl}/studio/board.html`
           : "Engine HTTP server is not running (no Studio URL).";
         return { content: [{ type: "text", text }] };
+      }
+
+      case "matrix_mini": {
+        if (!engineUrl) {
+          return { content: [{ type: "text", text: "The Studio engine is not running, so there is no mini-board to open. Start it with `npm run studio`." }] };
+        }
+        const miniUrl = `${engineUrl}/studio/mini.html`;
+        const size = Number(args.size);
+        // scripts/mini-lib.mjs is plain ESM outside mcp_server; dynamic-import it by file URL.
+        const libUrl = pathToFileURL(path.join(MCP_DIR, "..", "scripts", "mini-lib.mjs")).href;
+        try {
+          const { launchMini } = await import(libUrl);
+          const res = launchMini(miniUrl, Number.isFinite(size) && size > 0 ? { width: size, height: size } : {});
+          const note = res.mode === "app"
+            ? `Opened the mini-board in a chromeless ${/edge/i.test(res.browser || "") ? "Edge" : "Chrome"} window. Drag it onto your desktop.`
+            : res.mode === "default"
+              ? `No Chrome/Edge found, so I opened it in your default browser: ${miniUrl}`
+              : `Could not open a window (${res.error}). Open it yourself: ${miniUrl}`;
+          return { content: [{ type: "text", text: note }] };
+        } catch (e) {
+          return { content: [{ type: "text", text: `Could not launch the mini-board (${e instanceof Error ? e.message : String(e)}). Open it yourself: ${miniUrl}` }] };
+        }
       }
 
       default:
