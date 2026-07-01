@@ -28,6 +28,7 @@ import { decideRender, loadEngine, type RenderPlan } from "./engine.js";
 import { executePlan } from "./run-plan.js";
 import { normalizePresence } from "./presence.js";
 import { normalizeSettingsPatch } from "./settings.js";
+import { writePin, clearPin } from "./pin-flag.js";
 import { startEngineServer } from "./engine-server.js";
 import type { SseHub } from "./sse.js";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
@@ -452,6 +453,24 @@ One expression per state change, don't spam every step. Canned (pre-vetted as hu
       inputSchema: { type: "object", properties: {}, required: [] },
     },
     {
+      name: "matrix_pin",
+      description:
+        "PIN (hold) whatever is currently on the board so the lifecycle hooks stop overriding it. Normally, when your turn ends the Stop hook writes the 'done' checkmark and then the idle scheduler rotates in ambient animations, so a looping animation you pushed (matrix_animate/matrix_express with loop:0) gets clobbered within seconds. Call this right after pushing an animation you want to leave running: the done glyph and the bored rotation will keep hands off until you matrix_unpin (or the optional timeout expires). Does NOT change the display, only who is allowed to. Your own matrix_* calls still take effect (manual always wins); the .matrix_off kill switch still wins over a pin. Optional: seconds = auto-clear the pin after this many seconds.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          seconds: { type: "number", description: "Optional: auto-release the pin after this many seconds. Omit to hold until matrix_unpin." },
+        },
+        required: [],
+      },
+    },
+    {
+      name: "matrix_unpin",
+      description:
+        "Release a pin set by matrix_pin, so the lifecycle hooks (the 'done' checkmark and the idle/bored rotation) resume driving the board normally. Safe to call even if nothing is pinned.",
+      inputSchema: { type: "object", properties: {}, required: [] },
+    },
+    {
       name: "matrix_animate",
       description: `Draw and play a custom 8×8 animation of your own design, for anything the canned expressions don't cover: a custom status icon, a story illustration, a teaching visual, a playful moment.
 Format: frames = array of 1-${MAX_FRAMES} frames; each frame is 8 strings of exactly 8 characters. "." = off/black; every other character must be defined in colors (e.g. {"R": "#ff0000"}).
@@ -695,6 +714,26 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const note = await runPlan(decideRender(resolved, isFirmwareName));
         const label = resolved.label ?? String(resolved.value);
         return { content: [{ type: "text", text: `Idle pick: ${label} (${note}).` }] };
+      }
+
+      case "matrix_pin": {
+        const secsRaw = args.seconds;
+        const secs = secsRaw === undefined ? undefined : Number(secsRaw);
+        if (secs !== undefined && (!Number.isFinite(secs) || secs <= 0)) {
+          return { content: [{ type: "text", text: "seconds must be a positive number (or omit it to hold until matrix_unpin)." }] };
+        }
+        await writePin(secs);
+        const note = secs !== undefined
+          ? `Pinned the current display for ${secs}s. The done checkmark and idle rotation will hold off until then (or until matrix_unpin).`
+          : "Pinned the current display. The done checkmark and idle rotation will hold off until you matrix_unpin.";
+        return { content: [{ type: "text", text: note }] };
+      }
+
+      case "matrix_unpin": {
+        const existed = await clearPin();
+        return { content: [{ type: "text", text: existed
+          ? "Unpinned. The lifecycle hooks (done checkmark + idle rotation) will resume driving the board."
+          : "Nothing was pinned; hooks are already driving the board normally." }] };
       }
 
       case "matrix_animate": {
