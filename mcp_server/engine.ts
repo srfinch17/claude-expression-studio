@@ -43,6 +43,12 @@ export async function loadEngine(mcpDir: string) {
   const dir = engineDir(mcpDir);
   const manifest = JSON.parse(await readFile(path.join(dir, "manifest.json"), "utf8"));
   const { resolve } = await import(pathToFileURL(path.join(dir, "resolver.js")).href);
-  const { isFirmwareName } = await import(pathToFileURL(path.join(dir, "firmware-names.js")).href);
-  return { manifest, resolve, isFirmwareName: isFirmwareName as (n: string) => boolean };
+  const { isFirmwareName, FIRMWARE_NAMES } = await import(pathToFileURL(path.join(dir, "firmware-names.js")).href);
+  return {
+    manifest,
+    resolve,
+    isFirmwareName: isFirmwareName as (n: string) => boolean,
+    // Sorted list of the firmware-native mode names, for the unified catalog.
+    firmwareNames: [...(FIRMWARE_NAMES as Set<string>)].sort() as string[],
+  };
 }
