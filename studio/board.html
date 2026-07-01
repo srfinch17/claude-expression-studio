@@ -28,6 +28,10 @@
     #status { font-family:var(--mono); font-size:12px; color:var(--dim);
       letter-spacing:.04em; min-height:1.2em; }
     #status b { color:var(--text); font-weight:600; }
+    #popout { font-family:var(--mono); font-size:11px; color:var(--dim); cursor:pointer;
+      background:rgba(255,255,255,.03); border:1px solid var(--hair); border-radius:8px;
+      padding:5px 11px; transition:border-color .15s,color .15s; }
+    #popout:hover { color:var(--orange); border-color:color-mix(in srgb, var(--orange) 55%, #2a2a32); }
     #intro { text-align:center; max-width:min(82vmin,720px);
       display:flex; flex-direction:column; align-items:center; gap:9px; }
     .eyebrow { font-family:var(--mono); font-size:.7rem; font-weight:600; letter-spacing:.22em;
@@ -77,6 +81,7 @@
   <div id="stage">
     <canvas id="board" width="720" height="720"></canvas>
     <div id="status">starting…</div>
+    <button id="popout" type="button" title="Open a small mirror window you can drag onto your desktop">⧉ pop out mini board</button>
   </div>
   <div class="pins-label">pin an animation</div>
   <div id="pins"></div>
@@ -98,6 +103,15 @@
       </div>
     </div>
   </section>
+
+  <script>
+    // Pop the mini board into its own small window you can drag onto the desktop. A popup
+    // with minimal chrome; for a fully chromeless app-mode window run `npm run mini`.
+    document.getElementById("popout").addEventListener("click", () => {
+      window.open("mini.html", "claude-mini-board",
+        "width=248,height=272,menubar=no,toolbar=no,location=no,status=no,resizable=yes");
+    });
+  </script>
 
   <script type="module">
     import { Panel } from "../shared/render.js";

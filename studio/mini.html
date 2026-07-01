@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>mini board</title>
+  <style>
+    /* A board-sized desktop widget: just the panel, filling whatever window holds it.
+       Open it chromeless via `npm run mini` (Chromium --app) or "pop out" from board.html.
+       The whole surface is a drag handle in app-mode (-webkit-app-region: drag), so you
+       grab the board to move the window. */
+    :root { --bg:#08080b; --hair:#1c1c24; --dim:#9a9ba6;
+      --mono:'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace; }
+    * { box-sizing: border-box; }
+    html, body { height:100%; }
+    body {
+      margin:0; background:var(--bg); overflow:hidden;
+      display:flex; align-items:center; justify-content:center;
+      -webkit-app-region: drag;              /* drag the window by the widget (app-mode) */
+      -webkit-user-select: none; user-select: none; cursor: default;
+    }
+    /* Square board that fills the smaller window dimension, with a hair of breathing room. */
+    #board {
+      width: min(96vw, 96vh); height: min(96vw, 96vh);
+      border-radius: 14px; image-rendering: pixelated;
+      background:#060608; border:1px solid var(--hair);
+      box-shadow: 0 0 46px var(--glow, rgba(255,80,8,.28));
+    }
+    /* Hidden by default; double-click the widget to peek at what it is mirroring. */
+    #status {
+      position: fixed; left:0; right:0; bottom:6px; text-align:center;
+      font-family:var(--mono); font-size:10px; letter-spacing:.04em; color:var(--dim);
+      opacity:0; transition:opacity .15s; pointer-events:none;
+      text-shadow:0 1px 3px #000;
+    }
+    body.show-status #status { opacity:.85; }
+  </style>
+</head>
+<body>
+  <canvas id="board" width="480" height="480"></canvas>
+  <div id="status">starting</div>
+
+  <script type="module">
+    import { Panel } from "../shared/render.js";
+    import { makeWebSimRenderer } from "../shared/renderers/web-sim.js";
+    import { FIRMWARE_SIMS } from "../shared/firmware-sims.js";
+    import { resolveExpression } from "../shared/expressions.js";
+    import { framesFromPx, applyEvent, buildPlaylists, arbitrate, nextIndex, isEngineResponse, mirrorOkAt } from "./board.js";
+    import { SHOWCASE } from "./showcase.js";
+
+    // Same firmware-sim defaults board.html uses, so the mini mirror looks identical.
+    const FW_DEFAULTS = {
+      frostbite:   { mist: 40, sparkle: 20 },
+      fire:        { palette: "classic", intensity: 6 },
+      matrix_rain: { theme: "classic", frame_ms: 60 },
+      snow:        { frame_ms: 110, flakeColor: "#dce6ff" },
+      dancefloor:  { palette: 0, hold: 6 },
+    };
+    const DWELL_MS = 7000;
+    const REDUCE = matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+    const cv = document.getElementById("board");
+    const statusEl = document.getElementById("status");
+    const panel = new Panel(cv, { device: cv });
+    const webSim = makeWebSimRenderer({ panel, loadExpression: () => null, firmwareSims: FIRMWARE_SIMS });
+
+    let ambItems = [], ambIdx = 0, ambNextAt = 0, curToken = null;
+    let lastSseAt = null, lastMirrorAt = 0, liveAnim = null;
+
+    // Reflect state in the status line AND the window title (so a chromeless app-mode
+    // window is still self-identifying), only writing on change.
+    let lastLabel = null;
+    function setLabel(short, full) {
+      if (full === lastLabel) return;
+      lastLabel = full; statusEl.textContent = full;
+      document.title = "mini board - " + short;
+    }
+    document.body.addEventListener("dblclick", () => document.body.classList.toggle("show-status"));
+
+    function playItem(item) {
+      if (!item) return;
+      if (item.kind === "firmware") {
+        const sim = FIRMWARE_SIMS[item.name](FW_DEFAULTS[item.name] || {});
+        panel.setStepper(() => sim.frame(), sim.frame_ms);
+      } else {
+        const ex = resolveExpression(item.entry);
+        panel.setFrames(ex.frames, ex.frame_ms);
+      }
+    }
+
+    // Precedence each frame (no pin in the mini): board mirror > live Claude > ambient.
+    function control(now) {
+      const src = arbitrate({ mirrorOk: mirrorOkAt(lastMirrorAt, now), lastSseAt, now, pinned: false });
+      if (src === "mirror") {
+        if (liveAnim && FIRMWARE_SIMS[liveAnim.type]) {
+          const want = "msim:" + liveAnim.type;
+          if (curToken !== want) {
+            const sim = FIRMWARE_SIMS[liveAnim.type](liveAnim.params || FW_DEFAULTS[liveAnim.type] || {});
+            panel.setStepper(() => sim.frame(), sim.frame_ms);
+            curToken = want;
+          }
+          setLabel("live board", "live board - " + liveAnim.type);
+        } else {
+          curToken = "mirror";
+          setLabel("live board", "live board - mirroring panel");
+        }
+        return;
+      }
+      if (src === "live") { curToken = "live"; setLabel("Claude", "Claude is driving"); return; }
+      // ambient resting floor
+      const inAmbient = curToken && curToken.startsWith("amb:");
+      if (inAmbient && now < ambNextAt) return;
+      if (inAmbient) ambIdx = nextIndex(ambIdx, ambItems.length);
+      const it = ambItems[ambIdx];
+      if (it) { playItem(it); curToken = "amb:" + it.name; ambNextAt = now + DWELL_MS; setLabel("ambient", "ambient - " + it.name); }
+      else setLabel("ambient", "no library");
+    }
+
+    // Build the ambient playlist (same curated SHOWCASE as board.html); no pin strip.
+    try {
+      const data = await (await fetch("./gallery-data.json")).json();
+      ambItems = buildPlaylists(data, Object.keys(FIRMWARE_SIMS), SHOWCASE).ambient;
+    } catch (e) {
+      setLabel("no library", "no library (" + e.message + ")");
+    }
+
+    if (REDUCE) {
+      const it = ambItems[0];
+      if (it && it.kind === "expression") { const ex = resolveExpression(it.entry); panel.setFrames(ex.frames.slice(0, 1), 1e9); }
+      else if (it) { const sim = FIRMWARE_SIMS[it.name](FW_DEFAULTS[it.name] || {}); panel.setFrames([sim.frame()], 1e9); }
+      setLabel("ambient", "ambient - " + (it ? it.name : "-") + " (motion reduced)");
+    } else {
+      let last = performance.now();
+      (function loop(now) { panel.tick(now - last, now); last = now; control(now); requestAnimationFrame(loop); })(last);
+
+      // Wire the live mirror ONLY when an engine answers (a static host stays local-first).
+      (async function detectEngineThenWire() {
+        let engine = false;
+        try { engine = isEngineResponse((await fetch("/api/framebuffer")).status); } catch { engine = false; }
+        if (!engine) return;
+
+        const src = new EventSource("/events");
+        src.onmessage = (m) => {
+          lastSseAt = performance.now();
+          let ev; try { ev = JSON.parse(m.data); } catch { return; }
+          if (ev.kind === "animation" && FIRMWARE_SIMS[ev.type]) liveAnim = { type: ev.type, params: ev.params };
+          else if (ev.kind === "frames") liveAnim = null;
+          if (arbitrate({ mirrorOk: mirrorOkAt(lastMirrorAt, lastSseAt), lastSseAt, now: lastSseAt, pinned: false }) === "live") {
+            applyEvent(ev, { panel, webSim });
+          }
+        };
+
+        async function pollFramebuffer() {
+          if (document.hidden) return;
+          try {
+            const r = await fetch("/api/framebuffer");
+            if (r.ok) {
+              const { px } = await r.json();
+              lastMirrorAt = performance.now();
+              const liveSim = liveAnim && FIRMWARE_SIMS[liveAnim.type];
+              if (!liveSim && arbitrate({ mirrorOk: mirrorOkAt(lastMirrorAt, lastMirrorAt), lastSseAt, now: lastMirrorAt, pinned: false }) === "mirror") {
+                panel.setFrames([framesFromPx(px)], 1e9);
+              }
+            }
+          } catch { /* transient, grace window holds the mirror */ }
+        }
+        (async function pollLoop() { await pollFramebuffer(); setTimeout(pollLoop, 333); })();
+      })();
+    }
+  </script>
+</body>
+</html>
