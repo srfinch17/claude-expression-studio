@@ -36,7 +36,9 @@ renderer**, reached only over HTTP, not a dependency.
 - **`studio/`**, the Expression Studio web tool: `index.html` (Gallery),
   `editor.html` (binding/pool/weight editor over the manifest), `frame-editor.html`,
   `board.html` (the local-first virtual board, native render + SSE/framebuffer
-  mirror), `presence.html` (the presence card + playground).
+  mirror), `mini.html` (the chromeless draggable desktop mini-board, reuses `board.js`;
+  launch via `npm run mini` / board.html pop-out / the `matrix_mini` tool),
+  `presence.html` (the presence card + playground).
 - **`mcp_server/`**, the MCP server (Claude tools: `matrix_express`, `presence_set`,
   `matrix_idle`, …) **and the engine** (`engine-server.ts`, `startEngineServer`):
   serves `/studio/` + `/shared/`, the manifest API, `GET/POST /api/presence`
