@@ -24,6 +24,28 @@ npm run setup -- --dry-run        # preview    ·    --uninstall   # reverse
 Board-optional by default. The board is reached only over HTTP. See
 [`docs/board-api-contract.md`](docs/board-api-contract.md).
 
+## Run the Studio (edit and wire in your browser)
+
+The Studio is a local web app and runs fully **without a board**, no hardware required. Build the engine once, then run it:
+
+```bash
+cd mcp_server && npm install && npx tsc && cd ..   # one-time: build the engine
+npm run studio                                     # serves the Studio at http://127.0.0.1:8787
+```
+
+Then open in your browser:
+
+- **Editor** `http://127.0.0.1:8787/studio/editor.html`, bind and reweight which animation fires on which intent (Save writes back to `shared/manifest.json`).
+- **Gallery** `http://127.0.0.1:8787/studio/index.html`, browse and approve the animation library.
+- **Frame editor**, opened from the edit links on saved tiles, to paint an 8×8 expression.
+- **Board** `http://127.0.0.1:8787/studio/board.html`, a live mirror of the panel (or a no-board virtual one).
+
+With no board connected, the Board page shows a virtual panel of whatever intents fire, so you can build and wire the whole library board-free. To point it at a physical board instead: `ESP32_URL=http://<board-ip> npm run studio`.
+
+**Installed into Claude Code?** After `npm run setup` you don't need to remember any
+of this: just ask Claude (e.g. "open the Expression Studio") and it runs the
+`matrix_studio` tool to hand you the local URL. The MCP server starts the engine for you.
+
 ## Hardware
 
 The ESP32-S3 firmware + its standalone onboard web UI live in a separate repo:
@@ -37,7 +59,7 @@ npm test                 # node --test across shared/ studio/ mcp_server/ script
 npm run check:manifest   # validate the trigger manifest
 npm run build:pages      # assemble the read-only Pages bundle
 npm run build:mcpb       # pack the Claude Desktop extension
-python -m http.server 8766   # then open /studio/index.html and /site/index.html
+python -m http.server 8766   # view-only static preview (no Save; use `npm run studio` to edit)
 ```
 
 Design specs: `docs/superpowers/specs/` · plans: `docs/superpowers/plans/`.
