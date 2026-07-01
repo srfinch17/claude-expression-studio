@@ -1,7 +1,7 @@
 {
-  "name": "esp32-matrix-mcp",
+  "name": "expression-studio-mcp",
   "version": "0.12.0",
-  "description": "MCP server that connects Claude to the ESP32-S3-Matrix LED board",
+  "description": "MCP server + engine for the Claude Expression Studio (presence, expressions, the Studio web app, and an optional ESP32-S3 LED board renderer)",
   "type": "module",
   "scripts": {
     "start": "tsx index.ts"

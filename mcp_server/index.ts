@@ -218,7 +218,7 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 // ------------------------------------------------------------
 const server = new Server(
   {
-    name: "esp32-matrix",
+    name: "expression-studio",
     version: MCP_VERSION,
   },
   {

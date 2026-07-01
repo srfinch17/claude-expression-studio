@@ -6,7 +6,10 @@
 // A matrix hook entry is recognised by this substring in its command, the merge/remove
 // functions use it so they only ever touch OUR groups and never a user's other hooks.
 const MATRIX_MARKER = "matrix_signal.py";
-const MCP_KEY = "esp32-matrix";
+const MCP_KEY = "expression-studio";
+// Pre-rename registration key (when this was one ESP32 repo). Install and uninstall both
+// clear it so a re-run migrates an old install instead of leaving a dead duplicate server.
+const LEGACY_MCP_KEY = "esp32-matrix";
 
 // The six harness moments we wire, in order. Single source for hooksBlock so the emitted
 // settings can't drift from this list. matcher === null => an ungated event-level hook.
@@ -95,6 +98,7 @@ export function mcpRegistration({ platform, mcpDir, distIndexPath, nodePath, lau
 export function mergeMcp(claudeJson, registration) {
   const out = clone(claudeJson);
   out.mcpServers ||= {};
+  delete out.mcpServers[LEGACY_MCP_KEY];
   out.mcpServers[MCP_KEY] = clone(registration);
   return out;
 }
@@ -103,6 +107,7 @@ export function removeMcp(claudeJson) {
   const out = clone(claudeJson);
   if (out.mcpServers) {
     delete out.mcpServers[MCP_KEY];
+    delete out.mcpServers[LEGACY_MCP_KEY];
     if (Object.keys(out.mcpServers).length === 0) delete out.mcpServers; // clean round-trip
   }
   return out;
