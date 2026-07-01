@@ -79,9 +79,9 @@ be auto-tested across repos:
 
 ## Versioning
 
-Canonical `VERSION` stamped into `mcp_server/package.json` + `shared/manifest.json` +
-the `.mcpb` manifest. `npm run check` flags drift. (Follow-up: `scripts/version-stamp.js`
-still references firmware artifacts, trim to studio-only.)
+Canonical `VERSION` stamped into `mcp_server/package.json` + `shared/manifest.json`
+(`appVersion`) + the `.mcpb` manifest, all via `scripts/version-stamp.js` (studio-only).
+`npm run check` flags drift.
 
 ## Deeper material
 
