@@ -42,9 +42,26 @@ Then open in your browser:
 
 With no board connected, the Board page shows a virtual panel of whatever intents fire, so you can build and wire the whole library board-free. To point it at a physical board instead: `ESP32_URL=http://<board-ip> npm run studio`.
 
+### Mini board (a little widget on your desktop)
+
+Want a tiny, always-there window of what Claude is doing? The mini board is a
+board-sized, chromeless widget you can drag anywhere on your desktop. It mirrors the
+live panel when a board is connected, and plays the animation library when none is.
+Three ways to open it:
+
+```bash
+npm run mini                 # a small chromeless Chrome/Edge window (drag it onto your desktop)
+```
+
+- **Pop out** from the Board page: the `⧉ pop out mini board` button opens it as a small window in any browser.
+- **Ask Claude** (once installed): "put the mini board on my desktop" runs the `matrix_mini` tool.
+
+Runs board-free too. Double-click the widget to peek at what it is mirroring.
+
 **Installed into Claude Code?** After `npm run setup` you don't need to remember any
-of this: just ask Claude (e.g. "open the Expression Studio") and it runs the
-`matrix_studio` tool to hand you the local URL. The MCP server starts the engine for you.
+of this: just ask Claude (e.g. "open the Expression Studio" or "put a mini board on my
+desktop") and it runs the `matrix_studio` / `matrix_mini` tool for you. The MCP server
+starts the engine.
 
 ## Hardware
 
