@@ -36,6 +36,6 @@ if (!res.ok) {
 
 console.log(
   res.mode === "app"
-    ? `Mini-board open in a ${/msedge/i.test(res.browser || "") ? "Edge" : "Chrome"} app window. Drag it onto your desktop wherever you like.`
+    ? `Mini-board open in a ${/edge/i.test(res.browser || "") ? "Edge" : "Chrome"} app window. Drag it onto your desktop wherever you like.`
     : `No Chrome/Edge found, so I opened ${url} in your default browser. Resize/position that window as a mini-board.`,
 );

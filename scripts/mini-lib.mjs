@@ -68,11 +68,21 @@ export function buildAppArgs(url, { width, height, x, y, profileDir }) {
   return args;
 }
 
-// Open a url in the OS default browser (fallback when no Chromium is found). Not app-mode.
-function openDefault(url, platform) {
-  if (platform === "win32") return spawn("cmd", ["/c", "start", "", url], { detached: true, stdio: "ignore", shell: false });
-  if (platform === "darwin") return spawn("open", [url], { detached: true, stdio: "ignore" });
-  return spawn("xdg-open", [url], { detached: true, stdio: "ignore" });
+/** The [cmd, args] to open a url in the OS default browser (fallback when no Chromium
+ *  is found). Not app-mode. On Windows the `start "" <url>` form needs the empty title
+ *  arg so a url in quotes is not mistaken for the window title. Pure, for testability. */
+export function defaultOpenCommand(url, platform = process.platform) {
+  if (platform === "win32") return ["cmd", ["/c", "start", "", url]];
+  if (platform === "darwin") return ["open", [url]];
+  return ["xdg-open", [url]];
+}
+
+// A profile dir UNIQUE per launch. Chrome enforces one running process per --user-data-dir,
+// so a shared fixed dir would make a second mini-board window collide with the first's profile
+// lock instead of opening an independent instance. A timestamp + random suffix keeps each
+// launch isolated (and it is a throwaway widget profile under the OS temp dir).
+function uniqueProfileDir() {
+  return join(tmpdir(), `claude-mini-board-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
 }
 
 /**
@@ -80,23 +90,26 @@ function openDefault(url, platform) {
  *   mode: "app"     -> opened chromeless in a Chromium --app window
  *         "default" -> no Chromium found, opened the url in the default browser
  *         "failed"  -> spawn threw
- * Detached so the widget outlives the caller (CLI process or MCP server).
+ * Detached + unref so the widget survives the caller exiting or the stdio pipe closing
+ * (a normal MCP reconnect exits the server gracefully without waiting on this child's
+ * process group, so the window stays up; only a forced whole-tree kill would close it).
+ * `spawnFn` is injectable for tests; defaults to the real child_process.spawn.
  */
 export function launchMini(url, opts = {}) {
   const platform = opts.platform || process.platform;
   const width = opts.width || 240;
   const height = opts.height || 240;
-  const profileDir = opts.profileDir || join(tmpdir(), "claude-mini-board");
+  const profileDir = opts.profileDir || uniqueProfileDir();
+  const spawnFn = opts.spawnFn || spawn;
   const browser = opts.browser ?? findBrowser(platform, opts.env || process.env);
   try {
     if (browser) {
       const args = buildAppArgs(url, { width, height, x: opts.x, y: opts.y, profileDir });
-      const child = spawn(browser, args, { detached: true, stdio: "ignore" });
-      child.unref();
+      spawnFn(browser, args, { detached: true, stdio: "ignore" }).unref();
       return { ok: true, mode: "app", browser, url };
     }
-    const child = openDefault(url, platform);
-    child.unref();
+    const [cmd, args] = defaultOpenCommand(url, platform);
+    spawnFn(cmd, args, { detached: true, stdio: "ignore" }).unref();
     return { ok: true, mode: "default", url };
   } catch (e) {
     return { ok: false, mode: "failed", url, error: e instanceof Error ? e.message : String(e) };

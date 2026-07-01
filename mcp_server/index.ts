@@ -838,7 +838,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           const { launchMini } = await import(libUrl);
           const res = launchMini(miniUrl, Number.isFinite(size) && size > 0 ? { width: size, height: size } : {});
           const note = res.mode === "app"
-            ? `Opened the mini-board in a chromeless ${/msedge/i.test(res.browser || "") ? "Edge" : "Chrome"} window. Drag it onto your desktop.`
+            ? `Opened the mini-board in a chromeless ${/edge/i.test(res.browser || "") ? "Edge" : "Chrome"} window. Drag it onto your desktop.`
             : res.mode === "default"
               ? `No Chrome/Edge found, so I opened it in your default browser: ${miniUrl}`
               : `Could not open a window (${res.error}). Open it yourself: ${miniUrl}`;
