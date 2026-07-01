@@ -16,8 +16,9 @@ was current when it spawned. Each time it wakes it re-reads the file:
 After MATRIX_IDLE_CAP seconds of continuous idle it settles on a calm sleepy face
 and exits, so the panel isn't flashing all night.
 
-Honors the .matrix_off kill switch (checked every loop). Fails silent if the board
-is unreachable. Reuses matrix_signal's art_to_hex/post_frames (same dir).
+Honors the .matrix_off kill switch AND the .matrix_pinned hold flag (both checked
+every loop, so a watcher already running when the user pins goes quiet). Fails
+silent if the board is unreachable. Reuses matrix_signal's helpers (same dir).
 
 ──────────────────────────────────────────────────────────────────────────────
 ADDING / MODIFYING ANIMATIONS  (this is the easy part, no code edits needed):
@@ -128,6 +129,8 @@ def main():
         time.sleep(gap)
         if os.path.exists(FLAG_OFF):
             return 0                      # silenced via kill switch
+        if ms._pinned():
+            return 0                      # a user-pinned animation owns the board; hands off
         if current_token() != my_token:
             return 0                      # the user's back, or a newer watcher owns the board
         if time.monotonic() - start >= CAP_SECS:

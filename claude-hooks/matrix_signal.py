@@ -51,7 +51,8 @@ def _load_config():
 
 
 BOARD_URL, MCP_DIR = _load_config()
-FLAG_OFF = os.path.join(HOOK_DIR, ".matrix_off")        # kill switch
+FLAG_OFF = os.path.join(HOOK_DIR, ".matrix_off")        # kill switch (go dark)
+FLAG_PIN = os.path.join(HOOK_DIR, ".matrix_pinned")     # hold flag (hands off, keep what's up)
 ACTIVITY_FILE = os.path.join(HOOK_DIR, ".matrix_activity")  # last-activity token
 IDLE_WATCHER = os.path.join(HOOK_DIR, "matrix_idle.py")     # the "bored" watcher
 
@@ -375,10 +376,47 @@ def spawn_idle_watcher(token):
         pass  # never let a spawn failure break the turn
 
 
+def _pinned():
+    """True while a user-pinned animation should be HELD, i.e. the hooks (this
+    signal writer AND matrix_idle) must keep their hands off the board. The mirror
+    image of .matrix_off: off means "go dark," pin means "don't touch what's up."
+    Set by the user (a matrix_pin tool call, or `touch`-ing the flag); the display
+    itself is still whatever the user's own MCP push last put there.
+
+    Flag = a file at HOOK_DIR/.matrix_pinned. Empty body pins indefinitely; a body
+    that parses as an epoch-seconds deadline pins until then, and an EXPIRED flag
+    self-clears (unlinked) so a stale pin can never wedge the board forever. An
+    unreadable / garbage body is treated as "hold" (fail SAFE: honor the intent to
+    pin rather than silently dropping it). .matrix_off is checked BEFORE this, so
+    off always wins."""
+    try:
+        with open(FLAG_PIN, "r", encoding="utf-8") as f:
+            body = f.read().strip()
+    except FileNotFoundError:
+        return False
+    except Exception:
+        return True                      # present but unreadable: honor the hold
+    if not body:
+        return True                      # empty: pin forever
+    try:
+        deadline = float(body)
+    except ValueError:
+        return True                      # garbage: honor the hold
+    if time.time() < deadline:
+        return True
+    try:
+        os.unlink(FLAG_PIN)              # expired: self-clean so it never wedges
+    except Exception:
+        pass
+    return False
+
+
 def main():
     if len(sys.argv) < 2:
         return 0
-    if os.path.exists(FLAG_OFF):         # at-will kill switch
+    if os.path.exists(FLAG_OFF):         # at-will kill switch (off wins over a pin)
+        return 0
+    if _pinned():                        # user is holding an animation: hooks hands-off
         return 0
     moment = sys.argv[1].strip()
     # "user is active" beats stamp the token (any pending idle watcher then exits);

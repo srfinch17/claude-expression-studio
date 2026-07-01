@@ -26,6 +26,21 @@ forces the slow restart cycle. Trick: to preview a `CANNED` edit *without* resta
 re-send the identical frames via `matrix_animate` — the running MCP server keeps serving
 old `dist` until CC restarts, so `matrix_express` won't match source until then.
 
+## Pin a looping piece before you end the turn, or the hooks erase it
+
+When you fire a **looping** animation (`loop:0`) and end your turn so the user can look,
+the Claude Code **Stop hook** writes the `done` checkmark over it, and after ~1-2 min the
+**idle rotation** takes the board. The user then sees a checkmark (or a bored goof), *not*
+the piece you asked them to judge — every writer to the panel is equal, last-write-wins.
+
+**Fix: pin it before you hand off.** `matrix_pin` (add `seconds` for a timed hold) tells
+the Stop/done hook and the idle scheduler to keep hands off; `matrix_unpin` (or the
+timeout) releases. Your own `matrix_animate` calls still take effect (manual always wins),
+so you can keep iterating while pinned. Older install without the tools? `touch
+~/.claude/hooks/.matrix_pinned` and `rm` it to release. The `.matrix_off` kill switch is
+checked first, so **off still wins over a pin**. A `loop:N` piece that settles on a held
+last frame is clobbered the same way — pin those too.
+
 ## Mind the brightness-5 thresholds (the #1 cause of "it looks wrong")
 
 The panel usually runs at bri 5. FastLED then scales each channel by 6/256, so a channel

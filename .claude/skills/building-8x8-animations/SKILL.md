@@ -147,9 +147,14 @@ Independent files → no contention; build each as its own saved JSON.
   + design intent), not a fresh spawn: send it the ONE specific flaw + "keep everything else." A
   rework of an existing piece is still animator work (delegate) — just route it back to the agent
   that built it.
-- **Check the name doesn't collide** before saving: a new expression whose name matches an existing
-  wait-/bored/canned/saved name gets mis-grouped (and may silently auto-fire in that rotation)
-  instead of showing for review. Pick a unique name (a rename = write the new file + delete the old).
+- **Check the name doesn't collide** before saving, across TWO namespaces:
+  (1) other saved/canned/wait-/bored expressions — a match gets mis-grouped and may silently
+  auto-fire in that rotation instead of showing for review; and (2) the **firmware-native**
+  animation modes (`fire`, `rainbow`, `fireworks`, `fireworks2`, `comet`, `sun`, `frostbite`,
+  `matrix_rain`, `clock`, … — the full set is `shared/firmware-names.js`). A saved JSON named
+  `fireworks2` doesn't override the firmware mode but makes "play fireworks 2" ambiguous, since
+  the resolver routes firmware names down a different path than frame-expressions. Pick a name
+  outside both sets (a rename = write the new file + delete the old).
 - **Review discipline:** track sign-off with a visible marker (an `APPROVED` set → green ✓); and
   when an approved piece is later EDITED, REMOVE it from approved so it returns to review — edits
   invalidate prior sign-off.
@@ -157,6 +162,11 @@ Independent files → no contention; build each as its own saved JSON.
 Proven at scale: this loop built + refined ~40 animations across many parallel waves in one session.
 The dispatcher collects the JSONs, runs `npm run build:gallery` ONCE, and presents the contact
 sheets for the human's at-a-glance sign-off — the one thing no automated loop replaces (taste).
+
+If sign-off happens on the **live board** (not just the contact sheet), pin the piece before you
+end the turn: firing a `loop:0` animation and handing off lets the Stop hook's `done` checkmark
+and the idle rotation clobber it, so the human sees a checkmark instead. `matrix_pin` to hold,
+`matrix_unpin` to release (superpowers:emoting-on-8x8 has the details).
 
 ## Common mistakes
 
