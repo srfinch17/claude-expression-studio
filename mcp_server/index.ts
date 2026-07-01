@@ -29,6 +29,7 @@ import { executePlan } from "./run-plan.js";
 import { normalizePresence } from "./presence.js";
 import { normalizeSettingsPatch } from "./settings.js";
 import { writePin, clearPin } from "./pin-flag.js";
+import { reservedSaveError, formatCatalog } from "./expression-catalog.js";
 import { startEngineServer } from "./engine-server.js";
 import type { SseHub } from "./sse.js";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
@@ -499,7 +500,7 @@ If a drawing lands well (or the user likes it), re-call with save_as (kebab-case
     },
     {
       name: "matrix_list_expressions",
-      description: "List every available matrix expression, canned and saved, with descriptions. Call when unsure what exists or what a saved expression was for.",
+      description: "List every available animation in one catalog: the firmware-native modes (played with matrix_set_animation) plus the canned and saved frame-expressions (played with matrix_express), with descriptions. Call when unsure what exists, what a saved expression was for, or which registry a name like 'fireworks2' belongs to.",
       inputSchema: {
         type: "object",
         properties: {},
@@ -756,18 +757,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         let savedNote = "";
         if (args.save_as) {
           const saveName = String(args.save_as).toLowerCase().replace(/[^a-z0-9-]/g, "-");
-          await mkdir(EXPR_DIR, { recursive: true });
-          await writeFile(path.join(EXPR_DIR, `${saveName}.json`), JSON.stringify(expr, null, 2), "utf8");
-          savedNote = ` Saved to the library as "${saveName}", replay anytime with matrix_express.`;
+          // Reserve the firmware namespace: a saved expression sharing a firmware mode
+          // name is unreachable via the manifest (the resolver routes firmware names down
+          // the firmware path). Refuse the SAVE (the animation already played above).
+          const { isFirmwareName } = await engine();
+          const reserved = reservedSaveError(saveName, isFirmwareName);
+          savedNote = reserved
+            ? ` Not saved: ${reserved}`
+            : await (async () => {
+                await mkdir(EXPR_DIR, { recursive: true });
+                await writeFile(path.join(EXPR_DIR, `${saveName}.json`), JSON.stringify(expr, null, 2), "utf8");
+                return ` Saved to the library as "${saveName}", replay anytime with matrix_express.`;
+              })();
         }
         return { content: [{ type: "text", text: `Animating ${wire.frames.length} frame(s) on the matrix.${savedNote}` }] };
       }
 
       case "matrix_list_expressions": {
-        const canned = Object.entries(CANNED).map(([n, e]) => `- ${n}: ${e.description}`);
-        const saved = (await listSavedExpressions()).map((s) => `- ${s.name}: ${s.description}`);
-        return { content: [{ type: "text", text:
-          `Canned expressions:\n${canned.join("\n")}\n\nSaved expressions:\n${saved.length ? saved.join("\n") : "(none yet, create with matrix_animate save_as)"}` }] };
+        const { firmwareNames } = await engine();
+        const canned = Object.entries(CANNED).map(([name, e]) => ({ name, description: e.description }));
+        const saved = await listSavedExpressions();
+        return { content: [{ type: "text", text: formatCatalog({ firmwareNames, canned, saved }) }] };
       }
 
       case "matrix_get_temperature": {
