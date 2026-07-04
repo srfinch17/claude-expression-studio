@@ -186,16 +186,20 @@
         },
         "working": {
           "pool": {
-            "wait-claude": 40,
-            "wait-rainbow": 30,
-            "wait-orbit": 20,
-            "claudesweep": 20,
-            "working": 10,
-            "hourglass": 10,
-            "wait-logo-breathe": 8,
-            "wait-logo-chase": 8,
-            "wait-logo-boot": 8,
-            "wait-logo-ripple": 8
+            "wait-claude": 24,
+            "wait-rainbow": 18,
+            "wait-orbit": 14,
+            "claudesweep": 16,
+            "working": 8,
+            "hourglass": 8,
+            "wait-logo-breathe": 6,
+            "wait-logo-chase": 6,
+            "wait-logo-boot": 6,
+            "wait-logo-ripple": 6,
+            "crystal-ball": 8,
+            "newtons-cradle": 8,
+            "soundwave": 6,
+            "wave": 4
           }
         },
         "thinking": {
@@ -213,14 +217,19 @@
         },
         "done": {
           "pool": {
-            "done": 2,
-            "task-complete": 1
+            "done": 4,
+            "task-complete": 2,
+            "thumbsup": 2,
+            "smiley": 1,
+            "sparkle": 1,
+            "bloom": 1
           }
         },
         "attention": {
           "pool": {
             "ask-attention": 1,
-            "alert": 1
+            "alert": 1,
+            "reticle": 1
           }
         },
         "alert": {
@@ -319,11 +328,32 @@
             "fireflies": 1,
             "tornado": 1,
             "jack-o-lantern": 1,
-            "claude-idle": 1
+            "claude-idle": 1,
+            "starfield": 1,
+            "spiral": 1,
+            "sun": 1,
+            "liquid": 1,
+            "breathe": 1,
+            "rainbow": 1,
+            "aurora": 1,
+            "goldfish": 1,
+            "ufo": 1,
+            "butterfly": 1,
+            "bloom": 1,
+            "potion": 1,
+            "spinning-coin": 1,
+            "inchworm": 1,
+            "idea": 1,
+            "warp-portal": 1
           }
         },
         "awaiting-input": "ask-question",
-        "results-merged": "swarm-merge",
+        "results-merged": {
+          "pool": {
+            "swarm-merge": 2,
+            "newtons-cradle": 1
+          }
+        },
         "compacting": {
           "pool": {
             "black-hole": 2,
@@ -336,7 +366,9 @@
             "party": 1,
             "confetti": 1,
             "warrocket": 1,
-            "fireworks": 1
+            "fireworks": 1,
+            "fireworks2": 1,
+            "fireworks-3": 1
           }
         },
         "delight": {
@@ -367,12 +399,15 @@
         "session-start": {
           "pool": {
             "aurora": 1,
-            "sunrise": 1
+            "sunrise": 1,
+            "bloom": 1
           }
         },
         "session-end": {
           "pool": {
-            "dusk": 1
+            "dusk": 1,
+            "sleep": 1,
+            "yawn": 1
           }
         },
         "ok": {

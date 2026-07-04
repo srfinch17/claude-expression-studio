@@ -352,7 +352,6 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 - fireworks: single looping firework, white mortar launches from bottom, explodes in colorful radial burst. params: color1 (dominant burst color), color2, color3 (fade-out colors)
 - fireworks2: like fireworks but each tendril has a bright colored tip and a dimming white comet tail. Cross-bloom flash at burst. params: color1/2/3 (tip palette, same as fireworks)
 - frostbite: shimmering pale mist backdrop with bright diamond sparkles. All pixels always lit. params: color (base hue, default #DCE6FF cool white), sparkle (0-100, default 20)
-- comet: bobbing comet at right edge with wave tail and occasional sparks. params: color1 (heart), color2 (shell), color3 (tail tip)
 - sun: glowing disc with 4 colored dots orbiting around it. Dots are evenly spaced and each keeps its own color as they revolve. params: color1 (disc/sun color), color2 (orbit dot 1, lightest), color3 (orbit dot 2), color4 (orbit dot 3), color5 (orbit dot 4, darkest), discBri (0-100, sun disc brightness, default 78), ringBri (0-100, orbit dot brightness, default 78)
 - calendar: today's date from NTP. params: style (scroll = "Tue Jun 9" scrolls; bignum = big day-of-month number; grid = mini month grid with today highlighted; clock = month over day in the clock layout; square = desk-calendar square, 2-letter weekday over big day number), color1 (primary: day/today/scroll text), color2 (secondary: month/other days, weekday in square style), color3 (accent: weekday letter in clock style, weekend columns in grid style), tz (POSIX TZ string, DST-aware, PREFERRED) or timezone (fixed UTC offset integer). Until the first NTP sync the display shows an animated hourglass.
 - sound: vibration-reactive VU bar. NOTE: there is no microphone, it reacts to low-frequency vibration (bass) felt through a surface via the IMU, best with the board on/near a speaker. params: color1 (bar bottom), color2 (bar top), sensitivity (0-10, default 5)
@@ -372,7 +371,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
               "timer_fill", "timer_snow", "timer_text",
               "clock", "matrix_rain", "snow",
               "dancefloor",
-              "spiral", "starfield", "fireworks", "fireworks2", "comet", "sun",
+              "spiral", "starfield", "fireworks", "fireworks2", "sun",
               "frostbite",
               "calendar", "sound",
               "claudesweep",
@@ -421,8 +420,8 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
 - finished successfully → "done" (blinks green, then holds a checkmark)
 - blocked / waiting for the human's input → "alert" (blinks until replaced, this is the silent tap on the shoulder)
 - celebration / milestone → "party"; approval → "thumbsup"; failure → "cross" or "sad"
-- idle → "sleep"; delight → "sparkle"; pure fun when the moment fits → "spaceship"
-One expression per state change, don't spam every step. Canned (pre-vetted as human-readable): smiley, sad, heart, cross, thumbsup, ok, sparkle, alert, working, party, spaceship, sleep. "wait" = a random wait spinner (the working snake + any saved wait-* animation). Also plays anything saved via matrix_animate's save_as (see matrix_list_expressions).`,
+- idle → "sleep"; delight → "sparkle"
+One expression per state change, don't spam every step. Canned (pre-vetted as human-readable): smiley, sad, heart, cross, thumbsup, ok, sparkle, alert, working, party, sleep. "wait" = a random wait spinner (the working snake + any saved wait-* animation). Also plays anything saved via matrix_animate's save_as (see matrix_list_expressions).`,
       inputSchema: {
         type: "object",
         properties: {

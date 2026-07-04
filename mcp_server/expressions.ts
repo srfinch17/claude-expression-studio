@@ -535,18 +535,6 @@ export const CANNED: Record<string, Expression> = {
     ],
   },
 
-  spaceship: {
-    description:
-      "Rocket pointing up with a thrusting flame, playful, 'off we go', kicking something off. The ship is fixed in the top rows; the 2-wide flame's red ember scrolls down through orange to read as upward thrust.",
-    frame_ms: 160,
-    colors: { R: "#ff2828", O: "#ff8c00", W: "#ffffff", B: "#2060ff" },
-    frames: [
-      ["...RR...", "..RWWR..", "..WBBW..", ".RWWWWR.", ".R.WW.R.", "...RR...", "...OO...", "...OO..."],
-      ["...RR...", "..RWWR..", "..WBBW..", ".RWWWWR.", ".R.WW.R.", "...OO...", "...RR...", "...OO..."],
-      ["...RR...", "..RWWR..", "..WBBW..", ".RWWWWR.", ".R.WW.R.", "...OO...", "...OO...", "...RR..."],
-    ],
-  },
-
   sleep: {
     description: "Drifting Zz: idle, waiting quietly, nothing needs attention.",
     frame_ms: 600,

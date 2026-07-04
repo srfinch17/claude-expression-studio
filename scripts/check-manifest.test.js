@@ -82,10 +82,10 @@ test("collectAnimationNames includes canned, saved, bored, firmware", () => {
 
 // Firmware names must come from shared/firmware-names.js (the single source), not a stale
 // hardcoded subset, else the Studio can assign a real firmware sim the validator then rejects
-// on Save. wave/sun/comet/spiral/starfield/liquid/rainbow/breathe are sims that the old 8-name
+// on Save. wave/sun/spiral/starfield/liquid/rainbow/breathe are sims that the old 8-name
 // list omitted. This case fails against that stale list and passes once it's single-sourced.
 test("collectAnimationNames knows every firmware sim the Studio offers (not just the old 8)", () => {
-  for (const n of ["wave", "sun", "comet", "spiral", "starfield", "liquid", "rainbow", "breathe"])
+  for (const n of ["wave", "sun", "spiral", "starfield", "liquid", "rainbow", "breathe"])
     assert.ok(NAMES.has(n), `${n} must be a recognized firmware name`);
 });
 

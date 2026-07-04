@@ -7,9 +7,9 @@
 // resolve to a real animation are silently skipped (see buildPlaylists).
 
 export const SHOWCASE = [
-  // firmware sims (all 15 are kinetic art)
+  // firmware sims (all 14 are kinetic art)
   "claudesweep", "frostbite", "fire", "matrix_rain", "snow", "fireworks",
-  "dancefloor", "rainbow", "breathe", "wave", "comet", "spiral", "starfield",
+  "dancefloor", "rainbow", "breathe", "wave", "spiral", "starfield",
   "sun", "liquid",
   // scenic saved animations
   "atom", "bloom", "bomb", "butterfly", "compactor", "crystal-ball",
