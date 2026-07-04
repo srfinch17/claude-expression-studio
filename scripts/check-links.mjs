@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// check-links.mjs — guard the public showcase against cross-repo link drift.
+// check-links.mjs: guard the public showcase against cross-repo link drift.
 //
 // At the 2026-06-28 repo split the .mcpb + MCP server moved into THIS repo
 // (claude-expression-studio) while the board firmware stayed in peckworks-esp32s3matrix.
@@ -23,7 +23,9 @@ import { fileURLToPath } from "node:url";
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SHOWCASE = "site/index.html";
 const SELF_REPO = "github.com/srfinch17/claude-expression-studio";
-const FIRMWARE_REPO = "github.com/srfinch17/peckworks-esp32s3matrix";
+// Bare slug so this catches BOTH the firmware GitHub repo (github.com/.../peckworks-esp32s3matrix)
+// AND its Pages site (srfinch17.github.io/peckworks-esp32s3matrix) in one rule.
+const FIRMWARE_SLUG = "peckworks-esp32s3matrix";
 
 const html = readFileSync(path.join(REPO_ROOT, SHOWCASE), "utf8");
 const errors = [];
@@ -38,13 +40,13 @@ const anchorRe = /<a\b[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi;
 let m;
 while ((m = anchorRe.exec(html)) !== null) {
   const [, href, inner] = m;
-  if (!href.includes(FIRMWARE_REPO)) continue;
+  if (!href.includes(FIRMWARE_SLUG)) continue;
   const text = inner.replace(/<[^>]*>/g, "").trim();
   if (!/firmware/i.test(text)) {
     const line = html.slice(0, m.index).split("\n").length;
     errors.push(
-      `${SHOWCASE}:${line}  links to the firmware repo but its anchor text ("${text}") does not say "firmware".\n` +
-      `    Generic project/source links must point at ${SELF_REPO}; only explicit board-firmware links may point at ${FIRMWARE_REPO}.`
+      `${SHOWCASE}:${line}  links to the board firmware (${FIRMWARE_SLUG}) but its anchor text ("${text}") does not say "firmware".\n` +
+      `    Generic project/source links must point at ${SELF_REPO}; only explicit board-firmware links may point at ${FIRMWARE_SLUG}.`
     );
   }
 }

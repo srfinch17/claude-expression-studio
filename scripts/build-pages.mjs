@@ -3,7 +3,7 @@
 // studio + landing already use (`../shared/`, `./gallery-data.json`) resolves unchanged. Only the
 // landing moves up a level (site/index.html -> bundle root), so only its `../studio/` and
 // `../shared/` references are rewritten. Pure node built-ins; no dependencies.
-import { rmSync, mkdirSync, cpSync, writeFileSync, readFileSync } from "node:fs";
+import { rmSync, mkdirSync, cpSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -31,6 +31,14 @@ export function buildPages({ repoRoot = REPO_ROOT, outDir = path.join(REPO_ROOT,
   // 2. landing at the clean bundle root, its sibling paths rewritten
   const landing = readFileSync(path.join(repoRoot, "site", "index.html"), "utf8");
   writeFileSync(path.join(outDir, "index.html"), rewriteLandingPaths(landing), "utf8");
+
+  // 2b. site/assets (board video, poster, images) → bundle root /assets, so the
+  //     landing's own ./assets/... references resolve unchanged at the root (they
+  //     are NOT rewritten, unlike the ../studio and ../shared sibling paths).
+  const assetsDir = path.join(repoRoot, "site", "assets");
+  if (existsSync(assetsDir)) {
+    cpSync(assetsDir, path.join(outDir, "assets"), { recursive: true });
+  }
 
   // 3. disable Jekyll so no file/dir is silently dropped or transformed
   writeFileSync(path.join(outDir, ".nojekyll"), "", "utf8");

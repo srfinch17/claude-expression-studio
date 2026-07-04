@@ -29,6 +29,9 @@ test("buildPages mirrors the dev tree into outDir", () => {
       "studio/board.html",
       "shared/render.js",
       ".nojekyll",
+      // site/assets copied to the bundle root so the landing's ./assets/ refs resolve
+      "assets/board-sweep.mp4",
+      "assets/board-sweep-poster.webp",
     ]) {
       assert.ok(existsSync(path.join(out, f)), `missing ${f}`);
     }

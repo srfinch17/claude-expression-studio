@@ -156,6 +156,24 @@
   .proto-msg{font-family:var(--mono); font-size:.92rem; margin-top:38px; padding:18px 22px; border:1px solid var(--hair); border-radius:12px; background:var(--panel-sub); color:var(--dim); overflow-x:auto;}
   .proto-msg .k{color:var(--info);} .proto-msg .v{color:var(--emotion);} .proto-msg .c{color:var(--faint);}
 
+  /* ── the board twin (real hardware ‖ browser) ────────────── */
+  .twin{display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:clamp(14px,3vw,34px); margin-top:48px;}
+  .twin-cell{justify-self:center; max-width:320px; width:100%; margin:0;}
+  .twin-cell .device{width:100%;}
+  .twin-cell .device video, .twin-cell .device canvas{
+    width:100%; height:auto; aspect-ratio:1/1; display:block; border-radius:11px; background:var(--panel-sub);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.03), inset 0 6px 24px rgba(0,0,0,.6);
+  }
+  .twin-eq{font-family:var(--mono); font-size:clamp(1.6rem,4vw,2.4rem); color:var(--faint); text-align:center; user-select:none; line-height:1;}
+  .twin-foot{margin-top:36px; display:flex; flex-direction:column; gap:20px; align-items:flex-start;}
+  .twin-note{font-size:.98rem; color:var(--dim); max-width:54ch;}
+  .twin-note b{color:var(--text); font-weight:600;}
+  @media(max-width:640px){
+    .twin{grid-template-columns:1fr; gap:6px;}
+    .twin-eq{transform:rotate(90deg); margin:2px 0;}
+    .twin-cell{max-width:280px;}
+  }
+
   /* ── install ─────────────────────────────────────────────── */
   .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:42px;}
   .step{border:1px solid var(--hair); border-radius:16px; padding:24px;}
@@ -199,6 +217,7 @@
       <a href="#language">Body language</a>
       <a href="#playground">Try it</a>
       <a href="#protocol">The idea</a>
+      <a href="#hardware">The board</a>
       <a href="#install">Install</a>
       <a class="ghub" href="https://github.com/srfinch17/claude-expression-studio">GitHub ↗</a>
     </nav>
@@ -348,6 +367,42 @@
           <span class="n">Renderer 03+</span>
           <h3>Any ESP32 board</h3>
           <p>Bigger matrices, round displays, a lamp. A fabric of screens you've <i>chosen</i> to let Claude speak through. It only ever drives the ones you enlist.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="divider"></div></div>
+
+  <!-- ───────────────────────── THE BOARD (side-by-side) ─────── -->
+  <section id="hardware">
+    <div class="wrap">
+      <span class="eyebrow">Same message, on glass</span>
+      <h2>One sweep, two screens.</h2>
+      <p class="section-lead">On the left, a real ESP32-S3 panel on a desk, running the firmware. On the right, this page, drawing the <i>same</i> Claude "working" sweep from the same code. It all runs board-free in your browser. A real one on your desk is just more fun.</p>
+
+      <div class="twin">
+        <figure class="twin-cell">
+          <div class="device">
+            <video id="boardVideo" poster="./assets/board-sweep-poster.webp" loop muted playsinline
+                   aria-label="A real ESP32-S3 8x8 LED panel running the Claude working-sweep animation"></video>
+            <div class="now">On your desk · <b>real hardware</b></div>
+          </div>
+        </figure>
+        <div class="twin-eq" aria-hidden="true">=</div>
+        <figure class="twin-cell">
+          <div class="device" id="twinDevice">
+            <canvas id="twinPanel" width="512" height="512"></canvas>
+            <div class="now">In this page · <b>no board</b></div>
+          </div>
+        </figure>
+      </div>
+
+      <div class="twin-foot">
+        <p class="twin-note"><b>Same animation, same code.</b> The browser panel and the board run the identical sweep; the board just makes it glow on your desk.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="https://srfinch17.github.io/peckworks-esp32s3matrix/">Get the board firmware ↗</a>
+          <a class="btn btn-ghost" href="https://github.com/srfinch17/peckworks-esp32s3matrix">Board firmware repo ↗</a>
         </div>
       </div>
     </div>
@@ -609,6 +664,17 @@ function wirePlayground() {
 // ── Hero: the signature Claude wait-spinner (ring sweep + bobbing Claude) ──
 drive(hero, 'claudesweep');
 document.getElementById('heroNow').innerHTML = 'Claude is <b>working</b>';
+
+// ── The board twin: the browser panel runs the SAME claudesweep sim as the
+// real board in the video beside it (one shared port, no hardware). The video
+// src + playback are set here so prefers-reduced-motion just holds the poster. ──
+const twinCanvas = document.getElementById('twinPanel');
+if (twinCanvas) drive(mk(twinCanvas, document.getElementById('twinDevice')), 'claudesweep');
+const boardVideo = document.getElementById('boardVideo');
+if (boardVideo) {
+  boardVideo.src = './assets/board-sweep.mp4';
+  if (!REDUCE) boardVideo.play().catch(() => {});   // muted → allowed; poster holds if blocked
+}
 
 // ── Library showcase: a curated set of the coolest animations ──
 // Pulled live from the gallery: saved expressions (frames) + a couple of
