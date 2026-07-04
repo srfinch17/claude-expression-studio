@@ -200,7 +200,7 @@
       <a href="#playground">Try it</a>
       <a href="#protocol">The idea</a>
       <a href="#install">Install</a>
-      <a class="ghub" href="https://github.com/srfinch17/peckworks-esp32s3matrix">GitHub ↗</a>
+      <a class="ghub" href="https://github.com/srfinch17/claude-expression-studio">GitHub ↗</a>
     </nav>
   </div>
 </header>
@@ -359,29 +359,29 @@
   <section id="install">
     <div class="wrap">
       <span class="eyebrow">Get it</span>
-      <h2>Real hardware. Fully open.</h2>
-      <p class="section-lead">It runs on a low-cost <b style="color:var(--text)">Waveshare ESP32-S3-Matrix</b> (a ~$15 board, 8×8 WS2812B). The board and your computer just need to be on the same Wi-Fi. Three steps:</p>
+      <h2>No board required. Fully open.</h2>
+      <p class="section-lead">Install it and Claude renders its expressions on a virtual panel right in your browser. A physical <b style="color:var(--text)">Waveshare ESP32-S3-Matrix</b> (a ~$15 board, 8×8 WS2812B) is an optional upgrade you can add anytime. Three steps:</p>
       <div class="steps">
         <div class="step">
-          <span class="num">01 · Flash</span>
-          <h3>One file to the board</h3>
-          <p>Grab the firmware from GitHub and run <code>flash.bat</code> / <code>flash.sh</code>. One merged image: firmware and the web UI together, no extra upload. A one-click browser flasher is on the way.</p>
+          <span class="num">01 · Install</span>
+          <h3>Add it to Claude</h3>
+          <p>Double-click the <code>.mcpb</code> extension from <a href="https://github.com/srfinch17/claude-expression-studio" style="color:var(--emotion)">this repo</a> for Claude Desktop, or run <code>npm run setup</code> for Claude Code. No JSON, no config, no hardware.</p>
         </div>
         <div class="step">
-          <span class="num">02 · Connect</span>
-          <h3>Add it to Claude Desktop</h3>
-          <p>Double-click the <code>.mcpb</code> extension. No JSON, no Node install, no config. The board lives at <code>esp32matrix.local</code> on your network.</p>
-        </div>
-        <div class="step">
-          <span class="num">03 · Say hi</span>
+          <span class="num">02 · Say hi</span>
           <h3>Watch it come alive</h3>
-          <p>Claude starts using the panel on its own: a spinner when it's busy, a check when it's done, a tap when it needs you.</p>
+          <p>Claude starts expressing on its own: a spinner when it's busy, a check when it's done, a tap when it needs you. It renders on the in-browser virtual board and the draggable desktop mini board.</p>
+        </div>
+        <div class="step">
+          <span class="num">03 · Add a board</span>
+          <h3>Optional: put it on your desk</h3>
+          <p>Want a glowing thing on your desk? Flash a ~$15 panel from the <a href="https://github.com/srfinch17/peckworks-esp32s3matrix" style="color:var(--emotion)">board firmware repo</a> (<code>flash.bat</code> / <code>flash.sh</code>, one merged image). The same tools start mirroring to it at <code>esp32matrix.local</code>. Nothing else changes.</p>
         </div>
       </div>
-      <p class="install-note"><b>Where it stands:</b> the firmware, the web control panel, and the Claude integration all work and are hardware-verified. The offline flasher lives in the repo today; tagged releases and a one-click browser install are on the way. Full instructions and source are on <a href="https://github.com/srfinch17/peckworks-esp32s3matrix" style="color:var(--emotion)">GitHub</a>.</p>
+      <p class="install-note"><b>Where it stands:</b> the Studio, the Claude integration, and the board-free virtual panel all work; the firmware and its web control panel are hardware-verified. Tagged releases and a one-click browser flasher are on the way. Full instructions and source are on <a href="https://github.com/srfinch17/claude-expression-studio" style="color:var(--emotion)">GitHub</a>.</p>
       <div class="cta-row" style="margin-top:30px">
-        <a class="btn btn-primary" href="https://github.com/srfinch17/peckworks-esp32s3matrix">View on GitHub</a>
-        <a class="btn btn-ghost" href="https://github.com/srfinch17/peckworks-esp32s3matrix#readme">Read the docs ↗</a>
+        <a class="btn btn-primary" href="https://github.com/srfinch17/claude-expression-studio">View on GitHub</a>
+        <a class="btn btn-ghost" href="https://github.com/srfinch17/claude-expression-studio#readme">Read the docs ↗</a>
       </div>
     </div>
   </section>
@@ -390,7 +390,7 @@
 <footer class="site">
   <div class="wrap">
     <span class="mono">Matrix: an expression channel for Claude.</span>
-    <span>Open source · built with Claude Code · <a href="https://github.com/srfinch17/peckworks-esp32s3matrix">GitHub</a></span>
+    <span>Open source · built with Claude Code · <a href="https://github.com/srfinch17/claude-expression-studio">GitHub</a></span>
   </div>
 </footer>
 

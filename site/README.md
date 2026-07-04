@@ -42,7 +42,7 @@ jobs:
         uses: actions/deploy-pages@v4
 ```
 Then in **Settings → Pages → Source**, choose **GitHub Actions**. The site lands at
-`https://<user>.github.io/peckworks-esp32s3matrix/`.
+`https://<user>.github.io/claude-expression-studio/`.
 
 **B. Deploy from a folder.** Copy `index.html` into `/docs` and set
 **Settings → Pages → Deploy from a branch → `/docs`**. Simplest, no Actions.
