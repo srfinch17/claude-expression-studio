@@ -9,7 +9,7 @@ export const FIRMWARE_NAMES = new Set([
   "fire", "rainbow", "breathe", "wave", "solid", "liquid", "imu", "chiptemp",
   "weather", "timer_fill", "timer_snow", "timer_text", "clock", "matrix_rain",
   "snow", "dancefloor", "spiral", "starfield", "fireworks", "fireworks2",
-  "comet", "sun", "frostbite", "calendar", "sound", "claudesweep",
+  "sun", "frostbite", "calendar", "sound", "claudesweep",
 ]);
 
 export function isFirmwareName(name) {

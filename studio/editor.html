@@ -71,6 +71,41 @@
     .ptile canvas { width:46px; height:46px; border-radius:5px; background:var(--panel-sub); display:block; margin:0 auto; }
     .ptile .nm { font-size:.56rem; margin-top:3px; word-break:break-all; color:var(--dim); line-height:1.05; }
     .ptile .cnt { font-size:.56rem; color:var(--orange); }
+    /* per-tile airtime bar (width = share of the busiest animation, color = tier) */
+    .ptile .cbar { height:3px; border-radius:2px; background:var(--sub); margin-top:3px; overflow:hidden; }
+    .ptile .cbar span { display:block; height:100%; width:0; transition:width .45s cubic-bezier(.4,0,.2,1); }
+    .tier-frequent { background:var(--green); }
+    .tier-occasional { background:var(--info); }
+    .tier-rare { background:#e0a800; }
+    .tier-ambient { background:#8a7dd6; }
+    .tier-never { background:transparent; }
+
+    /* ── Coverage card: the live "how much of my library actually plays?" readout ── */
+    .cov { background:linear-gradient(180deg, rgba(255,255,255,.03), transparent);
+      border:1px solid var(--hair); border-radius:12px; padding:12px; margin-bottom:14px; }
+    .cov-head { display:flex; align-items:center; gap:12px; }
+    .cov-ring { --pct:0; --ink:var(--green); width:58px; height:58px; flex:0 0 auto; border-radius:50%;
+      background:conic-gradient(var(--ink) calc(var(--pct)*1%), var(--sub) 0); display:grid; place-items:center;
+      position:relative; transition:background .55s cubic-bezier(.4,0,.2,1); }
+    .cov-ring::before { content:""; position:absolute; inset:5px; border-radius:50%; background:var(--panel); }
+    .cov-ring b { position:relative; font-size:1rem; font-weight:700; letter-spacing:-.02em; }
+    .cov-ring b i { font-size:.6rem; color:var(--dim); font-style:normal; margin-left:1px; }
+    .cov-head-txt h2 { font-size:.72rem; letter-spacing:.2em; text-transform:uppercase; color:var(--dim); margin:0 0 3px; }
+    .cov-head-txt p { margin:0; font-size:.72rem; color:var(--dim); line-height:1.4; }
+    .cov-head-txt strong { color:var(--text); font-weight:600; }
+    .cov-head-txt .never { color:var(--faint); }
+    .cov-dist { display:flex; height:12px; border-radius:6px; overflow:hidden; margin:11px 0 7px; background:var(--sub); }
+    .cov-dist span { transition:width .55s cubic-bezier(.4,0,.2,1); min-width:0; }
+    .cov-legend { display:flex; flex-wrap:wrap; gap:4px 12px; font-size:.62rem; color:var(--dim); }
+    .cov-legend span { display:inline-flex; align-items:center; gap:5px; }
+    .cov-legend i { width:8px; height:8px; border-radius:2px; display:inline-block; }
+    .cov-legend b { color:var(--text); font-weight:600; }
+    .cov-notes { margin-top:10px; padding-top:9px; border-top:1px solid var(--hair); display:flex; flex-direction:column; gap:5px; }
+    .cov-note { font-size:.64rem; color:var(--dim); line-height:1.4; display:flex; gap:7px; align-items:baseline; }
+    .cov-note .k { color:var(--faint); flex:0 0 auto; }
+    .cov-note.hog .k { color:var(--emotion); }
+    .cov-note b { color:var(--text); font-weight:600; }
+    .cov-note.warn b { color:#e0a800; }
     .tile .gear { width:100%; margin-top:4px; padding:2px; font-size:.58rem; }
     .entryed { position:absolute; top:4px; left:90px; z-index:20; width:212px; background:#0d0d12;
       border:1px solid #2a2a34; border-radius:8px; padding:8px; display:flex; flex-direction:column; gap:6px;
@@ -99,6 +134,7 @@
   <main>
     <div id="intents"></div>
     <aside>
+      <section id="cov" class="cov"></section>
       <h2>Animations</h2>
       <div class="legend"><span><span class="sw av"></span>available</span><span><span class="sw as"></span>assigned (N&nbsp;events)</span></div>
       <div id="tray" class="tray"></div>
@@ -116,6 +152,7 @@
              setEntryParam, removeEntryParam, setEntryParamsRaw, setLabel } from "./editor.js";
     import { INTENT_FIRES } from "./intent-info.js";
     import { FIRMWARE_PARAMS } from "./firmware-params.js";
+    import { computeCoverage } from "../shared/coverage.js";
 
     const RID = "esp32-8x8";
     const FW_DEFAULTS = { frostbite:{mist:40,sparkle:20}, fire:{palette:"classic",intensity:6},
@@ -128,8 +165,10 @@
     const bannerEl = document.getElementById("banner");
     const saveBtn = document.getElementById("save");
     const revertBtn = document.getElementById("revert");
+    const covEl = document.getElementById("cov");
 
-    let manifest = null, readOnly = false, byName = new Map(), allItems = [], dirty = false;
+    let manifest = null, readOnly = false, byName = new Map(), allItems = [], ambientNames = [], dirty = false;
+    let lastCov = null;   // most recent coverage analysis, recomputed every render (= live)
     const animating = new Set();   // ONLY hovered Panels animate; everything else holds a still frame
 
     // Drive an existing Panel to play a library item (firmware sim OR frame-expression).
@@ -247,8 +286,51 @@
       return wrap;
     }
 
+    // The live Coverage card. Recomputed on every edit, so rebinding an animation
+    // immediately moves the meter, the distribution bar, and every per-tile airtime bar.
+    const TIER_META = [
+      ["frequent", "var(--green)", "Frequent"],
+      ["occasional", "var(--info)", "Occasional"],
+      ["rare", "#e0a800", "Rare"],
+      ["ambient", "#8a7dd6", "Idle watcher"],
+      ["never", "#2a2a34", "Never"],
+    ];
+    function updateCoverage(cov) {
+      if (!cov) { covEl.innerHTML = ""; return; }
+      const s = cov.summary;
+      const ink = s.diversityPct >= 75 ? "var(--green)" : s.diversityPct >= 45 ? "var(--info)" : "var(--emotion)";
+      const total = s.total || 1;
+      const segs = TIER_META.map(([key, color, label]) =>
+        `<span class="tier-${key}" style="width:${((s.tiers[key] || 0) / total * 100).toFixed(2)}%;background:${color}" title="${label}: ${s.tiers[key] || 0}"></span>`).join("");
+      const legend = TIER_META.map(([key, color, label]) =>
+        `<span><i style="background:${color}"></i>${label} <b>${s.tiers[key] || 0}</b></span>`).join("");
+      const hogs = s.hogs.map((h) => `${h.name} ${h.reachPct}%`).join(" · ");
+      const amb = s.ambientNames || [];
+      covEl.innerHTML = `
+        <div class="cov-head">
+          <div class="cov-ring" style="--pct:${s.diversityPct};--ink:${ink}"><b>${s.diversityPct}<i>%</i></b></div>
+          <div class="cov-head-txt">
+            <h2>Coverage</h2>
+            <p><strong>${s.reachable}</strong> of <strong>${s.total}</strong> animations play automatically${s.ambient ? `, <strong>${s.ambient}</strong> more when idle` : ""}.
+            ${s.never ? `<span class="never">${s.never} never do.</span>` : ""}</p>
+          </div>
+        </div>
+        <div class="cov-dist">${segs}</div>
+        <div class="cov-legend">${legend}</div>
+        <div class="cov-notes">
+          ${s.deadIntents.length ? `<div class="cov-note warn"><span class="k">dead pools</span><span><b>${s.deadIntents.length}</b> intents hold animations no moment ever fires <span class="never">(${s.deadIntents.join(", ")})</span></span></div>` : ""}
+          ${s.orphans.length ? `<div class="cov-note warn"><span class="k">unbound</span><span><b>${s.orphans.length}</b> in no pool at all <span class="never">(${s.orphans.slice(0, 8).join(", ")}${s.orphans.length > 8 ? "…" : ""})</span></span></div>` : ""}
+          ${amb.length ? `<div class="cov-note"><span class="k">idle watcher</span><span><b>${amb.length}</b> play when Claude is idle, outside the manifest <span class="never">(${amb.slice(0, 8).join(", ")}${amb.length > 8 ? "…" : ""})</span></span></div>` : ""}
+          <div class="cov-note hog"><span class="k">top airtime</span><span>${hogs}</span></div>
+        </div>`;
+    }
+
     function render() {
       animating.clear();   // re-render replaces every tile; drop stale hover state
+      // Recompute coverage from the current (edited) manifest FIRST so the card and the
+      // per-tile airtime bars reflect this edit in the same paint.
+      lastCov = computeCoverage(manifest, { renderer: RID, animationNames: allItems.map((i) => i.name), ambientNames });
+      updateCoverage(lastCov);
       intentsEl.innerHTML = "";
       const bindings = ownBindings(manifest, RID);
       for (const intent of Object.keys(manifest.intents || {})) {
@@ -359,6 +441,15 @@
         wireHover(t, makePanel(cv, it.name));
         const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = it.name; t.appendChild(nm);
         if (n > 0) { const c = document.createElement("div"); c.className = "cnt"; c.textContent = `(${n})`; t.appendChild(c); }
+        // airtime bar: width = share vs the busiest animation, color = tier. Ambient = a fixed
+        // stub (idle-watcher, no manifest share); empty for "never".
+        const a = lastCov && lastCov.perAnim[it.name];
+        const bar = document.createElement("div"); bar.className = "cbar";
+        const fill = document.createElement("span");
+        if (a && a.tier === "ambient") { fill.className = "tier-ambient"; fill.style.width = "20%"; fill.title = "plays when Claude is idle (bored watcher)"; }
+        else if (a && a.tier !== "never") { fill.className = "tier-" + a.tier; fill.style.width = Math.max(5, a.relPct) + "%"; fill.title = `${a.reachPct}% of airtime · ${a.tier}`; }
+        else { fill.title = "never plays on its own"; }
+        bar.appendChild(fill); t.appendChild(bar);
         trayEl.appendChild(t);
       }
     }
@@ -391,6 +482,9 @@
     // --- boot ---
     const data = await (await fetch("./gallery-data.json")).json();
     allItems = buildPlaylists(data, Object.keys(FIRMWARE_SIMS), []).all;
+    // Bored-watcher animations fire on idle, outside the manifest, so coverage counts them
+    // as "ambient" (appearing) rather than a wiring gap.
+    ambientNames = allItems.filter((it) => it.entry && it.entry.group === "bored").map((it) => it.name);
     byName = new Map(allItems.map((it) => [it.name, it]));
     await loadManifest();
     setDirty(false);
