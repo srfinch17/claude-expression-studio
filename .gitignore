@@ -57,3 +57,6 @@ pages-dist/
 
 # Hook runtime artifacts (activity token / kill switch), created when the hook runs
 claude-hooks/.matrix_*
+
+# raw live-board source footage (processed assets go in site/assets/)
+LiveBoardClips/
