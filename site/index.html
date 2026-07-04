@@ -174,6 +174,39 @@
     .twin-cell{max-width:280px;}
   }
 
+  /* ── hardware gallery: the whole library, on real glass ──── */
+  .hw-hint{font-family:var(--mono); font-size:.72rem; letter-spacing:.04em; color:var(--faint); margin-top:20px;}
+  .hw-hint b{color:var(--dim); font-weight:500;}
+  .hw-hint .g{color:var(--emotion);} .hw-hint .s{color:var(--info);}
+  .hw-grid{display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-top:26px;}
+  .hw-tile{position:relative; aspect-ratio:1/1; perspective:820px; cursor:pointer;
+    border:0; padding:0; background:none; transition:transform .18s; -webkit-tap-highlight-color:transparent;}
+  .hw-tile:hover{transform:translateY(-3px);}
+  .hw-inner{position:absolute; inset:0; transform-style:preserve-3d; transition:transform .55s cubic-bezier(.4,.08,.2,1);}
+  .hw-face{position:absolute; inset:0; backface-visibility:hidden; -webkit-backface-visibility:hidden;
+    border-radius:11px; overflow:hidden; border:1px solid var(--hair); background:var(--panel-sub);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.03), inset 0 6px 20px rgba(0,0,0,.55); transition:border-color .18s;}
+  .hw-tile:hover .hw-face{border-color:#33333f;}
+  .hw-back{transform:rotateY(180deg);}
+  .hw-face video, .hw-face canvas{width:100%; height:100%; object-fit:cover; display:block; background:var(--panel-sub);}
+  .hw-tag{position:absolute; top:7px; left:8px; z-index:3; font-family:var(--mono); font-size:.5rem;
+    letter-spacing:.14em; text-transform:uppercase; padding:2px 5px; border-radius:4px;
+    background:rgba(6,6,8,.62); backdrop-filter:blur(2px);}
+  .hw-front .hw-tag{color:var(--emotion);} .hw-back .hw-tag{color:var(--info);}
+  .hw-label{position:absolute; left:0; right:0; bottom:0; z-index:4; pointer-events:none;
+    font-family:var(--mono); font-size:.64rem; letter-spacing:.02em; color:var(--text);
+    padding:16px 8px 8px; text-align:center;
+    background:linear-gradient(transparent, rgba(5,5,7,.86)); opacity:0; transition:opacity .16s;}
+  .hw-tile:hover .hw-label, .hw-tile.flipped .hw-label{opacity:1;}
+  /* hover flips on pointer devices; tap toggles .flipped on touch */
+  @media(hover:hover){ .hw-tile:hover .hw-inner{transform:rotateY(180deg);} }
+  .hw-tile.flipped .hw-inner{transform:rotateY(180deg);}
+  .hw-tile.noflip{cursor:default;} .hw-tile.noflip:hover .hw-inner{transform:none;}
+  .hw-tile:focus-visible{outline:2px solid var(--info); outline-offset:3px; border-radius:12px;}
+  @media(max-width:860px){ .hw-grid{grid-template-columns:repeat(4,1fr);} }
+  @media(max-width:560px){ .hw-grid{grid-template-columns:repeat(3,1fr); gap:9px;} }
+  @media(prefers-reduced-motion:reduce){ .hw-inner{transition:none;} .hw-tile:hover{transform:none;} }
+
   /* ── install ─────────────────────────────────────────────── */
   .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:42px;}
   .step{border:1px solid var(--hair); border-radius:16px; padding:24px;}
@@ -218,6 +251,7 @@
       <a href="#playground">Try it</a>
       <a href="#protocol">The idea</a>
       <a href="#hardware">The board</a>
+      <a href="#gallery">Gallery</a>
       <a href="#install">Install</a>
       <a class="ghub" href="https://github.com/srfinch17/claude-expression-studio">GitHub ↗</a>
     </nav>
@@ -405,6 +439,19 @@
           <a class="btn btn-ghost" href="https://github.com/srfinch17/peckworks-esp32s3matrix">Board firmware repo ↗</a>
         </div>
       </div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="divider"></div></div>
+
+  <!-- ─────────────────────── HARDWARE GALLERY ──────────────── -->
+  <section id="gallery">
+    <div class="wrap">
+      <span class="eyebrow">No renders, no mockups</span>
+      <h2>The whole library, on real glass.</h2>
+      <p class="section-lead">Every one of these is the physical ESP32-S3 panel on a desk, filmed. One clip per animation. Hover any tile to flip it to the in-browser version, same frames, same code, glass and screen back to back.</p>
+      <p class="hw-hint">Hover to flip · <b class="g">glass</b> is the real board, <b class="s">screen</b> is this page rendering the same frames.</p>
+      <div class="hw-grid" id="hwGrid"></div>
     </div>
   </section>
 
@@ -704,6 +751,82 @@ async function buildShowcase() {
   }
 }
 
+// ── Hardware gallery: every animation filmed on the real board, each tile
+// flippable to its live browser twin (same drive() path as the hero/showcase).
+// [assetBasename, sim/expression name, label]. board-sweep → claudesweep. ──
+const GALLERY = [
+  ['board-sweep','claudesweep','working sweep'], ['claude-idle','claude-idle','claude, idle'],
+  ['galaxy','galaxy','galaxy'], ['aurora','aurora','aurora'], ['starfield','starfield','starfield'],
+  ['warp-portal','warp-portal','warp portal'], ['black-hole','black-hole','black hole'],
+  ['sun','sun','sun'], ['ringed-planet','ringed-planet','saturn'], ['jupiter','jupiter','jupiter'],
+  ['meteor','meteor','meteor'], ['atom','atom','atom'], ['fire','fire','fire'],
+  ['volcano','volcano','volcano'], ['mushroom-cloud','mushroom-cloud','mushroom cloud'],
+  ['lightning','lightning','lightning'], ['frostbite','frostbite','frostbite'], ['snow','snow','snow'],
+  ['wave','wave','wave'], ['breathe','breathe','breathe'], ['jellyfish','jellyfish','jellyfish'],
+  ['goldfish','goldfish','goldfish'], ['butterfly','butterfly','butterfly'], ['ufo','ufo','ufo'],
+  ['pacman','pacman','pac-man'], ['rainbow','rainbow','rainbow'], ['fireworks','fireworks','fireworks'],
+  ['fireworks2','fireworks2','fireworks ii'], ['confetti','confetti','confetti'],
+  ['dancefloor','dancefloor','dancefloor'], ['soundwave','soundwave','soundwave'],
+  ['lava-lamp','lava-lamp','lava lamp'], ['spiral','spiral','spiral'], ['tornado','tornado','tornado'],
+  ['bloom','bloom','bloom'], ['crystal-ball','crystal-ball','crystal ball'], ['potion','potion','potion'],
+  ['newtons-cradle','newtons-cradle',"newton's cradle"], ['matrix_rain','matrix_rain','matrix rain'],
+  ['wink','wink','wink'], ['idea','idea','idea'], ['hourglass','hourglass','hourglass'],
+  ['task-complete','task-complete','task complete'], ['ask-question','ask-question','question'],
+  ['warrocket','warrocket','war rocket'], ['dusk','dusk','dusk'], ['clock','clock','clock'],
+];
+function buildGallery() {
+  const grid = document.getElementById('hwGrid');
+  if (!grid) return;
+  // Lazy: only load + play videos while they're near the viewport.
+  const io = ('IntersectionObserver' in window) ? new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      const v = e.target.querySelector('video'); if (!v) continue;
+      if (e.isIntersecting) { if (!v.src) v.src = v.dataset.src; if (!REDUCE) v.play().catch(() => {}); }
+      else v.pause();
+    }
+  }, { rootMargin: '150px 0px' }) : null;
+
+  for (const [asset, sim, label] of GALLERY) {
+    const drivable = !!(FIRMWARE_SIMS[sim] || LIB[sim]);
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = 'hw-tile' + (drivable ? '' : ' noflip');
+    tile.setAttribute('aria-label', drivable ? label + ', flip between the real board and the browser render' : label + ', real board clip');
+
+    const inner = document.createElement('div'); inner.className = 'hw-inner';
+    const front = document.createElement('div'); front.className = 'hw-face hw-front';
+    const vid = document.createElement('video');
+    vid.loop = true; vid.muted = true; vid.playsInline = true; vid.preload = 'none';
+    vid.setAttribute('playsinline', ''); vid.setAttribute('aria-hidden', 'true');
+    vid.poster = `./assets/${asset}-poster.webp`;
+    vid.dataset.src = `./assets/${asset}.mp4`;
+    front.appendChild(vid);
+    front.insertAdjacentHTML('beforeend', '<span class="hw-tag">glass</span>');
+    inner.appendChild(front);
+
+    if (drivable) {
+      const back = document.createElement('div'); back.className = 'hw-face hw-back';
+      back.insertAdjacentHTML('beforeend', '<span class="hw-tag">screen</span>');
+      inner.appendChild(back);
+      let mounted = false;
+      const mount = () => {
+        if (mounted) return; mounted = true;
+        const cv = document.createElement('canvas'); cv.width = 256; cv.height = 256;
+        back.insertBefore(cv, back.firstChild);
+        const p = mk(cv, null);
+        if (drive(p, sim) && REDUCE) p.draw(0);
+      };
+      tile.addEventListener('pointerenter', mount);
+      tile.addEventListener('focus', mount);
+      tile.addEventListener('click', () => { mount(); tile.classList.toggle('flipped'); });
+    }
+    const lab = document.createElement('span'); lab.className = 'hw-label'; lab.textContent = label;
+    tile.appendChild(inner); tile.appendChild(lab);
+    grid.appendChild(tile);
+    if (io) io.observe(tile); else { vid.src = vid.dataset.src; if (!REDUCE) vid.play().catch(() => {}); }
+  }
+}
+
 // ── Single shared animation loop ──
 // The loop reads `panels` each frame, so the async showcase tiles join in as
 // soon as buildShowcase() pushes them, no restart needed.
@@ -720,7 +843,7 @@ if (REDUCE) {
 
 // Beats and the showcase both draw from the saved-expression library, wire them
 // once it has loaded (the shared loop picks up their panels automatically).
-loadLibrary().then(() => { wireBeats(); wirePlayground(); buildShowcase(); });
+loadLibrary().then(() => { wireBeats(); wirePlayground(); buildShowcase(); buildGallery(); });
 </script>
 </body>
 </html>
