@@ -40,7 +40,7 @@ renderer**, reached only over HTTP, not a dependency.
   launch via `npm run mini` / board.html pop-out / the `matrix_mini` tool),
   `presence.html` (the presence card + playground).
 - **`mcp_server/`**, the MCP server (Claude tools: `matrix_express`, `presence_set`,
-  `matrix_idle`, …) **and the engine** (`engine-server.ts`, `startEngineServer`):
+  `matrix_idle`, `matrix_pin`, …) **and the engine** (`engine-server.ts`, `startEngineServer`):
   serves `/studio/` + `/shared/`, the manifest API, `GET/POST /api/presence`
   (board-preferred with an in-memory store fallback), the `/api/framebuffer` board
   proxy, and `/events` SSE (the no-board virtual board). `matrix_studio` prints its URL.
