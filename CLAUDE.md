@@ -40,7 +40,7 @@ renderer**, reached only over HTTP, not a dependency.
   launch via `npm run mini` / board.html pop-out / the `matrix_mini` tool),
   `presence.html` (the presence card + playground).
 - **`mcp_server/`**, the MCP server (Claude tools: `matrix_express`, `presence_set`,
-  `matrix_idle`, …) **and the engine** (`engine-server.ts`, `startEngineServer`):
+  `matrix_idle`, `matrix_pin`, …) **and the engine** (`engine-server.ts`, `startEngineServer`):
   serves `/studio/` + `/shared/`, the manifest API, `GET/POST /api/presence`
   (board-preferred with an in-memory store fallback), the `/api/framebuffer` board
   proxy, and `/events` SSE (the no-board virtual board). `matrix_studio` prints its URL.
@@ -54,6 +54,17 @@ Claude **can** run and verify the studio locally (engine + Studio + hooks; Playw
 for the web surfaces). When a board IS present, confirm board-facing behavior on
 hardware before claiming it works. The board is reached only via the documented HTTP
 contract.
+
+> **HARD RULE: docs follow code, same change.** Shipping a feature or changing behavior
+> is NOT done until the docs that describe it are updated in the SAME change. That means:
+> a new/changed MCP tool, hook, flag, or user-facing capability updates the README, this
+> CLAUDE.md where relevant, AND the public `site/` showcase if it is user-visible. Treat
+> "docs updated?" as a merge gate, like tests passing. The pin feature shipped in PR #10
+> but its docs lagged until PR #21, that is the exact failure this rule exists to prevent.
+> If a change is deliberately undocumented (internal tool, dev-only), say so out loud
+> rather than leaving it silent. The MCP tool surface enforces this mechanically:
+> `scripts/check-tool-docs.mjs` (in `npm run check`) fails the build when a new tool is
+> unclassified, or a headline tool is named in none of the README / CLAUDE.md / `site/`.
 
 ## Architecture = RESOLVER-ONLY
 

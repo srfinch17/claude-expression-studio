@@ -10,7 +10,7 @@ A **renderer-agnostic presence & expression system for Claude**. Claude's state 
 
 - **The Studio** (`studio/`): see, edit, and wire Claude's whole animation library. A Gallery, a binding/pool/weight editor over the trigger manifest, a frame painter, a live virtual board, and the presence card.
 - **The trigger manifest** (`shared/manifest.json`): one source of truth mapping *moment → intent → renderer*, with fallback chains and weighted pools. The MCP server and the Claude Code hooks both resolve through it (parity-tested TS ↔ Python).
-- **The MCP server + engine** (`mcp_server/`): Claude's tools (`matrix_express`, `presence_set`, `matrix_idle`, …) plus a localhost engine that serves the Studio, holds presence, and broadcasts a no-board virtual board over SSE.
+- **The MCP server + engine** (`mcp_server/`): Claude's tools (`matrix_express`, `presence_set`, `matrix_idle`, `matrix_pin`, …) plus a localhost engine that serves the Studio, holds presence, and broadcasts a no-board virtual board over SSE.
 - **The Claude Code hooks** (`claude-hooks/`): fire ambient presence/expression per lifecycle moment (prompt submitted, task done, awaiting input, idle).
 
 ## How it fits together (one MCP server, board optional)
@@ -79,6 +79,8 @@ Then open in your browser:
 - **Board** `http://127.0.0.1:8787/studio/board.html`, a live mirror of the panel (or a no-board virtual one).
 
 With no board connected, the Board page shows a virtual panel of whatever intents fire, so you can build and wire the whole library board-free. To point it at a physical board instead: `ESP32_URL=http://<board-ip> npm run studio`.
+
+**Pin an animation to hold it.** Normally the ambient rotation and the "done" check keep cycling the panel. To park one animation up instead, click it in the Board page's *pin an animation* strip; the rotation holds off until you hit *resume*. Claude can do the same mid-conversation: `matrix_pin` holds whatever is currently on the board (optionally for N seconds) so the lifecycle hooks stop clobbering a loop you asked for, and `matrix_unpin` releases it. Your own `matrix_*` calls always win, and the `.matrix_off` kill switch still overrides a pin.
 
 ### Mini board (a little widget on your desktop)
 
