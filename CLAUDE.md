@@ -55,6 +55,15 @@ for the web surfaces). When a board IS present, confirm board-facing behavior on
 hardware before claiming it works. The board is reached only via the documented HTTP
 contract.
 
+> **HARD RULE: docs follow code, same change.** Shipping a feature or changing behavior
+> is NOT done until the docs that describe it are updated in the SAME change. That means:
+> a new/changed MCP tool, hook, flag, or user-facing capability updates the README, this
+> CLAUDE.md where relevant, AND the public `site/` showcase if it is user-visible. Treat
+> "docs updated?" as a merge gate, like tests passing. The pin feature shipped in PR #10
+> but its docs lagged until PR #21, that is the exact failure this rule exists to prevent.
+> If a change is deliberately undocumented (internal tool, dev-only), say so out loud
+> rather than leaving it silent.
+
 ## Architecture = RESOLVER-ONLY
 
 The MCP server (TS) and the Python hook EACH resolve a moment/intent via the shared
