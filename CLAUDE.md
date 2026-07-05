@@ -62,7 +62,9 @@ contract.
 > "docs updated?" as a merge gate, like tests passing. The pin feature shipped in PR #10
 > but its docs lagged until PR #21, that is the exact failure this rule exists to prevent.
 > If a change is deliberately undocumented (internal tool, dev-only), say so out loud
-> rather than leaving it silent.
+> rather than leaving it silent. The MCP tool surface enforces this mechanically:
+> `scripts/check-tool-docs.mjs` (in `npm run check`) fails the build when a new tool is
+> unclassified, or a headline tool is named in none of the README / CLAUDE.md / `site/`.
 
 ## Architecture = RESOLVER-ONLY
 
