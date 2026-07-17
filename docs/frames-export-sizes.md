@@ -18,23 +18,16 @@ these numbers.
 | bloom | saved | 8 | 140 | 5 | 5 |  | 539 | authored loop |
 | bomb | saved | 23 | 130 | 9 | 9 |  | 1511 | authored loop |
 | bored-eyes | saved | 7 | 280 | 3 | 3 |  | 469 | authored loop |
-| breathe | sim | 64 | 50 | 33 | 33 |  | 4207 | seamless, period 64 |
 | butterfly | saved | 4 | 150 | 8 | 8 |  | 292 | authored loop |
 | claude-idle | saved | 12 | 250 | 2 | 2 |  | 786 | authored loop |
-| claudesweep | sim | 84 | 90 | 8 | 8 |  | 5412 | seamless, period 84 (skipped 4 warm-up) |
 | compactor | saved | 20 | 150 | 10 | 10 |  | 1322 | authored loop |
 | confetti | saved | 16 | 120 | 25 | 25 |  | 1111 | authored loop |
 | crystal-ball | saved | 12 | 150 | 10 | 10 |  | 810 | authored loop |
-| dancefloor | sim | 75 | 80 | 256 | 293 | yes | 5580 | window 6.0s (RNG, no exact period) |
 | dizzy | saved | 8 | 120 | 3 | 3 |  | 533 | authored loop |
 | double-slit | saved | 17 | 110 | 5 | 5 |  | 1115 | authored loop |
 | dusk | saved | 24 | 200 | 12 | 12 |  | 1584 | authored loop |
-| fire | sim | 150 | 40 | 194 | 194 |  | 10194 | window 6.0s (RNG, no exact period) |
 | fireflies | saved | 32 | 150 | 13 | 13 |  | 2099 | authored loop |
-| fireworks | sim | 120 | 50 | 18 | 18 |  | 7746 | window 6.0s (RNG, no exact period) |
 | fireworks-3 | saved | 13 | 130 | 13 | 13 |  | 883 | authored loop |
-| fireworks2 | sim | 120 | 50 | 47 | 47 |  | 7833 | window 6.0s (RNG, no exact period) |
-| frostbite | sim | 100 | 60 | 58 | 58 |  | 6586 | window 6.0s (RNG, no exact period) |
 | galaxy | saved | 12 | 150 | 9 | 9 |  | 807 | authored loop |
 | goldfish | saved | 8 | 150 | 5 | 5 |  | 539 | authored loop |
 | heart | canned | 2 | 520 | 2 | 2 |  | 146 | authored loop |
@@ -45,8 +38,6 @@ these numbers.
 | jupiter | saved | 4 | 320 | 11 | 11 |  | 301 | authored loop |
 | lava-lamp | saved | 24 | 220 | 7 | 7 |  | 1569 | authored loop |
 | lightning | saved | 22 | 85 | 7 | 7 |  | 1441 | authored loop |
-| liquid | sim | 100 | 60 | 256 | 587 | yes | 7180 | window 6.0s (RNG, no exact period) |
-| matrix_rain | sim | 100 | 60 | 5 | 5 |  | 6427 | window 6.0s (RNG, no exact period) |
 | meteor | saved | 17 | 85 | 8 | 8 |  | 1124 | authored loop |
 | mushroom-cloud | saved | 13 | 130 | 6 | 6 |  | 862 | authored loop |
 | newtons-cradle | saved | 12 | 110 | 6 | 6 |  | 798 | authored loop |
@@ -54,7 +45,6 @@ these numbers.
 | party | canned | 8 | 130 | 6 | 6 |  | 542 | authored loop |
 | potion | saved | 12 | 150 | 10 | 10 |  | 810 | authored loop |
 | rain | saved | 12 | 110 | 6 | 6 |  | 798 | authored loop |
-| rainbow | sim | 64 | 90 | 64 | 64 |  | 4300 | seamless, period 64 |
 | reticle | saved | 8 | 120 | 5 | 5 |  | 539 | authored loop |
 | ringed-planet | saved | 10 | 200 | 7 | 7 |  | 673 | authored loop |
 | rocket | bored | 3 | 160 | 5 | 5 |  | 219 | authored loop |
@@ -62,13 +52,9 @@ these numbers.
 | skull | saved | 8 | 160 | 6 | 6 |  | 542 | authored loop |
 | sleep | canned | 2 | 600 | 3 | 3 |  | 149 | authored loop |
 | smiley | canned | 1 | 150 | 2 | 2 |  | 82 | authored loop |
-| snow | sim | 55 | 110 | 2 | 2 |  | 3538 | window 6.0s (RNG, no exact period) |
 | soundwave | saved | 16 | 90 | 17 | 17 |  | 1087 | authored loop |
 | sparkle | canned | 24 | 70 | 4 | 4 |  | 1560 | authored loop |
 | spinning-coin | saved | 18 | 90 | 5 | 5 |  | 1179 | authored loop |
-| spiral | sim | 64 | 80 | 64 | 64 |  | 4300 | seamless, period 64 |
-| starfield | sim | 75 | 80 | 256 | 781 | yes | 5580 | window 6.0s (RNG, no exact period) |
-| sun | sim | 8 | 120 | 6 | 6 |  | 542 | seamless, period 8 |
 | sunrise | saved | 18 | 190 | 7 | 7 |  | 1185 | authored loop |
 | swarm-merge | saved | 8 | 140 | 7 | 7 |  | 545 | authored loop |
 | task-complete | saved | 8 | 120 | 4 | 4 |  | 536 | authored loop |
@@ -79,6 +65,5 @@ these numbers.
 | wait-rainbow | saved | 24 | 90 | 7 | 7 |  | 1569 | authored loop |
 | warp-portal | saved | 24 | 110 | 24 | 24 |  | 1620 | authored loop |
 | warrocket | saved | 20 | 110 | 12 | 12 |  | 1328 | authored loop |
-| wave | sim | 128 | 60 | 20 | 20 |  | 8264 | seamless, period 128 |
 
-**Total: 71 animations, 136624 bytes (133.4 KB).** Budget: well under 500 KB.
+**Total: 56 animations, 48935 bytes (47.8 KB).** Budget: well under 500 KB.

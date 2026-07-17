@@ -1,17 +1,122 @@
 [
-  { "name": "cross", "reason": "user curation 2026-07-18, gift-board pack" },
-  { "name": "ok", "reason": "user curation 2026-07-18, gift-board pack" },
-  { "name": "wink", "reason": "user curation 2026-07-18, gift-board pack" },
-  { "name": "yawn", "reason": "user curation 2026-07-18, gift-board pack" },
-  { "name": "thumbsup", "reason": "user curation 2026-07-18, gift-board pack" },
-  { "name": "done", "reason": "user curation 2026-07-18, gift-board pack" },
-  { "name": "jack-o-lantern", "reason": "user curation 2026-07-18, gift-board pack" },
-  { "name": "working", "reason": "user curation 2026-07-18, gift-board pack" },
-  { "name": "wait-logo-boot", "reason": "user curation 2026-07-18, gift-board pack" },
-  { "name": "wait-logo-breathe", "reason": "user curation 2026-07-18, gift-board pack" },
-  { "name": "wait-logo-chase", "reason": "user curation 2026-07-18, gift-board pack" },
-  { "name": "wait-logo-ripple", "reason": "user curation 2026-07-18, gift-board pack" },
-  { "name": "wait-orbit", "reason": "user curation 2026-07-18, gift-board pack" },
-  { "name": "bounce", "reason": "user curation 2026-07-18, gift-board pack" },
-  { "name": "shooting-star", "reason": "user curation 2026-07-18, gift-board pack" }
+  {
+    "name": "cross",
+    "reason": "user curation 2026-07-18, gift-board pack"
+  },
+  {
+    "name": "ok",
+    "reason": "user curation 2026-07-18, gift-board pack"
+  },
+  {
+    "name": "wink",
+    "reason": "user curation 2026-07-18, gift-board pack"
+  },
+  {
+    "name": "yawn",
+    "reason": "user curation 2026-07-18, gift-board pack"
+  },
+  {
+    "name": "thumbsup",
+    "reason": "user curation 2026-07-18, gift-board pack"
+  },
+  {
+    "name": "done",
+    "reason": "user curation 2026-07-18, gift-board pack"
+  },
+  {
+    "name": "jack-o-lantern",
+    "reason": "user curation 2026-07-18, gift-board pack"
+  },
+  {
+    "name": "working",
+    "reason": "user curation 2026-07-18, gift-board pack"
+  },
+  {
+    "name": "wait-logo-boot",
+    "reason": "user curation 2026-07-18, gift-board pack"
+  },
+  {
+    "name": "wait-logo-breathe",
+    "reason": "user curation 2026-07-18, gift-board pack"
+  },
+  {
+    "name": "wait-logo-chase",
+    "reason": "user curation 2026-07-18, gift-board pack"
+  },
+  {
+    "name": "wait-logo-ripple",
+    "reason": "user curation 2026-07-18, gift-board pack"
+  },
+  {
+    "name": "wait-orbit",
+    "reason": "user curation 2026-07-18, gift-board pack"
+  },
+  {
+    "name": "bounce",
+    "reason": "user curation 2026-07-18, gift-board pack"
+  },
+  {
+    "name": "shooting-star",
+    "reason": "user curation 2026-07-18, gift-board pack"
+  },
+  {
+    "name": "breathe",
+    "reason": "native firmware animation; the bake is a redundant capture (user 2026-07-18)"
+  },
+  {
+    "name": "claudesweep",
+    "reason": "native firmware animation; the bake is a redundant capture (user 2026-07-18)"
+  },
+  {
+    "name": "dancefloor",
+    "reason": "native firmware animation; the bake is a redundant capture (user 2026-07-18)"
+  },
+  {
+    "name": "fire",
+    "reason": "native firmware animation; the bake is a redundant capture (user 2026-07-18)"
+  },
+  {
+    "name": "fireworks",
+    "reason": "native firmware animation; the bake is a redundant capture (user 2026-07-18)"
+  },
+  {
+    "name": "fireworks2",
+    "reason": "native firmware animation; the bake is a redundant capture (user 2026-07-18)"
+  },
+  {
+    "name": "frostbite",
+    "reason": "native firmware animation; the bake is a redundant capture (user 2026-07-18)"
+  },
+  {
+    "name": "liquid",
+    "reason": "native firmware animation; the bake is a redundant capture (user 2026-07-18)"
+  },
+  {
+    "name": "matrix_rain",
+    "reason": "native firmware animation; the bake is a redundant capture (user 2026-07-18)"
+  },
+  {
+    "name": "rainbow",
+    "reason": "native firmware animation; the bake is a redundant capture (user 2026-07-18)"
+  },
+  {
+    "name": "snow",
+    "reason": "native firmware animation; the bake is a redundant capture (user 2026-07-18)"
+  },
+  {
+    "name": "spiral",
+    "reason": "native firmware animation; the bake is a redundant capture (user 2026-07-18)"
+  },
+  {
+    "name": "starfield",
+    "reason": "native firmware animation; the bake is a redundant capture (user 2026-07-18)"
+  },
+  {
+    "name": "sun",
+    "reason": "native firmware animation; the bake is a redundant capture (user 2026-07-18)"
+  },
+  {
+    "name": "wave",
+    "reason": "native firmware animation; the bake is a redundant capture (user 2026-07-18)"
+  }
 ]
