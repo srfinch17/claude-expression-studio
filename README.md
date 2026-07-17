@@ -116,6 +116,7 @@ npm test                 # node --test across shared/ studio/ mcp_server/ script
 npm run check:manifest   # validate the trigger manifest
 npm run build:pages      # assemble the read-only Pages bundle
 npm run build:mcpb       # pack the Claude Desktop extension
+npm run export:frames    # bake the animation library into .cfr frame files (docs/frames-file-format.md)
 python -m http.server 8766   # view-only static preview (no Save; use `npm run studio` to edit)
 ```
 

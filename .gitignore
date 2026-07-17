@@ -55,6 +55,9 @@ mcp_server/mcp_launch.cmd
 # Generated: read-only static showcase bundle for GitHub Pages (scripts/build-pages.mjs)
 pages-dist/
 
+# Generated: baked .cfr frame files for the firmware frames player (scripts/export-frames.mjs)
+frames-out/
+
 # Hook runtime artifacts (activity token / kill switch), created when the hook runs
 claude-hooks/.matrix_*
 
