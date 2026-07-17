@@ -1,16 +1,20 @@
-// scripts/export-frames.mjs, bake the whole animation library into .cfr files
-// (indexed-color binary frames, spec: docs/frames-file-format.md) so a future
-// firmware "frames player" can loop the library standalone from LittleFS.
+// scripts/export-frames.mjs, bake the curated animation library into .cfr files
+// (indexed-color binary frames) archived into one library.cfrpack + index.json
+// (spec: docs/frames-file-format.md) so a gift board's firmware "frames player"
+// can loop the library standalone from LittleFS.
 //
 // Sources (reused machinery, no new renderer):
 //   frame expressions: buildGalleryData() merges bored + canned + saved (de-duped)
 //   generative sims:   shared/firmware-sims.js factories, stepped headlessly
 //
-// Pure parts (encode/decode, palette build, loop capture) are exported for tests;
-// main() wires the real repo paths.
+// Curation: scripts/frames-exclude.json names are dropped from every output (see
+// applyExclusions()); the export fails if an excluded name is not in the library.
+//
+// Pure parts (encode/decode, pack encode/decode, palette build, loop capture,
+// curation guards) are exported for tests; main() wires the real repo paths.
 //
 // Run: node scripts/export-frames.mjs [--out frames-out] [--report docs/frames-export-sizes.md]
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { resolveExpression } from "../shared/expressions.js";
@@ -21,6 +25,8 @@ export const MAGIC = "CFRM";
 export const VERSION = 1;
 export const HEADER_BYTES = 12;
 export const MAX_COLORS = 256; // 1-byte indices; measured: only 3 of 15 sims exceed this
+export const MAX_FRAMES = 160; // firmware frames-player cap, docs/frames-file-format.md
+export const NAME_RE = /^[a-z0-9_-]{1,31}$/; // strict lowercase; matches the firmware's name guard
 
 // ---- pixel plumbing: lit-pixel lists -> full 64-int RGB frames (0xRRGGBB) ----
 
@@ -162,6 +168,99 @@ export function decodeCfr(buf) {
   return { version, loop, frame_ms, palette, frames, framesRGB: frames.map((f) => f.map((i) => palette[i])) };
 }
 
+// ---- curation (drop list) + shared guards ----
+
+// entries: built library entries ({name, frames: RGBframe[], ...}) BEFORE curation.
+// exclude: parsed scripts/frames-exclude.json ([{name, reason}]).
+// Validates every entry's name + frame count (so a bad name/oversize sim never
+// ships whether or not it happens to be excluded), fails if an excluded name is
+// not actually in the library (typo protection), then returns the kept entries.
+export function applyExclusions(entries, exclude) {
+  const excludeNames = new Set(exclude.map((x) => x.name));
+  const entryNames = new Set(entries.map((e) => e.name));
+  for (const name of excludeNames) {
+    if (!entryNames.has(name)) throw new Error(`excluded name "${name}" not found in the library (typo?)`);
+  }
+  const seen = new Set();
+  for (const e of entries) {
+    if (!NAME_RE.test(e.name)) throw new Error(`unsafe or oversize name "${e.name}"`);
+    if (e.frames.length > MAX_FRAMES) throw new Error(`"${e.name}" has ${e.frames.length} frames, over the firmware's ${MAX_FRAMES}-frame cap`);
+    if (seen.has(e.name)) throw new Error(`duplicate name "${e.name}"`);
+    seen.add(e.name);
+  }
+  return entries.filter((e) => !excludeNames.has(e.name));
+}
+
+// ---- .cfrpack v1 (archive of complete .cfr blobs), see docs/frames-file-format.md ----
+
+export const PACK_MAGIC = "CFRP";
+export const PACK_VERSION = 1;
+export const PACK_HEADER_BYTES = 8;
+export const PACK_NAME_BYTES = 32;
+export const PACK_ENTRY_BYTES = 40; // 32 name + 4 offset + 4 length
+
+// items: [{name, buf}], buf = a complete unmodified .cfr blob (encodeCfr output).
+// Sorts by name, lays the table down first, then payloads back to back.
+export function encodePack(items) {
+  const sorted = [...items].sort((a, b) => a.name.localeCompare(b.name));
+  if (sorted.length > 0xffff) throw new Error("too many pack entries");
+  const tableEnd = PACK_HEADER_BYTES + PACK_ENTRY_BYTES * sorted.length;
+  const totalBytes = sorted.reduce((n, it) => n + it.buf.length, tableEnd);
+  const buf = Buffer.alloc(totalBytes);
+  buf.write(PACK_MAGIC, 0, "ascii");
+  buf.writeUInt8(PACK_VERSION, 4);
+  buf.writeUInt8(0, 5); // reserved
+  buf.writeUInt16LE(sorted.length, 6);
+  let tableOff = PACK_HEADER_BYTES;
+  let payloadOff = tableEnd;
+  for (const it of sorted) {
+    if (Buffer.byteLength(it.name, "ascii") > PACK_NAME_BYTES - 1) throw new Error(`name too long for pack table "${it.name}"`);
+    buf.write(it.name, tableOff, "ascii");
+    buf.writeUInt32LE(payloadOff, tableOff + PACK_NAME_BYTES);
+    buf.writeUInt32LE(it.buf.length, tableOff + PACK_NAME_BYTES + 4);
+    it.buf.copy(buf, payloadOff);
+    payloadOff += it.buf.length;
+    tableOff += PACK_ENTRY_BYTES;
+  }
+  return buf;
+}
+
+// Reference decoder (mirrors what the firmware validates at open time): magic,
+// version, table in-bounds, entries sorted-ascending with no duplicates/overlap,
+// no zero-length payloads. extract(name) returns the raw blob slice or null.
+export function decodePack(buf) {
+  if (buf.toString("ascii", 0, 4) !== PACK_MAGIC) throw new Error("bad pack magic");
+  const version = buf.readUInt8(4);
+  if (version !== PACK_VERSION) throw new Error(`unsupported pack version ${version}`);
+  const count = buf.readUInt16LE(6);
+  const tableEnd = PACK_HEADER_BYTES + PACK_ENTRY_BYTES * count;
+  if (buf.length < tableEnd) throw new Error("pack table overruns file");
+  const table = [];
+  let prevName = "";
+  let minOffset = tableEnd;
+  for (let i = 0; i < count; i++) {
+    const o = PACK_HEADER_BYTES + i * PACK_ENTRY_BYTES;
+    const nameRaw = buf.subarray(o, o + PACK_NAME_BYTES);
+    const nul = nameRaw.indexOf(0);
+    const name = nameRaw.toString("ascii", 0, nul === -1 ? PACK_NAME_BYTES : nul);
+    const offset = buf.readUInt32LE(o + PACK_NAME_BYTES);
+    const length = buf.readUInt32LE(o + PACK_NAME_BYTES + 4);
+    if (name <= prevName) throw new Error(`table not sorted, or duplicate name at "${name}"`);
+    if (length === 0) throw new Error(`zero-length payload for "${name}"`);
+    if (offset < minOffset || offset + length > buf.length) throw new Error(`payload out of bounds for "${name}"`);
+    prevName = name;
+    minOffset = offset + length;
+    table.push({ name, offset, length });
+  }
+  return {
+    version, count, table,
+    extract(name) {
+      const e = table.find((t) => t.name === name);
+      return e ? buf.subarray(e.offset, e.offset + e.length) : null;
+    },
+  };
+}
+
 // ---- CLI ----
 
 // Deterministic RNG for the export run so RNG sims (and the committed size report)
@@ -181,8 +280,9 @@ function markdownReport(index) {
     "",
     "Generated by `node scripts/export-frames.mjs --report docs/frames-export-sizes.md`.",
     "Format spec: [frames-file-format.md](frames-file-format.md). Output files are",
-    "gitignored (`frames-out/`); this table is the committed record of what a full",
-    "library bake measures. Sim captures use a fixed RNG seed, so re-running reproduces",
+    "gitignored (`frames-out/`); this table is the committed record of what the",
+    "curated library bake measures (see `scripts/frames-exclude.json` for what was",
+    "dropped and why). Sim captures use a fixed RNG seed, so re-running reproduces",
     "these numbers.",
     "",
     "| animation | source | frames | frame_ms | palette | distinct | quantized | bytes | loop |",
@@ -233,18 +333,19 @@ async function main() {
     });
   }
 
+  const exclude = JSON.parse(readFileSync(join(root, "scripts/frames-exclude.json"), "utf8"));
+  const kept = applyExclusions(entries, exclude); // throws on bad name, oversize bake, or excluded typo
+
   mkdirSync(outDir, { recursive: true });
-  const seenNames = new Set();
   const animations = [];
+  const packItems = [];
   let totalBytes = 0;
-  for (const e of entries) {
-    if (!/^[a-z0-9_-]+$/i.test(e.name)) throw new Error(`unsafe name "${e.name}"`);
-    if (seenNames.has(e.name)) throw new Error(`duplicate name "${e.name}"`);
-    seenNames.add(e.name);
+  for (const e of kept) {
     const { buf, palette, distinct, quantized } = encodeCfr(e);
     const file = `${e.name}.cfr`;
-    writeFileSync(join(outDir, file), buf);
+    writeFileSync(join(outDir, file), buf); // loose files: dev inspection only, not shipped to the board
     totalBytes += buf.length;
+    packItems.push({ name: e.name, buf });
     animations.push({
       name: e.name, source: e.source, file, frames: e.frames.length, frame_ms: e.frame_ms,
       loop: e.loop, palette_size: palette.length, distinct_colors: distinct,
@@ -258,11 +359,17 @@ async function main() {
     totalBytes,
     animations,
   };
-  writeFileSync(join(outDir, "index.json"), JSON.stringify(index, null, 2));
+  const indexJson = JSON.stringify(index); // minified: this is the file shipped to the board
+  writeFileSync(join(outDir, "index.json"), indexJson);
   if (reportPath) writeFileSync(join(root, reportPath), markdownReport(index));
 
+  const pack = encodePack(packItems);
+  writeFileSync(join(outDir, "library.cfrpack"), pack);
+
   const quantizedNames = animations.filter((a) => a.quantized).map((a) => a.name);
-  console.log(`exported ${animations.length} animations -> ${outDir} (${(totalBytes / 1024).toFixed(1)} KB total)`);
+  const droppedCount = entries.length - kept.length;
+  console.log(`exported ${animations.length} animations (${droppedCount} dropped by curation) -> ${outDir} (${(totalBytes / 1024).toFixed(1)} KB loose total)`);
+  console.log(`library.cfrpack: ${pack.length} bytes; index.json: ${indexJson.length} bytes (minified)`);
   console.log(`quantized (over ${MAX_COLORS} distinct colors): ${quantizedNames.join(", ") || "none"}`);
   if (reportPath) console.log(`report -> ${reportPath}`);
 }
