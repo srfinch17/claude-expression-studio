@@ -200,9 +200,12 @@ export const PACK_NAME_BYTES = 32;
 export const PACK_ENTRY_BYTES = 40; // 32 name + 4 offset + 4 length
 
 // items: [{name, buf}], buf = a complete unmodified .cfr blob (encodeCfr output).
-// Sorts by name, lays the table down first, then payloads back to back.
+// Sorts by byte order (plain code-unit comparison, not locale-aware), lays the
+// table down first, then payloads back to back. Must match decodePack's ascending
+// check below exactly, or a locale-dependent order (ICU collation, e.g. '-' vs '_')
+// would encode a pack the reference decoder itself rejects.
 export function encodePack(items) {
-  const sorted = [...items].sort((a, b) => a.name.localeCompare(b.name));
+  const sorted = [...items].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
   if (sorted.length > 0xffff) throw new Error("too many pack entries");
   const tableEnd = PACK_HEADER_BYTES + PACK_ENTRY_BYTES * sorted.length;
   const totalBytes = sorted.reduce((n, it) => n + it.buf.length, tableEnd);
@@ -225,9 +228,12 @@ export function encodePack(items) {
   return buf;
 }
 
-// Reference decoder (mirrors what the firmware validates at open time): magic,
-// version, table in-bounds, entries sorted-ascending with no duplicates/overlap,
-// no zero-length payloads. extract(name) returns the raw blob slice or null.
+// Reference decoder: validates magic, version, table in-bounds, entries
+// sorted-ascending by byte order with no duplicates/overlap, no zero-length
+// payloads, all up front at decode time. Stricter than the firmware, which has
+// no equivalent "at open" pass: it only validates the looked-up entry's
+// offset/length bounds, at lookup time. extract(name) returns the raw blob
+// slice or null.
 export function decodePack(buf) {
   if (buf.toString("ascii", 0, 4) !== PACK_MAGIC) throw new Error("bad pack magic");
   const version = buf.readUInt8(4);
@@ -352,7 +358,7 @@ async function main() {
       quantized, bytes: buf.length, loop_note: e.loop_note,
     });
   }
-  animations.sort((a, b) => a.name.localeCompare(b.name));
+  animations.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 
   const index = {
     format: { magic: MAGIC, version: VERSION, spec: "docs/frames-file-format.md" },

@@ -95,15 +95,19 @@ against the blob at that offset. Reference encoder/decoder:
 
 Table entry (40 bytes): `name` 32 bytes, ASCII `[a-z0-9_-]`, zero-padded (spec cap
 31 chars + NUL; longest shipped name is 14 characters); `offset` u32 from file
-start; `length` u32. Entries sorted by name. Offsets must be ascending,
-non-overlapping, in-bounds, and each payload must itself validate as `.cfr` v1
-(the firmware re-uses the existing per-blob validation).
+start; `length` u32. Entries sorted by byte order (plain code-unit comparison
+of the ASCII names), reproducible across machines and locales. Offsets must be
+ascending, non-overlapping, in-bounds, and each payload must itself validate as
+`.cfr` v1 (the firmware re-uses the existing per-blob validation).
 
-Rejected at open, not at play time: duplicate names, zero-length payloads, a
-table that overruns the file, or offsets/lengths out of bounds. If the pack is
-missing or fails validation, every baked play returns 400 and the display is
-left untouched (fail-safe); the gallery still renders from `index.json`, but
-tiles fail visibly.
+The reference decoder (`decodePack()` in `scripts/export-frames.mjs`) rejects
+duplicate names, non-ascending order, zero-length payloads, and a table that
+overruns the file, all up front at decode time. The firmware does not do this
+global pass: `loadCfr()` only validates the looked-up entry's offset/length
+bounds, for the one name being looked up, at lookup time. If the pack is
+missing or a lookup fails validation, that baked play returns 400 and the
+display is left untouched (fail-safe); the gallery still renders from
+`index.json`, but tiles fail visibly.
 
 ## Loop capture policy
 
