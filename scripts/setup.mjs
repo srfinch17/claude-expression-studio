@@ -76,6 +76,7 @@ export async function run(opts) {
     nodePath = process.execPath,
     exists,
     log = console.log,
+    build,
   } = opts;
   const pythonCandidates = opts.pythonCandidates || pythonCandidatesFor(platform);
 
@@ -133,15 +134,19 @@ export async function run(opts) {
   }
 
   // --- real install ---
-  // 1. ensure the compiled MCP server exists (the engine that serves the panel + Studio).
-  if (!fs.existsSync(distIndex)) {
-    log("Building the MCP server (dist/index.js missing)…");
-    try {
+  // 1. build the compiled MCP server (the engine that serves the panel + Studio).
+  // Always rebuild, never just check existence: a dist/ left over from a previous
+  // install would silently keep serving pre-pull code after a git pull.
+  log("Building the MCP server…");
+  try {
+    if (build) {
+      build();
+    } else {
       execFileSync(nodePath, [path.join(repoDir, "scripts", "copy-shared-runtime.mjs")], { cwd: repoDir, stdio: "inherit" });
       execFileSync("npx", ["tsc", "--project", "tsconfig.json"], { cwd: mcpServerDir, stdio: "inherit", shell: platform === "win32" });
-    } catch (e) {
-      throw new Error(`MCP server build failed (${e.message}). Run \`npm run build:mcpb\` manually, then re-run setup.`);
     }
+  } catch (e) {
+    throw new Error(`MCP server build failed (${e.message}). Run \`npm run build:mcpb\` manually, then re-run setup.`);
   }
 
   // 2. deploy hook assets + config.
