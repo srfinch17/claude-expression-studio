@@ -30,6 +30,7 @@ const baseOpts = (repoDir, homeDir, argv) => ({
   pythonCandidates: ["python", "python3"],
   exists: () => true,
   log: () => {},
+  build: () => {}, // the staged repo has a dummy dist; the real build is not under test
 });
 
 const read = (p) => JSON.parse(fs.readFileSync(p, "utf8"));

@@ -91,6 +91,12 @@ be auto-tested across repos:
 - **`shared/presence-vocab.js`**, must match the board's copy
   (`esp32_matrix_webserver/data/presence-vocab.js` in `peckworks-esp32s3matrix`) so the
   presence card and the board agree. The old in-repo parity test was removed at the split.
+- **`mcp_server/settings.ts`** (`KNOWN_SETTING_KEYS` + type sets), the whitelist for
+  `matrix_set_settings`, must track the board's `/api/settings` key universe (firmware
+  `docs/API.md`). A firmware settings key not listed here cannot be set from Claude (the
+  tool reply names ignored keys, but naming is not setting). The tool's input schema and
+  the `matrix_set_settings`/`matrix_get_settings` descriptions ride along: the schema is
+  derived from the whitelist, the description prose is updated by hand.
 
 ## Versioning
 

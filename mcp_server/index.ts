@@ -27,7 +27,7 @@ import { CANNED, MAX_FRAMES, artToFrameHex, expressionToWire, type Expression } 
 import { decideRender, loadEngine, type RenderPlan } from "./engine.js";
 import { executePlan } from "./run-plan.js";
 import { normalizePresence } from "./presence.js";
-import { normalizeSettingsPatch } from "./settings.js";
+import { normalizeSettingsPatch, KNOWN_SETTING_KEYS, NUMERIC_KEYS, BOOLEAN_KEYS } from "./settings.js";
 import { writePin, clearPin } from "./pin-flag.js";
 import { reservedSaveError, formatCatalog } from "./expression-catalog.js";
 import { startEngineServer } from "./engine-server.js";
@@ -240,6 +240,20 @@ const server = new Server(
 // Think of descriptions as instructions written TO Claude.
 // The better the description, the smarter Claude's choices are.
 // ------------------------------------------------------------
+
+// matrix_set_settings' inputSchema is DERIVED from the whitelist in settings.ts
+// so the schema, the whitelist, and the coercion sets cannot drift apart; a new
+// board settings key is added in exactly one place.
+const SETTINGS_SCHEMA_PROPERTIES = Object.fromEntries(
+  KNOWN_SETTING_KEYS.map((key) => [
+    key,
+    BOOLEAN_KEYS.has(key) ? { type: "boolean" }
+      : NUMERIC_KEYS.has(key) ? { type: "number" }
+      : key === "idle_apps" ? { type: "string", description: "Comma-separated enabled screensaver apps." }
+      : { type: "string" },
+  ]),
+);
+
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
@@ -539,26 +553,16 @@ If a drawing lands well (or the user likes it), re-call with save_as (kebab-case
     {
       name: "matrix_get_settings",
       description:
-        "Read the board's current persistent settings, idle screensaver behavior (enabled, which apps rotate, how long before it starts, how often it re-picks, idle brightness), default brightness, default boot animation, and clock timezone. Use this to answer questions like 'what's my idle timeout?' or before changing a setting.",
+        "Read the board's current persistent settings as JSON: every field matrix_set_settings can write (idle screensaver behavior including idle_random, MQTT publisher config, brightness defaults, boot animation, timezone, calibration toggle) plus anything else the board reports. Use this to answer questions like 'what's my idle timeout?' or 'is MQTT publishing?', or before changing a setting.",
       inputSchema: { type: "object", properties: {} },
     },
     {
       name: "matrix_set_settings",
       description:
-        "Change one or more board settings (persisted on the board, survives reflash). Only the fields you provide change. Fields: idle_enabled (bool), idle_apps (comma-separated app names from: fire, matrix_rain, clock, fireworks, frostbite, snow, dancefloor, claudesweep), idle_after_secs (seconds of quiet before the screensaver starts), idle_rotate_secs (seconds between screensaver changes), idle_brightness (1-255, screensaver dimness), default_brightness (0-255 on boot), boot_animation (animation type to show on power-up, or empty to resume last), timezone (POSIX TZ string for the clock), calibration_correction (bool, apply the measured LED color/brightness correction; turn off to A/B compare). Example: 'start the screensaver after 5 minutes' -> { idle_after_secs: 300 }.",
+        "Change one or more board settings (persisted on the board, survives reflash). Only the fields you provide change. Fields: idle_enabled (bool), idle_apps (comma-separated app names from: fire, matrix_rain, clock, fireworks, fireworks2, frostbite, snow, dancefloor, spiral, wave, starfield, rainbow, claudesweep; the first 12 are the board default rotation, but boards upgraded from older firmware keep their previously stored list until a new one is POSTed), idle_after_secs (seconds of quiet before the screensaver starts), idle_rotate_secs (seconds between screensaver changes), idle_brightness (1-255, screensaver dimness; ignored while idle_random is on), idle_random (bool, default true: each screensaver launch rolls random params and a random low brightness; false runs tuned params at idle_brightness), default_brightness (0-255 on boot), boot_animation (animation type to show on power-up, or empty to resume last), timezone (POSIX TZ string for the clock), calibration_correction (bool, apply the measured LED color/brightness correction; turn off to A/B compare), mqtt_enabled (bool, default false: publish onboard sensor readings to an MQTT broker), mqtt_host (broker LAN IP string, empty = unconfigured), mqtt_port (int, default 1883), mqtt_every_secs (publish interval, 1-3600). Unknown keys and unparseable values are not sent; the reply names them. Example: 'start the screensaver after 5 minutes' -> { idle_after_secs: 300 }.",
       inputSchema: {
         type: "object",
-        properties: {
-          idle_enabled: { type: "boolean" },
-          idle_apps: { type: "string", description: "Comma-separated enabled screensaver apps." },
-          idle_after_secs: { type: "number" },
-          idle_rotate_secs: { type: "number" },
-          idle_brightness: { type: "number" },
-          default_brightness: { type: "number" },
-          boot_animation: { type: "string" },
-          timezone: { type: "string" },
-          calibration_correction: { type: "boolean" },
-        },
+        properties: SETTINGS_SCHEMA_PROPERTIES,
       },
     },
     {
@@ -810,12 +814,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "matrix_set_settings": {
-        const patch = normalizeSettingsPatch(args as Record<string, unknown>);
+        const { patch, ignored } = normalizeSettingsPatch(args as Record<string, unknown>);
+        const note = ignored.length ? ` Ignored: ${ignored.join(", ")}.` : "";
         if (Object.keys(patch).length === 0) {
-          return { content: [{ type: "text", text: "No recognized settings to change." }] };
+          return { content: [{ type: "text", text: `No settings applied.${note}` }] };
         }
         const r = await post("/api/settings", patch);
-        return { content: [{ type: "text", text: r.ok ? `Settings updated: ${r.body}` : `Error ${r.status}: ${r.body}` }] };
+        return { content: [{ type: "text", text: r.ok ? `Settings updated: ${r.body}${note}` : `Error ${r.status}: ${r.body}` }] };
       }
 
       case "matrix_studio": {

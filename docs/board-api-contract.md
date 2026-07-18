@@ -21,9 +21,16 @@ in-memory store + the no-board SSE virtual board).
 | POST | `/api/display/frames` | `{ frames: ["384-hex"…≤24], frame_ms, loop }`, the frame-expression channel |
 | POST | `/api/display/animation` | `{ type, transient?, …params }`, firmware animations; `transient:true` skips NVS auto-resume |
 | GET  | `/api/display/framebuffer` | live 8×8 `leds[]` as 64 `"RRGGBB"` (row-major), the mirror source |
+| POST | `/api/display/clear` | blank the panel |
+| POST | `/api/display/text` | `{ text, …opts }`, scrolling text |
 | GET  | `/api/presence` | current `PresenceMessage` |
 | POST | `/api/presence` | `{ intent, headline?, detail?, data?, urgency? }`, pure store on the board (no render) |
 | POST | `/api/idle/arm` | arm the idle screensaver countdown (fired by the Stop hook) |
+| GET  | `/api/settings` | current persistent settings JSON |
+| POST | `/api/settings` | partial merge, only sent keys change; the studio-side key whitelist is `mcp_server/settings.ts` and must track the board's key universe |
+| GET  | `/api/sensors/temperature` | onboard temperature reading |
+| GET  | `/api/sensors/weather` | onboard weather sensor readings |
+| GET  | `/api/sensors/accelerometer` | raw IMU values (ax, ay, az) |
 
 `shared/firmware-names.js` decides whether a resolved render takes the
 `/api/display/animation` path (firmware sim) or `/api/display/frames` path (frame
