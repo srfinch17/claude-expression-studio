@@ -31,6 +31,18 @@ test("normalizeSettingsPatch coerces boolean true to boolean true", () => {
   assert.deepEqual(normalizeSettingsPatch({ idle_enabled: true }), { idle_enabled: true });
 });
 
+test("normalizeSettingsPatch keeps idle_random and coerces it to boolean", () => {
+  assert.deepEqual(normalizeSettingsPatch({ idle_random: false }), { idle_random: false });
+  assert.deepEqual(normalizeSettingsPatch({ idle_random: "true" }), { idle_random: true });
+});
+
+test("normalizeSettingsPatch keeps the MQTT keys with correct types", () => {
+  const out = normalizeSettingsPatch({
+    mqtt_enabled: "true", mqtt_host: "192.168.1.50", mqtt_port: "1883", mqtt_every_secs: "3",
+  });
+  assert.deepEqual(out, { mqtt_enabled: true, mqtt_host: "192.168.1.50", mqtt_port: 1883, mqtt_every_secs: 3 });
+});
+
 test("KNOWN_SETTING_KEYS contains idle_after_secs and timezone", () => {
   assert.ok(KNOWN_SETTING_KEYS.includes("idle_after_secs"), "expected idle_after_secs");
   assert.ok(KNOWN_SETTING_KEYS.includes("timezone"), "expected timezone");

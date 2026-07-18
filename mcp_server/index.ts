@@ -545,7 +545,7 @@ If a drawing lands well (or the user likes it), re-call with save_as (kebab-case
     {
       name: "matrix_set_settings",
       description:
-        "Change one or more board settings (persisted on the board, survives reflash). Only the fields you provide change. Fields: idle_enabled (bool), idle_apps (comma-separated app names from: fire, matrix_rain, clock, fireworks, frostbite, snow, dancefloor, claudesweep), idle_after_secs (seconds of quiet before the screensaver starts), idle_rotate_secs (seconds between screensaver changes), idle_brightness (1-255, screensaver dimness), default_brightness (0-255 on boot), boot_animation (animation type to show on power-up, or empty to resume last), timezone (POSIX TZ string for the clock), calibration_correction (bool, apply the measured LED color/brightness correction; turn off to A/B compare). Example: 'start the screensaver after 5 minutes' -> { idle_after_secs: 300 }.",
+        "Change one or more board settings (persisted on the board, survives reflash). Only the fields you provide change. Fields: idle_enabled (bool), idle_apps (comma-separated app names from: fire, matrix_rain, clock, fireworks, fireworks2, frostbite, snow, dancefloor, spiral, wave, starfield, rainbow, claudesweep; the first 12 are the board default rotation), idle_after_secs (seconds of quiet before the screensaver starts), idle_rotate_secs (seconds between screensaver changes), idle_brightness (1-255, screensaver dimness; ignored while idle_random is on), idle_random (bool, default true: each screensaver launch rolls random params and a random low brightness; false runs tuned params at idle_brightness), default_brightness (0-255 on boot), boot_animation (animation type to show on power-up, or empty to resume last), timezone (POSIX TZ string for the clock), calibration_correction (bool, apply the measured LED color/brightness correction; turn off to A/B compare), mqtt_enabled (bool, default false: publish onboard sensor readings to an MQTT broker), mqtt_host (broker LAN IP string, empty = unconfigured), mqtt_port (int, default 1883), mqtt_every_secs (publish interval, 1-3600). Example: 'start the screensaver after 5 minutes' -> { idle_after_secs: 300 }.",
       inputSchema: {
         type: "object",
         properties: {
@@ -554,10 +554,15 @@ If a drawing lands well (or the user likes it), re-call with save_as (kebab-case
           idle_after_secs: { type: "number" },
           idle_rotate_secs: { type: "number" },
           idle_brightness: { type: "number" },
+          idle_random: { type: "boolean" },
           default_brightness: { type: "number" },
           boot_animation: { type: "string" },
           timezone: { type: "string" },
           calibration_correction: { type: "boolean" },
+          mqtt_enabled: { type: "boolean" },
+          mqtt_host: { type: "string" },
+          mqtt_port: { type: "number" },
+          mqtt_every_secs: { type: "number" },
         },
       },
     },
