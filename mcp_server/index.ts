@@ -351,6 +351,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
 - wave: color wave across the matrix. no params.
 - solid: fill the matrix with one color. params: color (hex)
 - liquid: tilt-reactive fluid simulation using the onboard IMU. params: viscosity (0-10, default 5)
+- fluid2: a FLIP particle fluid, tilt-reactive, splashes and sprays (port of Ten Minute Physics #18). params: viscosity (0-10, higher is thicker), fill (0-100, percent of the tank, snaps to a clean fill line), color1 (deep color hex), color2 (surface color hex). Runs at a fixed frame rate, speed has little effect.
 - imu: live accelerometer bar graph, shows the board's tilt in real time. no params.
 - chiptemp: displays the ESP32 chip temperature. params: units (F or C)
 - weather: animated weather icon + live data from wttr.in. params: zipcode (US zip), units (F or C), data_mode (temp/humidity/uv/pressure/cycle), icon_source (animated/remote)
@@ -381,7 +382,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
             type: "string",
             enum: [
               "fire", "rainbow", "breathe", "wave", "solid",
-              "liquid", "imu", "chiptemp", "weather",
+              "liquid", "fluid2", "imu", "chiptemp", "weather",
               "timer_fill", "timer_snow", "timer_text",
               "clock", "matrix_rain", "snow",
               "dancefloor",
@@ -403,6 +404,7 @@ Speed 1-5 applies to all animations: 1 = slow, 3 = normal, 5 = fast.`,
           color2:      { type: "string",  description: "Secondary color hex." },
           color3:      { type: "string",  description: "Tertiary color hex." },
           viscosity:   { type: "number",  description: "Liquid viscosity 0-10. Higher is thicker." },
+          fill:        { type: "number",  description: "Fluid2 fill percent 0-100. Snaps to the nearest clean fill line; default 50." },
           zipcode:     { type: "string",  description: "US zip code for weather data." },
           units:       { type: "string",  description: "Temperature units: F or C." },
           data_mode:   { type: "string",  description: "Weather data to display: temp, humidity, uv, pressure, or cycle." },

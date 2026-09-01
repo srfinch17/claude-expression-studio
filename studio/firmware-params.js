@@ -43,4 +43,13 @@ export const FIRMWARE_PARAMS = {
   claudesweep: {
     color: { type: "color", default: "#ff5008" },
   },
+  fluid2: {
+    viscosity:     { type: "number", min: 0, max: 10, step: 1, default: 5 },
+    fill:          { type: "number", min: 0, max: 100, step: 1, default: 50 },
+    color1:        { type: "color", default: "#0028a0" },
+    color2:        { type: "color", default: "#e6faff" },
+    gravity_scale: { type: "number", min: 0, max: 2, step: 0.1, default: 1 },
+    foam:          { type: "number", min: 0, max: 10, step: 1, default: 5 },
+    K:             { type: "enum", options: [1, 2], default: 2 },
+  },
 };
