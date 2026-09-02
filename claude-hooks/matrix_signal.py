@@ -62,7 +62,7 @@ from manifest_resolver import resolve   # pure mirror of shared/resolver.js
 # Firmware animation names, MIRROR of shared/firmware-names.js (keep in sync). These
 # render via POST /api/display/animation (transient); everything else is a frame-expression.
 FIRMWARE_NAMES = {
-    "fire", "rainbow", "breathe", "wave", "solid", "liquid", "fluid2", "imu",
+    "fire", "rainbow", "breathe", "wave", "solid", "liquid", "liquid2", "imu",
     "chiptemp", "weather", "timer_fill", "timer_snow", "timer_text", "clock",
     "matrix_rain", "snow", "dancefloor", "spiral", "starfield", "fireworks",
     "fireworks2", "sun", "frostbite", "calendar", "sound", "claudesweep",

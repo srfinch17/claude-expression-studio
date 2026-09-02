@@ -43,7 +43,7 @@ export const FIRMWARE_PARAMS = {
   claudesweep: {
     color: { type: "color", default: "#ff5008" },
   },
-  fluid2: {
+  liquid2: {
     viscosity:     { type: "number", min: 0, max: 10, step: 1, default: 2 },
     fill:          { type: "number", min: 0, max: 100, step: 1, default: 50 },
     color1:        { type: "color", default: "#0028a0" },

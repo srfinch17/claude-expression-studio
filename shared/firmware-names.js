@@ -6,7 +6,7 @@
 // MIRRORED as a literal set in claude-hooks/matrix_signal.py (FIRMWARE_NAMES); keep
 // the two in sync. (Source list = the matrix_set_animation enum in mcp_server/index.ts.)
 export const FIRMWARE_NAMES = new Set([
-  "fire", "rainbow", "breathe", "wave", "solid", "liquid", "fluid2", "imu",
+  "fire", "rainbow", "breathe", "wave", "solid", "liquid", "liquid2", "imu",
   "chiptemp", "weather", "timer_fill", "timer_snow", "timer_text", "clock",
   "matrix_rain", "snow", "dancefloor", "spiral", "starfield", "fireworks",
   "fireworks2", "sun", "frostbite", "calendar", "sound", "claudesweep",
